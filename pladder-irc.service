@@ -1,0 +1,8 @@
+[Unit]
+Description=Pladder Bot IRC Connector
+
+[Service]
+ExecStart=/usr/bin/python3 -u -m pladder.irc localhost 6667 pladder "Pladder IRC Bot" #bot
+
+[Install]
+WantedBy=default.target
