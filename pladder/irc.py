@@ -4,6 +4,8 @@ import io
 import re
 import socket
 
+import ftfy
+
 
 Message = collections.namedtuple("Message", "sender, command, params")
 Sender = collections.namedtuple("Sender", "nick, user, host")
@@ -111,7 +113,7 @@ class MessageConnection:
 
     def recv_message(self):
         line_bytes = self._recv_line()
-        line = line_bytes.decode("utf-8")
+        line = self._magically_decode_utf8(line_bytes)
         print("-->", line)
         message = parse_message(line)
         return message
@@ -128,6 +130,9 @@ class MessageConnection:
             if not new_bytes:
                 raise Exception("Server closed connection")
             self._recv_buffer += new_bytes
+
+    def _magically_decode_utf8(self, bytestring):
+        return ftfy.fix_text(bytestring.decode("cp1252"))
 
     def send_message(self, message):
         line = format_message(message)
