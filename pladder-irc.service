@@ -3,6 +3,10 @@ Description=Pladder Bot IRC Connector
 
 [Service]
 ExecStart=/usr/bin/python3 -u -m pladder.irc localhost 6667 pladder "Pladder IRC Bot" #bot
+Restart=on-failure
+RestartSec=15min
+StartLimitInterval=4h
+StartLimitBurst=16
 
 [Install]
 WantedBy=default.target
