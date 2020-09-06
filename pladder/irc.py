@@ -149,14 +149,17 @@ class MessageConnection:
         self.send_message(make_message(*args))
 
 
-def run_client(host, port, nick, realname, channels):
-    with MessageConnection(host, port) as conn:
-        conn.send("NICK", nick)
-        conn.send("USER", nick, "0", "*", realname)
+Config = collections.namedtuple("Config", "host, port, nick, realname, channels")
+
+
+def run_client(config):
+    with MessageConnection(config.host, config.port) as conn:
+        conn.send("NICK", config.nick)
+        conn.send("USER", config.nick, "0", "*", config.realname)
         while True:
             message = conn.recv_message()
             if message.command == "001":
-                for channel in channels:
+                for channel in config.channels:
                     conn.send("JOIN", channel)
             elif message.command == "PING":
                 conn.send("PONG", *message.params)
@@ -171,7 +174,8 @@ def main():
     parser.add_argument("realname")
     parser.add_argument("channels", nargs="*")
     args = parser.parse_args()
-    run_client(args.host, args.port, args.nick, args.realname, args.channels)
+    config = Config(args.host, args.port, args.nick, args.realname, args.channels)
+    run_client(config)
 
 
 if __name__ == "__main__":
