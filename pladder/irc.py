@@ -153,16 +153,28 @@ Config = collections.namedtuple("Config", "host, port, nick, realname, channels"
 
 
 def run_client(config):
+    logger.info("Connecting to {host}:{port}".format(**config._asdict()))
     with MessageConnection(config.host, config.port) as conn:
+        logger.info("Using nick \"{nick}\" and realname \"{realname}\"".format(**config._asdict()))
         conn.send("NICK", config.nick)
         conn.send("USER", config.nick, "0", "*", config.realname)
+        channels_to_join = set(config.channels)
+        joined_channels = set()
         while True:
             message = conn.recv_message()
             if message.command == "001":
+                logger.info("Joining channels: {}".format(", ".join(config.channels)))
                 for channel in config.channels:
                     conn.send("JOIN", channel)
             elif message.command == "PING":
                 conn.send("PONG", *message.params)
+            elif message.command == "JOIN":
+                if message.sender.nick == config.nick:
+                    channel = message.params[0]
+                    logger.info("Joined channel: {}".format(channel))
+                    if channel in channels_to_join:
+                        joined_channels.add(channel)
+                        logger.info("Joined {} of {} channels".format(len(joined_channels), len(channels_to_join)))
 
 
 def main():
