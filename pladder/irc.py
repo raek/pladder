@@ -1,10 +1,14 @@
 import argparse
 import collections
 import io
+import logging
 import re
 import socket
 
 import ftfy
+
+
+logger = logging.getLogger("pladder.irc")
 
 
 Message = collections.namedtuple("Message", "sender, command, params")
@@ -114,7 +118,7 @@ class MessageConnection:
     def recv_message(self):
         line_bytes = self._recv_line()
         line = self._magically_decode_utf8(line_bytes)
-        print("-->", line)
+        logger.debug("--> %s", line)
         message = parse_message(line)
         return message
 
@@ -136,7 +140,7 @@ class MessageConnection:
 
     def send_message(self, message):
         line = format_message(message)
-        print("<--", line)
+        logger.debug("<-- %s", line)
         line += "\r\n"
         line_bytes = line.encode("utf-8")
         self._socket.sendall(line_bytes)
@@ -159,6 +163,7 @@ def run_client(host, port, nick, realname, channels):
 
 
 def main():
+    logging.basicConfig(level=logging.DEBUG)
     parser = argparse.ArgumentParser()
     parser.add_argument("host")
     parser.add_argument("port", type=int)
