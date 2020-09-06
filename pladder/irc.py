@@ -166,14 +166,21 @@ def run_client(config):
 
 
 def main():
-    logging.basicConfig(level=logging.DEBUG)
     parser = argparse.ArgumentParser()
+    parser.add_argument("--systemd", action="store_true")
     parser.add_argument("host")
     parser.add_argument("port", type=int)
     parser.add_argument("nick")
     parser.add_argument("realname")
     parser.add_argument("channels", nargs="*")
     args = parser.parse_args()
+    if args.systemd:
+        from systemd.journal import JournalHandler
+        root_logger = logging.getLogger()
+        root_logger.setLevel(logging.DEBUG)
+        root_logger.addHandler(JournalHandler(SYSLOG_IDENTIFIER="pladder-irc"))
+    else:
+        logging.basicConfig(level=logging.DEBUG)
     config = Config(args.host, args.port, args.nick, args.realname, args.channels)
     run_client(config)
 
