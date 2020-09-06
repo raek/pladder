@@ -158,7 +158,7 @@ def run_client(host, port, nick, realname, channels):
                 conn.send("PONG", *message.params)
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("host")
     parser.add_argument("port", type=int)
@@ -167,3 +167,7 @@ if __name__ == "__main__":
     parser.add_argument("channels", nargs="*")
     args = parser.parse_args()
     run_client(args.host, args.port, args.nick, args.realname, args.channels)
+
+
+if __name__ == "__main__":
+    main()
