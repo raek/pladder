@@ -150,9 +150,15 @@ class MessageConnection:
 
 
 Config = collections.namedtuple("Config", "host, port, nick, realname, channels")
+class Hooks:
+    def on_ready(self):
+        pass
+
+    def on_ping(self):
+        pass
 
 
-def run_client(config):
+def run_client(config, hooks):
     logger.info("Connecting to {host}:{port}".format(**config._asdict()))
     with MessageConnection(config.host, config.port) as conn:
         logger.info("Using nick \"{nick}\" and realname \"{realname}\"".format(**config._asdict()))
@@ -166,8 +172,10 @@ def run_client(config):
                 logger.info("Joining channels: {}".format(", ".join(config.channels)))
                 for channel in config.channels:
                     conn.send("JOIN", channel)
+                hooks.on_ready()
             elif message.command == "PING":
                 conn.send("PONG", *message.params)
+                hooks.on_ping()
             elif message.command == "JOIN":
                 if message.sender.nick == config.nick:
                     channel = message.params[0]
@@ -188,13 +196,25 @@ def main():
     args = parser.parse_args()
     if args.systemd:
         from systemd.journal import JournalHandler
+        from systemd.daemon import notify
+
         root_logger = logging.getLogger()
         root_logger.setLevel(logging.DEBUG)
         root_logger.addHandler(JournalHandler(SYSLOG_IDENTIFIER="pladder-irc"))
+
+        class SystemdHooks(Hooks):
+            def on_ready(self):
+                notify("READY=1")
+
+            def on_ping(self):
+                notify("WATCHDOG=1")
+
+        hooks = SystemdHooks()
     else:
         logging.basicConfig(level=logging.DEBUG)
+        hooks = Hooks()
     config = Config(args.host, args.port, args.nick, args.realname, args.channels)
-    run_client(config)
+    run_client(config, hooks)
 
 
 if __name__ == "__main__":
