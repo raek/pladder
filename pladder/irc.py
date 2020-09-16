@@ -150,6 +150,8 @@ class MessageConnection:
 
 
 Config = collections.namedtuple("Config", "host, port, nick, realname, channels")
+
+
 class Hooks:
     def on_ready(self):
         pass
@@ -157,11 +159,17 @@ class Hooks:
     def on_ping(self):
         pass
 
+    def on_status(self, s):
+        pass
+
 
 def run_client(config, hooks):
-    logger.info("Connecting to {host}:{port}".format(**config._asdict()))
+    def update_status(s):
+        logger.info(s)
+        hooks.on_status(s)
+    update_status("Connecting to {host}:{port}".format(**config._asdict()))
     with MessageConnection(config.host, config.port) as conn:
-        logger.info("Using nick \"{nick}\" and realname \"{realname}\"".format(**config._asdict()))
+        update_status("Using nick \"{nick}\" and realname \"{realname}\"".format(**config._asdict()))
         conn.send("NICK", config.nick)
         conn.send("USER", config.nick, "0", "*", config.realname)
         channels_to_join = set(config.channels)
@@ -169,7 +177,7 @@ def run_client(config, hooks):
         while True:
             message = conn.recv_message()
             if message.command == "001":
-                logger.info("Joining channels: {}".format(", ".join(config.channels)))
+                update_status("Joining channels: {}".format(", ".join(config.channels)))
                 for channel in config.channels:
                     conn.send("JOIN", channel)
                 hooks.on_ready()
@@ -182,7 +190,7 @@ def run_client(config, hooks):
                     logger.info("Joined channel: {}".format(channel))
                     if channel in channels_to_join:
                         joined_channels.add(channel)
-                        logger.info("Joined {} of {} channels".format(len(joined_channels), len(channels_to_join)))
+                        update_status("Joined {} of {} channels: {}".format(len(joined_channels), len(channels_to_join), ", ".join(sorted(joined_channels))))
 
 
 def main():
@@ -208,6 +216,9 @@ def main():
 
             def on_ping(self):
                 notify("WATCHDOG=1")
+
+            def on_status(self, status):
+                notify("STATUS=" + status)
 
         hooks = SystemdHooks()
     else:
