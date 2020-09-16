@@ -149,7 +149,7 @@ class MessageConnection:
         self.send_message(make_message(*args))
 
 
-Config = collections.namedtuple("Config", "host, port, nick, realname, channels")
+Config = collections.namedtuple("Config", "host, port, nick, realname, channels, trigger_prefix, reply_prefix")
 
 
 class Hooks:
@@ -160,6 +160,9 @@ class Hooks:
         pass
 
     def on_status(self, s):
+        pass
+
+    def on_trigger(self, sender, text):
         pass
 
 
@@ -191,41 +194,79 @@ def run_client(config, hooks):
                     if channel in channels_to_join:
                         joined_channels.add(channel)
                         update_status("Joined {} of {} channels: {}".format(len(joined_channels), len(channels_to_join), ", ".join(sorted(joined_channels))))
+            elif message.command == "PRIVMSG":
+                target, text = message.params
+                if text.startswith(config.trigger_prefix):
+                    if target[0] in "&#+!":
+                        reply_to = target
+                    else:
+                        reply_to = sender.nick
+                    logger.info("{} -> {} : {}".format(message.sender.nick, target, text))
+                    reply = hooks.on_trigger(message.sender, text[len(config.trigger_prefix):])
+                    if reply is not None:
+                        full_reply = config.reply_prefix + reply
+                        logger.info("-> {} : {}".format(reply_to, full_reply))
+                        conn.send("PRIVMSG", reply_to, full_reply)
+
+
+Mode = collections.namedtuple("Mode", "echo, systemd")
 
 
 def main():
+    config, mode = parse_arguments()
+    if mode.echo:
+        hooks_class = EchoHooks
+    else:
+        hooks_class = Hooks
+    if mode.systemd:
+        hooks_class = set_up_systemd(hooks_class)
+    else:
+        logging.basicConfig(level=logging.DEBUG)
+    hooks = hooks_class()
+    run_client(config, hooks)
+
+
+class EchoHooks(Hooks):
+    def on_trigger(self, sender, text):
+        return text
+
+
+def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("--systemd", action="store_true")
+    parser.add_argument("--echo", action="store_true")
+    parser.add_argument("--trigger-prefix", default="~")
+    parser.add_argument("--reply-prefix", default="> ")
     parser.add_argument("host")
     parser.add_argument("port", type=int)
     parser.add_argument("nick")
     parser.add_argument("realname")
     parser.add_argument("channels", nargs="*")
     args = parser.parse_args()
-    if args.systemd:
-        from systemd.journal import JournalHandler
-        from systemd.daemon import notify
+    config = Config(args.host, args.port, args.nick, args.realname, args.channels, args.trigger_prefix, args.reply_prefix)
+    mode = Mode(args.echo, args.systemd)
+    return config, mode
 
-        root_logger = logging.getLogger()
-        root_logger.setLevel(logging.DEBUG)
-        root_logger.addHandler(JournalHandler(SYSLOG_IDENTIFIER="pladder-irc"))
 
-        class SystemdHooks(Hooks):
-            def on_ready(self):
-                notify("READY=1")
+def set_up_systemd(hooks_base_class):
+    from systemd.journal import JournalHandler
+    from systemd.daemon import notify
 
-            def on_ping(self):
-                notify("WATCHDOG=1")
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.DEBUG)
+    root_logger.addHandler(JournalHandler(SYSLOG_IDENTIFIER="pladder-irc"))
 
-            def on_status(self, status):
-                notify("STATUS=" + status)
+    class SystemdHooks(hooks_base_class):
+        def on_ready(self):
+            notify("READY=1")
 
-        hooks = SystemdHooks()
-    else:
-        logging.basicConfig(level=logging.DEBUG)
-        hooks = Hooks()
-    config = Config(args.host, args.port, args.nick, args.realname, args.channels)
-    run_client(config, hooks)
+        def on_ping(self):
+            notify("WATCHDOG=1")
+
+        def on_status(self, status):
+            notify("STATUS=" + status)
+
+    return SystemdHooks
 
 
 if __name__ == "__main__":
