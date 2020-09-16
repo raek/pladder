@@ -1,17 +1,17 @@
-from dasbus.loop import EventLoop
-from dasbus.connection import SessionMessageBus
+from gi.repository import GLib
+from pydbus import SessionBus
 
 
 def main():
-    loop = EventLoop()
-    bus = SessionMessageBus()
-    bus.publish_object("/se/raek/PladderBot", PladderBot())
-    bus.register_service("se.raek.PladderBot")
+    pladder_bot = PladderBot()
+    bus = SessionBus()
+    bus.publish("se.raek.PladderBot", pladder_bot)
+    loop = GLib.MainLoop()
     loop.run()
 
 
 class PladderBot:
-    __dbus_xml__ = """
+    """
     <node>
       <interface name="se.raek.PladderBot">
         <method name="RunCommand">
