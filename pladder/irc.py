@@ -200,7 +200,7 @@ def run_client(config, hooks):
                     if target[0] in "&#+!":
                         reply_to = target
                     else:
-                        reply_to = sender.nick
+                        reply_to = message.sender.nick
                     logger.info("{} -> {} : {}".format(message.sender.nick, target, text))
                     reply = hooks.on_trigger(message.sender, text[len(config.trigger_prefix):])
                     if reply is not None:
