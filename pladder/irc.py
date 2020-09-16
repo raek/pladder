@@ -209,32 +209,26 @@ def run_client(config, hooks):
                         conn.send("PRIVMSG", reply_to, full_reply)
 
 
-Mode = collections.namedtuple("Mode", "echo, systemd")
+Mode = collections.namedtuple("Mode", "systemd, dbus")
 
 
 def main():
+    hooks_class = Hooks
     config, mode = parse_arguments()
-    if mode.echo:
-        hooks_class = EchoHooks
-    else:
-        hooks_class = Hooks
     if mode.systemd:
         hooks_class = set_up_systemd(hooks_class)
     else:
         logging.basicConfig(level=logging.DEBUG)
+    if mode.dbus:
+        hooks_class = set_up_dbus(hooks_class)
     hooks = hooks_class()
     run_client(config, hooks)
-
-
-class EchoHooks(Hooks):
-    def on_trigger(self, sender, text):
-        return text
 
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("--systemd", action="store_true")
-    parser.add_argument("--echo", action="store_true")
+    parser.add_argument("--dbus", action="store_true")
     parser.add_argument("--trigger-prefix", default="~")
     parser.add_argument("--reply-prefix", default="> ")
     parser.add_argument("host")
@@ -244,7 +238,7 @@ def parse_arguments():
     parser.add_argument("channels", nargs="*")
     args = parser.parse_args()
     config = Config(args.host, args.port, args.nick, args.realname, args.channels, args.trigger_prefix, args.reply_prefix)
-    mode = Mode(args.echo, args.systemd)
+    mode = Mode(args.systemd, args.dbus)
     return config, mode
 
 
@@ -267,6 +261,19 @@ def set_up_systemd(hooks_base_class):
             notify("STATUS=" + status)
 
     return SystemdHooks
+
+
+def set_up_dbus(hooks_base_class):
+    from pydbus import SessionBus
+
+    bus = SessionBus()
+    bot = bus.get("se.raek.PladderBot")
+
+    class DbusHooks(hooks_base_class):
+        def on_trigger(self, sender, text):
+            return bot.RunCommand(text)
+
+    return DbusHooks
 
 
 if __name__ == "__main__":
