@@ -17,6 +17,7 @@ setuptools.setup(
     entry_points={
         "console_scripts": [
             "pladder-irc = pladder.irc:main",
+            "pladder-bot = pladder.bot:main",
         ],
     },
 )

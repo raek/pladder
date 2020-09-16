@@ -1,0 +1,11 @@
+[Unit]
+Description=Pladder Bot Core
+
+[Service]
+Type=dbus
+BusName=se.raek.PladderBot
+ExecStart=/usr/bin/python3 -u -m pladder.bot
+Restart=on-failure
+
+[Install]
+WantedBy=default.target
