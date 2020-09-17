@@ -156,7 +156,7 @@ class MessageConnection:
         self.send_message(make_message(*args))
 
 
-Config = collections.namedtuple("Config", "host, port, nick, realname, auth, channels, trigger_prefix, reply_prefix")
+Config = collections.namedtuple("Config", "host, port, nick, realname, auth, user_mode, channels, trigger_prefix, reply_prefix")
 
 
 class Hooks:
@@ -189,6 +189,8 @@ def run_client(config, hooks):
             if message.command == "001":
                 if config.auth:
                     conn.send("AUTH", config.nick, config.auth)
+                if config.user_mode:
+                    conn.send("MODE", config.nick, config.user_mode)
                 update_status("Joining channels: {}".format(", ".join(config.channels)))
                 for channel in config.channels:
                     conn.send("JOIN", channel)
@@ -243,6 +245,7 @@ def read_config(config_name):
 CONFIG_DEFAULTS = {
     "port": 6667,
     "auth": None,
+    "user_mode": None,
     "trigger_prefix": "~",
     "reply_prefix": "> ",
 }
