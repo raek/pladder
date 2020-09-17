@@ -1,9 +1,11 @@
 import argparse
 import collections
 import io
+import json
 import logging
 import re
 import socket
+import os
 
 import ftfy
 
@@ -209,37 +211,42 @@ def run_client(config, hooks):
                         conn.send("PRIVMSG", reply_to, full_reply)
 
 
-Mode = collections.namedtuple("Mode", "systemd, dbus")
-
-
 def main():
     hooks_class = Hooks
-    config, mode = parse_arguments()
-    if mode.systemd:
+    use_systemd, use_dbus, config_name = parse_arguments()
+    if use_systemd:
         hooks_class = set_up_systemd(hooks_class)
     else:
         logging.basicConfig(level=logging.DEBUG)
-    if mode.dbus:
+    if use_dbus:
         hooks_class = set_up_dbus(hooks_class)
     hooks = hooks_class()
+    config = read_config(config_name)
     run_client(config, hooks)
+
+
+def read_config(config_name):
+    config_home = os.environ.get("XDG_CONFIG_HOME", os.path.join(os.environ["HOME"], ".config"))
+    config_path = os.path.join(config_home, "pladder-irc", config_name + ".json")
+    with open(config_path, "rt") as f:
+        config_data = json.load(f)
+        return Config(**{**CONFIG_DEFAULTS, **config_data})
+
+
+CONFIG_DEFAULTS = {
+    "port": 6667,
+    "trigger_prefix": "~",
+    "reply_prefix": "> ",
+}
 
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("--systemd", action="store_true")
     parser.add_argument("--dbus", action="store_true")
-    parser.add_argument("--trigger-prefix", default="~")
-    parser.add_argument("--reply-prefix", default="> ")
-    parser.add_argument("host")
-    parser.add_argument("port", type=int)
-    parser.add_argument("nick")
-    parser.add_argument("realname")
-    parser.add_argument("channels", nargs="*")
+    parser.add_argument("--config", required=True)
     args = parser.parse_args()
-    config = Config(args.host, args.port, args.nick, args.realname, args.channels, args.trigger_prefix, args.reply_prefix)
-    mode = Mode(args.systemd, args.dbus)
-    return config, mode
+    return args.systemd, args.dbus, args.config
 
 
 def set_up_systemd(hooks_base_class):

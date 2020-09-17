@@ -1,16 +1,16 @@
 [Unit]
-Description=Pladder Bot IRC Connector
+Description=Pladder Bot IRC Connector for %I
 Wants=pladder-bot.service
 
 [Service]
 Type=notify
-ExecStart=/usr/bin/python3 -u -m pladder.irc --systemd --dbus localhost 6667 pladder "Pladder IRC Bot" #bot
+ExecStart=/usr/bin/python3 -u -m pladder.irc --systemd --dbus --config=%I
 Restart=on-failure
 RestartSec=15min
 StartLimitInterval=4h
 StartLimitBurst=16
 WatchdogSec=30min
-SyslogIdentifier=pladder-irc
+SyslogIdentifier=pladder-irc-%I
 
 [Install]
 WantedBy=default.target
