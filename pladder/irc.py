@@ -95,7 +95,12 @@ def format_message(msg):
     if msg.params:
         for param in msg.params[:-1]:
             result += " " + param
-        result += " :" + msg.params[-1]
+        last_param = msg.params[-1]
+        if last_param.startswith(":") or " " in last_param:
+            separator = " :"
+        else:
+            separator = " "
+        result += separator + last_param
     return result
 
 
