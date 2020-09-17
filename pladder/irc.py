@@ -214,7 +214,7 @@ def run_client(config, hooks):
                         reply_to = message.sender.nick
                     logger.info("{} -> {} : {}".format(message.sender.nick, target, text))
                     reply = hooks.on_trigger(message.sender, text[len(config.trigger_prefix):])
-                    if reply is not None:
+                    if reply:
                         full_reply = config.reply_prefix + reply
                         logger.info("-> {} : {}".format(reply_to, full_reply))
                         conn.send("PRIVMSG", reply_to, full_reply)
@@ -282,6 +282,7 @@ def set_up_systemd(hooks_base_class):
 
 
 def set_up_dbus(hooks_base_class):
+    from gi.repository import GLib
     from pydbus import SessionBus
 
     bus = SessionBus()
@@ -289,7 +290,11 @@ def set_up_dbus(hooks_base_class):
 
     class DbusHooks(hooks_base_class):
         def on_trigger(self, sender, text):
-            return bot.RunCommand(text)
+            try:
+                return bot.RunCommand(text)
+            except GLib.Error as e:
+                logger.error(str(e))
+                return "Oops! Error logged."
 
     return DbusHooks
 
