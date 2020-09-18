@@ -1,12 +1,12 @@
 import os
 
-from gi.repository import GLib
-from pydbus import SessionBus
-
 from pladder.snusk import SnuskDb
 
 
 def main():
+    from gi.repository import GLib
+    from pydbus import SessionBus
+
     pladder_bot = PladderBot()
     bus = SessionBus()
     bus.publish("se.raek.PladderBot", pladder_bot)
