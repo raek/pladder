@@ -65,10 +65,9 @@ class SnuskDb:
         return True
 
     def add_preposition(self, prep):
-        new_prep = prep
-        if new_prep in self._prep_entries:
+        if prep in self._prep_entries:
             return False
-        self._prep_entries.append(new_prep)
+        self._prep_entries.append(prep)
         self._save()
         return True
 
