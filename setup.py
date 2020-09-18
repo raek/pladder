@@ -16,8 +16,9 @@ setuptools.setup(
     python_requires='>=3.6',
     entry_points={
         "console_scripts": [
-            "pladder-irc = pladder.irc:main",
             "pladder-bot = pladder.bot:main",
+            "pladder-cli = pladder.cli:main",
+            "pladder-irc = pladder.irc:main",
         ],
     },
 )
