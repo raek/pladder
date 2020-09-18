@@ -52,8 +52,8 @@ class PladderBot:
         elif command == "add-preposition":
             arguments = argument.split()
             if len(arguments) == 1:
-                if self.snusk_db.add_preposition(arguments):
-                    return f'Här borde man ha lagt till en exempelutskrift som är fin... men du får nöja er med att veta att "{arguments}" lades till i databasen.'
+                if self.snusk_db.add_preposition(arguments[0]):
+                    return f'Här borde man ha lagt till en exempelutskrift som är fin... men du får nöja er med att veta att "{arguments[0]}" lades till i databasen.'
             else:
                 return "Men ditt inavlade mähä! En preposition, EN!"
 
