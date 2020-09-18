@@ -29,7 +29,8 @@ class PladderBot:
     def __init__(self):
         state_home = os.environ.get("XDG_CONFIG_HOME", os.path.join(os.environ["HOME"], ".config"))
         snusk_db_path = os.path.join(state_home, "pladder-bot", "snusk_db.json")
-        self.snusk_db = SnuskDb(snusk_db_path)
+        prepositions_db_path = os.path.join(state_home, "pladder-bot", "prepositions_db.json")
+        self.snusk_db = SnuskDb(snusk_db_path, prepositions_db_path)
 
     def RunCommand(self, text):
         parts = text.strip().split(maxsplit=1)
