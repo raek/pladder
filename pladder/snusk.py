@@ -2,15 +2,24 @@ import json
 import random
 
 
+
 class SnuskDb:
-    def __init__(self, db_file_path):
+    def __init__(self, db_file_path, prep_db_file_path=None):
         self._db_file_path = db_file_path
         with open(self._db_file_path, "rt", encoding="utf8") as f:
             self._entries = json.load(f)
 
+        self._prep_db_file_path = prep_db_file_path
+        with open(self._prep_db_file_path, "rt", encoding="utf8") as f:
+            self._prep_entries = json.load(f)
+        
+
     def _save(self):
         with open(self._db_file_path, "wt", encoding="utf8") as f:
             json.dump(self._entries, f, ensure_ascii=False, indent=True, sort_keys=True)
+
+        with open(self._prep_db_file_path, "wt", encoding="utf8") as f:
+            json.dump(self._prep_entries, f, ensure_ascii=False, indent=True, sort_keys=True)
 
     def snusk(self):
         return self._format_quad(self._random_quad())
@@ -36,7 +45,10 @@ class SnuskDb:
         return self._format_quad(quad)
 
     def _format_quad(self, quad):
-        return "{}{} i {}{}".format(*quad)
+            prep = random.choice(self._prep_entries)
+            quad.insert(2, prep) #Insert the preposition into the quad which technically makes it a pent, but who keeps score? 
+            return "{}{} {} {}{}".format(*quad)
+            
 
     def _random_quad(self):
         return [self._random_entry()[i % 2] for i in range(4)]
@@ -52,10 +64,18 @@ class SnuskDb:
         self._save()
         return True
 
+    def add_preposition(self, prep):
+        new_prep = prep
+        if new_prep in self._prep_entries:
+            return False
+        self._prep_entries.append(new_prep)
+        self._save()
+        return True
+
 
 if __name__ == "__main__":
-    db = SnuskDb("snusk_db.json")
-    #db.add_snusk("kraft", "kraften")
+    db = SnuskDb("snusk_db.json", "prepositions_db.json")
+    #db = SnuskDb("snusk_db.json", "prepositions_db.json")
     print(db.snusk())
     print(db.directed_snusk("raek"))
     print(db.example_snusk("don", "donet"))
