@@ -51,11 +51,10 @@ class PladderBot:
                     return "Hörrudu! Den där finns ju redan!"
         elif command == "add-preposition":
             arguments = argument.split()
-            if len(arguments) == 1:
-                if self.snusk_db.add_preposition(arguments[0]):
-                    return f'Här borde man ha lagt till en exempelutskrift som är fin... men du får nöja dig med att veta att "{arguments[0]}" lades till i databasen.'
+            if self.snusk_db.add_preposition(arguments[0]):
+                return f'Här borde man ha lagt till en exempelutskrift som är fin... men du får nöja dig med att veta att "{arguments[0]}" lades till i databasen.'
             else:
-                return "Men ditt inavlade mähä! En preposition, EN!"
+                return "Menååååh! Den där finns redan i databasen... Imbecill!"
 
         return ""
 
