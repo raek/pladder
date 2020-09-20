@@ -18,7 +18,7 @@ setuptools.setup(
         "console_scripts": [
             "pladder-bot = pladder.bot:main",
             "pladder-cli = pladder.cli:main",
-            "pladder-irc = pladder.irc:main",
+            "pladder-irc = pladder.irc.main:main",
         ],
     },
 )
