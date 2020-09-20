@@ -43,6 +43,11 @@ class SnuskDb:
             parts[3] = a
         return self._format_parts(parts)
 
+    def example_snusk_with_prep(self, prep):
+        parts = self._random_parts()
+        parts[2] = prep
+        return self._format_parts(parts)
+
     def _format_parts(self, parts):
         return "{}{} {} {}{}".format(*parts)
 
