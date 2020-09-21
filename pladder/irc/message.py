@@ -1,8 +1,7 @@
+import codecs
 from collections import namedtuple
 import logging
 import socket
-
-import ftfy
 
 
 logger = logging.getLogger("pladder.irc")
@@ -119,7 +118,7 @@ class MessageConnection:
 
     def recv_message(self):
         line_bytes = self._recv_line()
-        line = self._magically_decode_utf8(line_bytes)
+        line = decode_utf8_with_fallback(line_bytes)
         logger.debug("--> %s", line)
         message = parse_message(line)
         return message
@@ -137,9 +136,6 @@ class MessageConnection:
                 raise Exception("Server closed connection")
             self._recv_buffer += new_bytes
 
-    def _magically_decode_utf8(self, bytestring):
-        return ftfy.fix_text(bytestring.decode("cp1252"))
-
     def send_message(self, message):
         line = format_message(message)
         logger.debug("<-- %s", line)
@@ -149,3 +145,17 @@ class MessageConnection:
 
     def send(self, *args):
         self.send_message(make_message(*args))
+
+
+def decode_utf8_with_fallback(bytestring):
+    return bytestring.decode("utf8", errors="fallback_to_cp1252")
+
+
+def _fallback_to(encoding_name):
+    def error_handler(err):
+        replacement = err.object[err.start:err.end].decode(encoding_name)
+        return replacement, err.end
+    return error_handler
+
+
+codecs.register_error("fallback_to_cp1252", _fallback_to("cp1252"))

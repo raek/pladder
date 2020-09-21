@@ -9,7 +9,6 @@ contributors.
 Install Python 3 and dependency libaries:
 
     sudo apt install python3 pytgon3-pip python3-pydbus
-    sudo pip3 install ftfy
 
 Then install this package in "development mode":
 
