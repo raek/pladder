@@ -55,7 +55,7 @@ class PladderBot:
                 if self.snusk_db.add_preposition(arguments[0]):
                     return self.snusk_db.example_snusk_with_prep(arguments[0])
                 else:
-                    return f'Här borde man ha lagt till en exempelutskrift som är fin... men du får nöja dig med att veta att "{arguments[0]}" lades till i databasen.'
+                    return "Hörrudu! Den där finns ju redan!"
             else:
                 return "Men ditt inavlade mähä! En preposition, EN!"
 
