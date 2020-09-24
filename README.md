@@ -8,7 +8,7 @@ contributors.
 
 Install Python 3 and dependency libaries:
 
-    sudo apt install python3 pytgon3-pip python3-pydbus
+    sudo apt install python3 python3-systemd python3-pydbus
 
 Then install this package in "development mode":
 
@@ -127,7 +127,7 @@ command (which also display its most recent log lines):
 
 You can display the full log like this (useful for errors):
 
-    journalctl --user -e -u pladder-bot.service
+    journalctl --user-unit pladder-bot.service -e
 
 If you change the bot code, you can restart the service like this:
 
@@ -154,7 +154,7 @@ start a service for it like this (the `--now` argument is like running
 
 You can watch the log in "follow mode" to see how lines appear:
 
-    journalctl --user -e -f -u pladder-irc@foo.service
+    journalctl --user-unit pladder-irc@foo.service -f
 
 Note that the bot service and the IRC client can be started and
 stopped independently of each other. The DBus connection between them
