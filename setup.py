@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name="pladder",
-    version="0.0.1",
+    version="1.0.0",
     author="Rasmus Bondesson",
     author_email="raek@raek.se",
     description="An IRC bot",
