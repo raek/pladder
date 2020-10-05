@@ -7,7 +7,10 @@ def main():
     from gi.repository import GLib
     from pydbus import SessionBus
 
-    pladder_bot = PladderBot()
+    state_home = os.environ.get("XDG_CONFIG_HOME", os.path.join(os.environ["HOME"], ".config"))
+    state_dir = os.path.join(state_home, "pladder-bot")
+
+    pladder_bot = PladderBot(state_dir)
     bus = SessionBus()
     bus.publish("se.raek.PladderBot", pladder_bot)
     loop = GLib.MainLoop()
@@ -26,11 +29,9 @@ class PladderBot:
     </node>
     """
 
-    def __init__(self):
-        state_home = os.environ.get("XDG_CONFIG_HOME", os.path.join(os.environ["HOME"], ".config"))
-        snusk_db_path = os.path.join(state_home, "pladder-bot", "snusk_db.json")
-        prepositions_db_path = os.path.join(state_home, "pladder-bot", "prepositions_db.json")
-        self.snusk_db = SnuskDb(snusk_db_path, prepositions_db_path)
+    def __init__(self, state_dir):
+        snusk_db_path = os.path.join(state_dir, "snusk.db")
+        self.snusk_db = SnuskDb(snusk_db_path)
 
     def RunCommand(self, text):
         parts = text.strip().split(maxsplit=1)
@@ -42,23 +43,27 @@ class PladderBot:
             return self.snusk_db.snusk()
         elif command == "snuska" and argument:
             return self.snusk_db.directed_snusk(argument)
-        elif command == "add-snusk":
+        elif command in ["add-snusk", "add-noun"]:
             arguments = argument.split()
             if len(arguments) == 2:
-                if self.snusk_db.add_snusk(*arguments):
+                if self.snusk_db.add_noun(*arguments):
                     return self.snusk_db.example_snusk(*arguments)
                 else:
                     return "Hörrudu! Den där finns ju redan!"
         elif command == "add-preposition":
             arguments = argument.split()
             if len(arguments) == 1:
-                if self.snusk_db.add_preposition(arguments[0]):
+                if self.snusk_db.add_inbetweeny(arguments[0]):
                     return self.snusk_db.example_snusk_with_prep(arguments[0])
                 else:
                     return "Hörrudu! Den där finns ju redan!"
             else:
                 return "Men ditt inavlade mähä! En preposition, EN!"
-
+        elif command == "add-inbetweeny":
+            if self.snusk_db.add_inbetweeny(argument):
+                return self.snusk_db.example_snusk_with_inbetweeny(argument)
+            else:
+                return "Hörrudu! Den där finns ju redan!"
         return ""
 
 

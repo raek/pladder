@@ -1,24 +1,36 @@
-import json
+from contextlib import ExitStack
 import random
+import sqlite3
 
 
+class SnuskDb(ExitStack):
+    def __init__(self, db_file_path):
+        super().__init__()
+        self._db = sqlite3.connect(db_file_path)
+        self.callback(self._db.close)
+        self._setup()
 
-class SnuskDb:
-    def __init__(self, db_file_path, prep_db_file_path=None):
-        self._db_file_path = db_file_path
-        with open(self._db_file_path, "rt", encoding="utf8") as f:
-            self._entries = json.load(f)
-
-        self._prep_db_file_path = prep_db_file_path
-        with open(self._prep_db_file_path, "rt", encoding="utf8") as f:
-            self._prep_entries = json.load(f)
-
-    def _save(self):
-        with open(self._db_file_path, "wt", encoding="utf8") as f:
-            json.dump(self._entries, f, ensure_ascii=False, indent=True, sort_keys=True)
-
-        with open(self._prep_db_file_path, "wt", encoding="utf8") as f:
-            json.dump(self._prep_entries, f, ensure_ascii=False, indent=True, sort_keys=True)
+    def _setup(self):
+        with self._db:
+            c = self._db.cursor()
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS nouns (
+                    prefix TEXT,
+                    suffix TEXT,
+                    UNIQUE(prefix, suffix)
+                );
+            """)
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS inbetweenies (
+                    inbetweeny TEXT UNIQUE
+                );
+            """)
+            c.execute("SELECT COUNT(*) = 0 FROM nouns;")
+            if c.fetchone()[0]:
+                c.execute("INSERT INTO nouns VALUES ('frukt', 'frukten');")
+            c.execute("SELECT COUNT(*) = 0 FROM inbetweenies;")
+            if c.fetchone()[0]:
+                c.execute("INSERT INTO inbetweenies VALUES ('i');")
 
     def snusk(self):
         return self._format_parts(self._random_parts())
@@ -43,52 +55,71 @@ class SnuskDb:
             parts[3] = a
         return self._format_parts(parts)
 
-    def example_snusk_with_prep(self, prep):
+    def example_snusk_with_inbetweeny(self, inbetweeny):
         parts = self._random_parts()
-        parts[2] = prep
+        parts[2] = inbetweeny
         return self._format_parts(parts)
 
     def _format_parts(self, parts):
         return "{}{} {} {}{}".format(*parts)
 
     def _random_parts(self):
-        return [
-            self._random_a_entry(),
-            self._random_b_entry(),
-            self._random_prep(),
-            self._random_a_entry(),
-            self._random_b_entry(),
-        ]
+        with self._db:
+            c = self._db.cursor()
+            c.execute("""
+                SELECT
+                    a.prefix, b.suffix, c.inbetweeny, d.prefix, e.suffix
+                FROM
+                    nouns a, nouns b, inbetweenies c, nouns d, nouns e
+                WHERE
+                        a.rowid IN (SELECT rowid FROM nouns        ORDER BY RANDOM() LIMIT 1)
+                    AND b.rowid IN (SELECT rowid FROM nouns        ORDER BY RANDOM() LIMIT 1)
+                    AND c.rowid IN (SELECT rowid FROM inbetweenies ORDER BY RANDOM() LIMIT 1)
+                    AND d.rowid IN (SELECT rowid FROM nouns        ORDER BY RANDOM() LIMIT 1)
+                    AND e.rowid IN (SELECT rowid FROM nouns        ORDER BY RANDOM() LIMIT 1);
+            """)
+            return list(c.fetchone())
 
-    def _random_a_entry(self):
-        return random.choice(self._entries)[0]
+    def add_noun(self, prefix, suffix):
+        with self._db:
+            c = self._db.cursor()
+            try:
+                c.execute("INSERT INTO nouns VALUES (?, ?);", (prefix, suffix))
+                return True
+            except sqlite3.IntegrityError:
+                return False
 
-    def _random_b_entry(self):
-        return random.choice(self._entries)[1]
-
-    def _random_prep(self):
-        return random.choice(self._prep_entries)
-
-    def add_snusk(self, a, b):
-        new_entry = [a, b]
-        if new_entry in self._entries:
-            return False
-        self._entries.append(new_entry)
-        self._save()
-        return True
-
-    def add_preposition(self, prep):
-        if prep in self._prep_entries:
-            return False
-        self._prep_entries.append(prep)
-        self._save()
-        return True
+    def add_inbetweeny(self, inbetweeny):
+        with self._db:
+            c = self._db.cursor()
+            try:
+                c.execute("INSERT INTO inbetweenies VALUES (?);", (inbetweeny,))
+                return True
+            except sqlite3.IntegrityError:
+                return False
 
 
 if __name__ == "__main__":
-    db = SnuskDb("snusk_db.json", "prepositions_db.json")
-    #db = SnuskDb("snusk_db.json", "prepositions_db.json")
-    print(db.snusk())
-    print(db.directed_snusk("raek"))
-    print(db.example_snusk("don", "donet"))
-    db._save()
+    import argparse
+    import json
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("db_file_path")
+    parser.add_argument("--import-noun-json")
+    parser.add_argument("--import-inbetweeny-json")
+    args = parser.parse_args()
+
+    with SnuskDb(args.db_file_path) as db:
+        if args.import_noun_json:
+            with open(args.import_noun_json, "rt") as f:
+                nouns = json.load(f)
+            for prefix, suffix in nouns:
+                db.add_noun(prefix, suffix)
+        if args.import_inbetweeny_json:
+            with open(args.import_inbetweeny_json, "rt") as f:
+                inbetweenies = json.load(f)
+            for inbetweeny in inbetweenies:
+                db.add_inbetweeny(inbetweeny)
+        print(db.snusk())
+        print(db.directed_snusk("raek"))
+        print(db.example_snusk("don", "donet"))
