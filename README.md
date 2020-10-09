@@ -12,7 +12,7 @@ Install Python 3 and dependency libaries:
 
 Then install this package in "development mode":
 
-    pip3 --user --editable .
+    pip3 install --user --editable .
 
 This makes pladder commands available from the PATH. The commands
 "point into" this source directory, so source code changes are
