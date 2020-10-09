@@ -4,7 +4,24 @@ This is a personal IRC bot project written by Rasmus and other
 contributors.
 
 
-# Installation
+# Quick 'n' Dirty Test Setup
+
+This is a bare minimum setup for when you only want to develop the bot
+logic and don't care about running an actual IRC client.
+
+Make sure you have Python 3 installed:
+
+    sudo apt install python3
+
+To run the bot, run this command in the repository root:
+
+    python3 -m pladder.cli --state-dir test_state/ --command "type command here"
+
+This will store bot state in the test_state directory. (It will be
+initialized the first time.)
+
+
+# Development Setup
 
 Install Python 3 and dependency libaries:
 
