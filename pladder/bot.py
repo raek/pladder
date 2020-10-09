@@ -30,6 +30,7 @@ class PladderBot:
     """
 
     def __init__(self, state_dir):
+        os.makedirs(state_dir, exist_ok=True)
         snusk_db_path = os.path.join(state_dir, "snusk.db")
         self.snusk_db = SnuskDb(snusk_db_path)
 
