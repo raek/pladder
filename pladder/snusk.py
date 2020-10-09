@@ -45,6 +45,10 @@ class SnuskDb(ExitStack):
         parts[i] = part
         return self._format_parts(parts)
 
+    def taste(self):
+        parts = self._random_parts()
+        return "{}/{}".format(parts[0].upper(), parts[3].upper())
+
     def example_snusk(self, a, b):
         parts = self._random_parts()
         if random.choice([False, True]):
