@@ -1,6 +1,7 @@
 import os
 
 from pladder.snusk import SnuskDb
+from pladder.misc import MiscCmds
 
 
 def main():
@@ -30,9 +31,9 @@ class PladderBot:
     """
 
     def __init__(self, state_dir):
-        os.makedirs(state_dir, exist_ok=True)
         snusk_db_path = os.path.join(state_dir, "snusk.db")
         self.snusk_db = SnuskDb(snusk_db_path)
+        self.misc_cmds = MiscCmds()
 
     def RunCommand(self, text):
         parts = text.strip().split(maxsplit=1)
@@ -44,8 +45,6 @@ class PladderBot:
             return self.snusk_db.snusk()
         elif command == "snuska" and argument:
             return self.snusk_db.directed_snusk(argument)
-        elif command == "smak" and not argument:
-            return self.snusk_db.taste()
         elif command in ["add-snusk", "add-noun"]:
             arguments = argument.split()
             if len(arguments) == 2:
@@ -67,6 +66,8 @@ class PladderBot:
                 return self.snusk_db.example_snusk_with_inbetweeny(argument)
             else:
                 return "Hörrudu! Den där finns ju redan!"
+        elif command == "kloofify" and argument:
+            return self.misc_cmds.kloofify(argument)
         return ""
 
 
