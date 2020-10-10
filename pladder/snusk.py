@@ -71,16 +71,19 @@ class SnuskDb(ExitStack):
         with self._db:
             c = self._db.cursor()
             c.execute("""
+                WITH
+                    random_noun       AS (SELECT rowid FROM nouns        ORDER BY RANDOM() LIMIT 1),
+                    random_inbetweeny AS (SELECT rowid FROM inbetweenies ORDER BY RANDOM() LIMIT 1)
                 SELECT
                     a.prefix, b.suffix, c.inbetweeny, d.prefix, e.suffix
                 FROM
                     nouns a, nouns b, inbetweenies c, nouns d, nouns e
                 WHERE
-                        a.rowid IN (SELECT rowid FROM nouns        ORDER BY RANDOM() LIMIT 1)
-                    AND b.rowid IN (SELECT rowid FROM nouns        ORDER BY RANDOM() LIMIT 1)
-                    AND c.rowid IN (SELECT rowid FROM inbetweenies ORDER BY RANDOM() LIMIT 1)
-                    AND d.rowid IN (SELECT rowid FROM nouns        ORDER BY RANDOM() LIMIT 1)
-                    AND e.rowid IN (SELECT rowid FROM nouns        ORDER BY RANDOM() LIMIT 1);
+                        a.rowid IN random_noun
+                    AND b.rowid IN random_noun
+                    AND c.rowid IN random_inbetweeny
+                    AND d.rowid IN random_noun
+                    AND e.rowid IN random_noun;
             """)
             return list(c.fetchone())
 
