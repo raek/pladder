@@ -1,6 +1,6 @@
 import os
 
-from pladder.snusk import SnuskDb
+from pladder.snusk import SnuskDb, SKIP_SCORE
 from pladder.misc import MiscCmds
 
 
@@ -40,6 +40,8 @@ class PladderBot:
         "add-preposition <word>",
         "add-inbetweeny <words...>",
         "find-noun <word>",
+        "upvote-noun <prefix> <suffix>",
+        "downvote-noun <prefix> <suffix>",
         "kloofify <words...>",
         "comp <unary-command> <command-invocation...>",
     ]
@@ -87,6 +89,24 @@ class PladderBot:
         elif command == "find-noun":
             nouns = self.snusk_db.find_noun(argument)
             return "{} found:   ".format(len(nouns)) + ",   ".join(prefix + " " + suffix for prefix, suffix in nouns)
+        elif command == "upvote-noun":
+            arguments = argument.split()
+            if len(arguments) == 2:
+                score = self.snusk_db.add_noun_score(arguments[0], arguments[1], 1)
+                if score is None:
+                    return "Noun not found"
+                else:
+                    description = "out" if score <= SKIP_SCORE else "in"
+                    return "New score is {} ({})".format(score, description)
+        elif command == "downvote-noun":
+            arguments = argument.split()
+            if len(arguments) == 2:
+                score = self.snusk_db.add_noun_score(arguments[0], arguments[1], -1)
+                if score is None:
+                    return "Noun not found"
+                else:
+                    description = "out" if score <= SKIP_SCORE else "in"
+                    return "New score is {} ({})".format(score, description)
         elif command == "kloofify" and argument:
             return self.misc_cmds.kloofify(argument)
         elif command == "comp" and len(argument.split()) > 1:

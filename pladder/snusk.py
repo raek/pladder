@@ -3,6 +3,10 @@ import random
 import sqlite3
 
 
+# Words with scores lower than or equal to this will not be included in random picks
+SKIP_SCORE = -3
+
+
 class SnuskDb(ExitStack):
     def __init__(self, db_file_path):
         super().__init__()
@@ -13,21 +17,29 @@ class SnuskDb(ExitStack):
     def _setup(self):
         with self._db:
             c = self._db.cursor()
+
+            # Nouns
             c.execute("""
                 CREATE TABLE IF NOT EXISTS nouns (
                     prefix TEXT,
                     suffix TEXT,
+                    score  INTEGER DEFAULT 0,
                     UNIQUE(prefix, suffix)
                 );
             """)
+            c.execute("PRAGMA table_info(nouns);")
+            if len(c.fetchall()) < 3:
+                c.execute("ALTER TABLE nouns ADD COLUMN score INTEGER DEFAULT 0;")
+            c.execute("SELECT COUNT(*) = 0 FROM nouns;")
+            if c.fetchone()[0]:
+                c.execute("INSERT INTO nouns (prefix, suffix) VALUES ('frukt', 'frukten');")
+
+            # Inbetweenies
             c.execute("""
                 CREATE TABLE IF NOT EXISTS inbetweenies (
                     inbetweeny TEXT UNIQUE
                 );
             """)
-            c.execute("SELECT COUNT(*) = 0 FROM nouns;")
-            if c.fetchone()[0]:
-                c.execute("INSERT INTO nouns VALUES ('frukt', 'frukten');")
             c.execute("SELECT COUNT(*) = 0 FROM inbetweenies;")
             if c.fetchone()[0]:
                 c.execute("INSERT INTO inbetweenies VALUES ('i');")
@@ -72,26 +84,34 @@ class SnuskDb(ExitStack):
             c = self._db.cursor()
             c.execute("""
                 WITH
-                    random_noun       AS (SELECT rowid FROM nouns        ORDER BY RANDOM() LIMIT 1),
-                    random_inbetweeny AS (SELECT rowid FROM inbetweenies ORDER BY RANDOM() LIMIT 1)
-                SELECT
-                    a.prefix, b.suffix, c.inbetweeny, d.prefix, e.suffix
-                FROM
-                    nouns a, nouns b, inbetweenies c, nouns d, nouns e
-                WHERE
-                        a.rowid IN random_noun
-                    AND b.rowid IN random_noun
-                    AND c.rowid IN random_inbetweeny
-                    AND d.rowid IN random_noun
-                    AND e.rowid IN random_noun;
-            """)
+                random_noun AS (
+                    SELECT rowid
+                    FROM nouns
+                    WHERE score > :skip_score
+                    ORDER BY RANDOM()
+                    LIMIT 1
+                ),
+                random_inbetweeny AS (
+                    SELECT rowid
+                    FROM inbetweenies
+                    ORDER BY RANDOM()
+                    LIMIT 1
+                )
+                SELECT a.prefix, b.suffix, c.inbetweeny, d.prefix, e.suffix
+                FROM nouns a, nouns b, inbetweenies c, nouns d, nouns e
+                WHERE a.rowid IN random_noun
+                AND b.rowid IN random_noun
+                AND c.rowid IN random_inbetweeny
+                AND d.rowid IN random_noun
+                AND e.rowid IN random_noun;
+            """, {"skip_score": SKIP_SCORE})
             return list(c.fetchone())
 
     def add_noun(self, prefix, suffix):
         with self._db:
             c = self._db.cursor()
             try:
-                c.execute("INSERT INTO nouns VALUES (?, ?);", (prefix, suffix))
+                c.execute("INSERT INTO nouns (prefix, suffix) VALUES (?, ?);", (prefix, suffix))
                 return True
             except sqlite3.IntegrityError:
                 return False
@@ -114,6 +134,22 @@ class SnuskDb(ExitStack):
                 WHERE ? IN (prefix, suffix);
             """, (word,))
             return c.fetchall()
+
+    def add_noun_score(self, prefix, suffix, delta):
+        with self._db:
+            c = self._db.cursor()
+            c.execute("""
+                UPDATE nouns
+                SET score = score + ?
+                WHERE prefix = ? AND suffix = ?;
+            """, (delta, prefix, suffix))
+            c.execute("""
+                SELECT score
+                FROM nouns
+                WHERE prefix = ? AND suffix = ?
+            """, (prefix, suffix))
+            row = c.fetchone()
+            return None if row is None else row[0]
 
 
 if __name__ == "__main__":
