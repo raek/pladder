@@ -8,7 +8,8 @@ def main():
     from gi.repository import GLib
     from pydbus import SessionBus
 
-    state_home = os.environ.get("XDG_CONFIG_HOME", os.path.join(os.environ["HOME"], ".config"))
+    state_home = os.environ.get(
+        "XDG_CONFIG_HOME", os.path.join(os.environ["HOME"], ".config"))
     state_dir = os.path.join(state_home, "pladder-bot")
 
     pladder_bot = PladderBot(state_dir)
@@ -68,6 +69,9 @@ class PladderBot:
                 return "Hörrudu! Den där finns ju redan!"
         elif command == "kloofify" and argument:
             return self.misc_cmds.kloofify(argument)
+        elif command == "comp" and len(argument.split()) > 1:
+            subparts = argument.split(maxsplit=1)
+            return self.RunCommand(subparts[0] + " " + self.RunCommand(subparts[1]))
         return ""
 
 
