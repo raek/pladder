@@ -39,6 +39,7 @@ class PladderBot:
         "add-noun <prefix> <suffix>",
         "add-preposition <word>",
         "add-inbetweeny <words...>",
+        "find-noun <word",
         "kloofify <words...>",
         "comp <unary-command> <command-invocation...>",
     ]
@@ -83,6 +84,9 @@ class PladderBot:
                 return self.snusk_db.example_snusk_with_inbetweeny(argument)
             else:
                 return "Hörrudu! Den där finns ju redan!"
+        elif command == "find-noun":
+            nouns = self.snusk_db.find_noun(argument)
+            return "{} found:   ".format(len(nouns)) + ",   ".join(prefix + " " + suffix for prefix, suffix in nouns)
         elif command == "kloofify" and argument:
             return self.misc_cmds.kloofify(argument)
         elif command == "comp" and len(argument.split()) > 1:

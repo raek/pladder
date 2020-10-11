@@ -105,6 +105,16 @@ class SnuskDb(ExitStack):
             except sqlite3.IntegrityError:
                 return False
 
+    def find_noun(self, word):
+        with self._db:
+            c = self._db.cursor()
+            c.execute("""
+                SELECT prefix, suffix
+                FROM nouns
+                WHERE ? IN (prefix, suffix)
+            """, (word,))
+            return c.fetchall()
+
 
 if __name__ == "__main__":
     import argparse
