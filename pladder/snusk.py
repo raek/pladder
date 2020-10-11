@@ -37,12 +37,16 @@ class SnuskDb(ExitStack):
             # Inbetweenies
             c.execute("""
                 CREATE TABLE IF NOT EXISTS inbetweenies (
-                    inbetweeny TEXT UNIQUE
+                    inbetweeny TEXT UNIQUE,
+                    score      INTEGER DEFAULT 0
                 );
             """)
+            c.execute("PRAGMA table_info(inbetweenies);")
+            if len(c.fetchall()) < 2:
+                c.execute("ALTER TABLE inbetweenies ADD COLUMN score INTEGER DEFAULT 0;")
             c.execute("SELECT COUNT(*) = 0 FROM inbetweenies;")
             if c.fetchone()[0]:
-                c.execute("INSERT INTO inbetweenies VALUES ('i');")
+                c.execute("INSERT INTO inbetweenies (inbetweeny) VALUES ('i');")
 
     def snusk(self):
         return self._format_parts(self._random_parts())
@@ -94,6 +98,7 @@ class SnuskDb(ExitStack):
                 random_inbetweeny AS (
                     SELECT rowid
                     FROM inbetweenies
+                    WHERE score > :skip_score
                     ORDER BY RANDOM()
                     LIMIT 1
                 )
@@ -120,7 +125,7 @@ class SnuskDb(ExitStack):
         with self._db:
             c = self._db.cursor()
             try:
-                c.execute("INSERT INTO inbetweenies VALUES (?);", (inbetweeny,))
+                c.execute("INSERT INTO inbetweenies (inbetweeny) VALUES (?);", (inbetweeny,))
                 return True
             except sqlite3.IntegrityError:
                 return False
@@ -146,8 +151,24 @@ class SnuskDb(ExitStack):
             c.execute("""
                 SELECT score
                 FROM nouns
-                WHERE prefix = ? AND suffix = ?
+                WHERE prefix = ? AND suffix = ?;
             """, (prefix, suffix))
+            row = c.fetchone()
+            return None if row is None else row[0]
+
+    def add_inbetweeny_score(self, inbetweeny, delta):
+        with self._db:
+            c = self._db.cursor()
+            c.execute("""
+                UPDATE inbetweenies
+                SET score = score + ?
+                WHERE inbetweeny = ?;
+            """, (delta, inbetweeny))
+            c.execute("""
+                SELECT score
+                FROM inbetweenies
+                WHERE inbetweeny = ?;
+            """, (inbetweeny,))
             row = c.fetchone()
             return None if row is None else row[0]
 

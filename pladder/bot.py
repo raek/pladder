@@ -42,6 +42,8 @@ class PladderBot:
         "find-noun <word>",
         "upvote-noun <prefix> <suffix>",
         "downvote-noun <prefix> <suffix>",
+        "upvote-inbetweeny <words...>",
+        "downvote-inbetweeny <words...>",
         "kloofify <words...>",
         "comp <unary-command> <command-invocation...>",
     ]
@@ -107,6 +109,20 @@ class PladderBot:
                 else:
                     description = "out" if score <= SKIP_SCORE else "in"
                     return "New score is {} ({})".format(score, description)
+        elif command == "upvote-inbetweeny":
+            score = self.snusk_db.add_inbetweeny_score(argument, 1)
+            if score is None:
+                return "Inbetweeny not found"
+            else:
+                description = "out" if score <= SKIP_SCORE else "in"
+                return "New score is {} ({})".format(score, description)
+        elif command == "downvote-inbetweeny":
+            score = self.snusk_db.add_inbetweeny_score(argument, -1)
+            if score is None:
+                return "Inbetweeny not found"
+            else:
+                description = "out" if score <= SKIP_SCORE else "in"
+                return "New score is {} ({})".format(score, description)
         elif command == "kloofify" and argument:
             return self.misc_cmds.kloofify(argument)
         elif command == "comp" and len(argument.split()) > 1:
