@@ -39,7 +39,7 @@ class PladderBot:
         "add-noun <prefix> <suffix>",
         "add-preposition <word>",
         "add-inbetweeny <words...>",
-        "find-noun <word",
+        "find-noun <word>",
         "kloofify <words...>",
         "comp <unary-command> <command-invocation...>",
     ]

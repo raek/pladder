@@ -111,7 +111,7 @@ class SnuskDb(ExitStack):
             c.execute("""
                 SELECT prefix, suffix
                 FROM nouns
-                WHERE ? IN (prefix, suffix)
+                WHERE ? IN (prefix, suffix);
             """, (word,))
             return c.fetchall()
 
