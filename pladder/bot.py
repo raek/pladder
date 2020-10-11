@@ -31,6 +31,18 @@ class PladderBot:
     </node>
     """
 
+    COMMAND_LIST = [
+        "help [<command>]",
+        "snusk",
+        "snuska <target>",
+        "add-snusk <prefix> <suffix>",
+        "add-noun <prefix> <suffix>",
+        "add-preposition <word>",
+        "add-inbetweeny <words...>",
+        "kloofify <words...>",
+        "comp <unary-command> <command-invocation...>",
+    ]
+
     def __init__(self, state_dir):
         snusk_db_path = os.path.join(state_dir, "snusk.db")
         self.snusk_db = SnuskDb(snusk_db_path)
@@ -42,7 +54,11 @@ class PladderBot:
             command, argument = text, ""
         else:
             command, argument = parts
-        if command == "snusk" and not argument:
+        if command == "help" and not argument:
+            return "Available commands:   " + ",   ".join(self.COMMAND_LIST)
+        elif command == "help":
+            return "Command help not implemented yet..."
+        elif command == "snusk" and not argument:
             return self.snusk_db.snusk()
         elif command == "snuska" and argument:
             return self.snusk_db.directed_snusk(argument)
