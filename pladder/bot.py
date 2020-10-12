@@ -94,7 +94,8 @@ class PladderBot:
         elif command == "upvote-noun":
             arguments = argument.split()
             if len(arguments) == 2:
-                score = self.snusk_db.add_noun_score(arguments[0], arguments[1], 1)
+                score = self.snusk_db.add_noun_score(
+                    arguments[0], arguments[1], 1)
                 if score is None:
                     return "Noun not found"
                 else:
@@ -103,7 +104,8 @@ class PladderBot:
         elif command == "downvote-noun":
             arguments = argument.split()
             if len(arguments) == 2:
-                score = self.snusk_db.add_noun_score(arguments[0], arguments[1], -1)
+                score = self.snusk_db.add_noun_score(
+                    arguments[0], arguments[1], -1)
                 if score is None:
                     return "Noun not found"
                 else:
@@ -123,8 +125,10 @@ class PladderBot:
             else:
                 description = "out" if score <= SKIP_SCORE else "in"
                 return "New score is {} ({})".format(score, description)
-        elif command == "kloofify" and argument:
-            return self.misc_cmds.kloofify(argument)
+        elif command.startswith("kloo") and command.endswith("fify") and argument:
+            for _ in range(command.count("o")-1):
+                argument = self.misc_cmds.kloofify(argument)
+            return argument
         elif command == "comp" and len(argument.split()) > 1:
             subparts = argument.split(maxsplit=1)
             return self.RunCommand(subparts[0] + " " + self.RunCommand(subparts[1]))
