@@ -1,0 +1,10 @@
+[Unit]
+Description=Pladder Bot Upgrader
+
+[Service]
+Type=notify
+ExecStart=gunicorn3 --access-logfile=- -b localhost:5001 pladder.upgrade:app
+SyslogIdentifier=pladder-upgrade
+
+[Install]
+WantedBy=default.target
