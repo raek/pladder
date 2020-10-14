@@ -69,6 +69,8 @@ class PladderBot:
             return self.snusk_db.directed_snusk(argument)
         elif command == "smak" and not argument:
             return self.snusk_db.taste()
+        elif command == "nickförslag" and not argument:
+            return self.snusk_db.nick()
         elif command in ["add-snusk", "add-noun"]:
             arguments = argument.split()
             if len(arguments) == 2:

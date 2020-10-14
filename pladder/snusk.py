@@ -65,6 +65,10 @@ class SnuskDb(ExitStack):
         parts = self._random_parts()
         return "{}/{}".format(parts[0].upper(), parts[3].upper())
 
+    def nick(self):
+        parts = self._random_parts()
+        return parts[random.choice([0, 1])]
+
     def example_snusk(self, a, b):
         parts = self._random_parts()
         if random.choice([False, True]):
