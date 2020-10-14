@@ -27,7 +27,9 @@ def github_webhook():
     print("Got event {} from user {}".format(event_type, event["sender"]["login"]))
     if event_type == "push":
         script = os.path.join(repo_dir, "upgrade.sh")
-        subprocess.run([script, repo_dir], check=True, cwd=repo_dir)
+        subprocess.Popen([script, repo_dir], cwd=repo_dir)
+        # Don't wait for subprocess to finish. The GitHub client has
+        # a too short timeout for it to complete in time.
     return "OK"
 
 
