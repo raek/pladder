@@ -1,5 +1,5 @@
 from collections import namedtuple
-import inspect
+from inspect import Parameter, signature
 import os
 import re
 
@@ -33,13 +33,13 @@ class Command(namedtuple("Command", "name, fn, raw, regex")):
     @property
     def usage(self):
         result = self.display_name
-        parameters = list(inspect.signature(self.fn).parameters.values())
+        parameters = list(signature(self.fn).parameters.values())
         if self.regex:
             parameters.pop(0)
         for i, parameter in enumerate(parameters):
             if i == len(parameters) - 1 and self.raw:
                 result += f" {{{parameter.name}...}}"
-            elif parameter.default != inspect.Parameter.empty:
+            elif parameter.default != Parameter.empty:
                 result += f" [{parameter.name}]"
             else:
                 result += f" <{parameter.name}>"
@@ -98,15 +98,13 @@ class PladderBot:
         if command is None:
             return f"Unknown command: {command_name}"
         if command.raw:
-            arguments = [argument_text]
+            max_args = self.max_args(command.fn)
+            arguments = argument_text.split(maxsplit=(max_args - 1))
         else:
             arguments = argument_text.split()
         if command.regex:
             arguments.insert(0, command_name)
-        sig = inspect.signature(command.fn)
-        try:
-            sig.bind(*arguments)
-        except TypeError:
+        if not self.signature_accepts_arguments(command.fn, arguments):
             return f"Usage: {command.usage}"
         return command.fn(*arguments)
 
@@ -119,6 +117,23 @@ class PladderBot:
                 if command.name == command_name:
                     return command
         return None
+
+    def max_args(self, fn):
+        sig = signature(fn)
+        max_args = 0
+        for parameter in sig.parameters.values():
+            if parameter.kind in [Parameter.POSITIONAL_ONLY,
+                                  Parameter.POSITIONAL_OR_KEYWORD]:
+                max_args += 1
+        return max_args
+
+    def signature_accepts_arguments(self, fn, arguments):
+        try:
+            sig = signature(fn)
+            sig.bind(*arguments)
+            return True
+        except TypeError:
+            return False
 
     # Bot commands
 
@@ -187,9 +202,8 @@ class PladderBot:
             text = self.misc_cmds.kloofify(text)
         return text
 
-    def comp(self, text):
-        subparts = text.split(maxsplit=1)
-        return self.run_command(subparts[0] + " " + self.run_command(subparts[1]))
+    def comp(self, command1, command2_line):
+        return self.RunCommand(command1 + " " + self.RunCommand(command2_line))
 
 
 if __name__ == "__main__":
