@@ -79,6 +79,8 @@ class PladderBot(ExitStack):
             return f"Unknown command: {command_name}"
         if command.raw:
             max_args = self.max_args(command.fn)
+            if command.regex:
+                max_args -= 1
             arguments = argument_text.split(maxsplit=(max_args - 1))
         else:
             arguments = argument_text.split()

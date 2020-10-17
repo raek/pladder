@@ -7,6 +7,7 @@ from pladder.plugin import Plugin
 class MiscPlugin(Plugin):
     def __init__(self, bot):
         super().__init__()
+        self.bot = bot
         self.misc_cmds = MiscCmds()
         bot.register_command("kloo+fify", self.kloofify, raw=True, regex=True)
         bot.register_command("comp", self.comp, raw=True)
@@ -17,7 +18,7 @@ class MiscPlugin(Plugin):
         return text
 
     def comp(self, command1, command2_line):
-        return self.RunCommand(command1 + " " + self.RunCommand(command2_line))
+        return self.bot.RunCommand(command1 + " " + self.bot.RunCommand(command2_line))
 
 
 class MiscCmds:
