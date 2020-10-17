@@ -3,7 +3,7 @@ import setuptools
 setuptools.setup(
     name="pladder",
     version="1.0.0",
-    author="Rasmus Bondesson",
+    author="Rasmus Bondesson and the contributors",
     author_email="raek@raek.se",
     description="An IRC bot",
     url="https://github.com/raek/pladder",
@@ -11,9 +11,9 @@ setuptools.setup(
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
-        "Operating System :: OS Independent",
+        "Operating System :: POSIX :: Linux",
     ],
-    python_requires='>=3.6',
+    python_requires=">=3.6",
     entry_points={
         "console_scripts": [
             "pladder-bot = pladder.bot:main",
