@@ -1,6 +1,77 @@
 from contextlib import ExitStack
+import os
 import random
 import sqlite3
+
+from pladder.plugin import Plugin
+
+
+class SnuskPlugin(Plugin):
+    def __init__(self, bot):
+        super().__init__()
+        snusk_db_path = os.path.join(bot.state_dir, "snusk.db")
+        self.snusk_db = self.enter_context(SnuskDb(snusk_db_path))
+        bot.register_command("snusk", self.snusk_db.snusk)
+        bot.register_command("snuska", self.snusk_db.directed_snusk, raw=True)
+        bot.register_command("smak", self.snusk_db.taste)
+        bot.register_command("nickförslag", self.snusk_db.nick)
+        bot.register_command("add-snusk", self.add_noun)
+        bot.register_command("add-noun", self.add_noun)
+        bot.register_command("add-preposition", self.add_inbetweeny)
+        bot.register_command("add-inbetweeny", self.add_inbetweeny, raw=True)
+        bot.register_command("find-noun", self.find_noun)
+        bot.register_command("upvote-noun", self.upvote_noun)
+        bot.register_command("downvote-noun", self.downvote_noun)
+        bot.register_command("upvote-inbetweeny", self.upvote_inbetweeny, raw=True)
+        bot.register_command("downvote-inbetweeny", self.downvote_inbetweeny, raw=True)
+
+    def add_noun(self, prefix, suffix):
+        if self.snusk_db.add_noun(prefix, suffix):
+            return self.snusk_db.example_snusk(prefix, suffix)
+        else:
+            return "Hörrudu! Den där finns ju redan!"
+
+    def add_inbetweeny(self, inbetweeny):
+        if self.snusk_db.add_inbetweeny(inbetweeny):
+            return self.snusk_db.example_snusk_with_inbetweeny(inbetweeny)
+        else:
+            return "Hörrudu! Den där finns ju redan!"
+
+    def find_noun(self, word):
+        nouns = self.snusk_db.find_noun(word)
+        return "{} found:   ".format(len(nouns)) + ",   ".join(prefix + " " + suffix for prefix, suffix in nouns)
+
+    def upvote_noun(self, prefix, suffix):
+        score = self.snusk_db.add_noun_score(prefix, suffix, 1)
+        if score is None:
+            return "Noun not found"
+        else:
+            description = "out" if score <= SKIP_SCORE else "in"
+            return "New score is {} ({})".format(score, description)
+
+    def downvote_noun(self, prefix, suffix):
+        score = self.snusk_db.add_noun_score(prefix, suffix, -1)
+        if score is None:
+            return "Noun not found"
+        else:
+            description = "out" if score <= SKIP_SCORE else "in"
+            return "New score is {} ({})".format(score, description)
+
+    def upvote_inbetweeny(self, inbetweeny):
+        score = self.snusk_db.add_inbetweeny_score(inbetweeny, 1)
+        if score is None:
+            return "Inbetweeny not found"
+        else:
+            description = "out" if score <= SKIP_SCORE else "in"
+            return "New score is {} ({})".format(score, description)
+
+    def downvote_inbetweeny(self, inbetweeny):
+        score = self.snusk_db.add_inbetweeny_score(inbetweeny, -1)
+        if score is None:
+            return "Inbetweeny not found"
+        else:
+            description = "out" if score <= SKIP_SCORE else "in"
+            return "New score is {} ({})".format(score, description)
 
 
 # Words with scores lower than or equal to this will not be included in random picks

@@ -1,8 +1,26 @@
 import re
 
+from pladder.plugin import Plugin
+
 #TODO: Replace multiples of same consonants with single consonant (if between oo and y)
 
-class MiscCmds():
+class MiscPlugin(Plugin):
+    def __init__(self, bot):
+        super().__init__()
+        self.misc_cmds = MiscCmds()
+        bot.register_command("kloo+fify", self.kloofify, raw=True, regex=True)
+        bot.register_command("comp", self.comp, raw=True)
+
+    def kloofify(self, command, text):
+        for _ in range(command.count("o")-1):
+            text = self.misc_cmds.kloofify(text)
+        return text
+
+    def comp(self, command1, command2_line):
+        return self.RunCommand(command1 + " " + self.RunCommand(command2_line))
+
+
+class MiscCmds:
     def strip_double_consonants(self, target):
         r = re.compile('oo(bb|cc|ck|dd|ff|gg|hh|jj|kk|ll|mm|nn|pp|qq|rr|ss|tt|vv|ww|xx|zz)y$', re.IGNORECASE)
         m = r.search(target)

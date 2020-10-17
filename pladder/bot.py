@@ -1,10 +1,8 @@
 from collections import namedtuple
+from contextlib import ExitStack
 from inspect import Parameter, signature
 import os
 import re
-
-from pladder.snusk import SnuskDb, SKIP_SCORE
-from pladder.misc import MiscCmds
 
 
 def main():
@@ -15,11 +13,12 @@ def main():
         "XDG_CONFIG_HOME", os.path.join(os.environ["HOME"], ".config"))
     state_dir = os.path.join(state_home, "pladder-bot")
 
-    pladder_bot = PladderBot(state_dir)
-    bus = SessionBus()
-    bus.publish("se.raek.PladderBot", pladder_bot)
-    loop = GLib.MainLoop()
-    loop.run()
+    with PladderBot(state_dir) as bot:
+        load_standard_plugins(bot)
+        bus = SessionBus()
+        bus.publish("se.raek.PladderBot", bot)
+        loop = GLib.MainLoop()
+        loop.run()
 
 
 class Command(namedtuple("Command", "name, fn, raw, regex")):
@@ -46,7 +45,7 @@ class Command(namedtuple("Command", "name, fn, raw, regex")):
         return result
 
 
-class PladderBot:
+class PladderBot(ExitStack):
     """
     <node>
       <interface name="se.raek.PladderBot">
@@ -59,29 +58,10 @@ class PladderBot:
     """
 
     def __init__(self, state_dir):
-        snusk_db_path = os.path.join(state_dir, "snusk.db")
-        self.snusk_db = SnuskDb(snusk_db_path)
-        self.misc_cmds = MiscCmds()
+        super().__init__()
+        self.state_dir = state_dir
         self.commands = []
-        self.register_commands()
-
-    def register_commands(self):
         self.register_command("help", self.help)
-        self.register_command("snusk", self.snusk_db.snusk)
-        self.register_command("snuska", self.snusk_db.directed_snusk, raw=True)
-        self.register_command("smak", self.snusk_db.taste)
-        self.register_command("nickförslag", self.snusk_db.nick)
-        self.register_command("add-snusk", self.add_noun)
-        self.register_command("add-noun", self.add_noun)
-        self.register_command("add-preposition", self.add_inbetweeny)
-        self.register_command("add-inbetweeny", self.add_inbetweeny, raw=True)
-        self.register_command("find-noun", self.find_noun)
-        self.register_command("upvote-noun", self.upvote_noun)
-        self.register_command("downvote-noun", self.downvote_noun)
-        self.register_command("upvote-inbetweeny", self.upvote_inbetweeny, raw=True)
-        self.register_command("downvote-inbetweeny", self.downvote_inbetweeny, raw=True)
-        self.register_command("kloo+fify", self.kloofify, raw=True, regex=True)
-        self.register_command("comp", self.comp, raw=True)
 
     def register_command(self, name, fn, raw=False, regex=False):
         if regex:
@@ -135,8 +115,6 @@ class PladderBot:
         except TypeError:
             return False
 
-    # Bot commands
-
     def help(self, command_name=None):
         if not command_name:
             result = "Available commands: "
@@ -149,61 +127,12 @@ class PladderBot:
             else:
                 return f"Unknown command: {command_name}"
 
-    def add_noun(self, prefix, suffix):
-        if self.snusk_db.add_noun(prefix, suffix):
-            return self.snusk_db.example_snusk(prefix, suffix)
-        else:
-            return "Hörrudu! Den där finns ju redan!"
 
-    def add_inbetweeny(self, inbetweeny):
-        if self.snusk_db.add_inbetweeny(inbetweeny):
-            return self.snusk_db.example_snusk_with_inbetweeny(inbetweeny)
-        else:
-            return "Hörrudu! Den där finns ju redan!"
-
-    def find_noun(self, word):
-        nouns = self.snusk_db.find_noun(word)
-        return "{} found:   ".format(len(nouns)) + ",   ".join(prefix + " " + suffix for prefix, suffix in nouns)
-
-    def upvote_noun(self, prefix, suffix):
-        score = self.snusk_db.add_noun_score(prefix, suffix, 1)
-        if score is None:
-            return "Noun not found"
-        else:
-            description = "out" if score <= SKIP_SCORE else "in"
-            return "New score is {} ({})".format(score, description)
-
-    def downvote_noun(self, prefix, suffix):
-        score = self.snusk_db.add_noun_score(prefix, suffix, -1)
-        if score is None:
-            return "Noun not found"
-        else:
-            description = "out" if score <= SKIP_SCORE else "in"
-            return "New score is {} ({})".format(score, description)
-
-    def upvote_inbetweeny(self, inbetweeny):
-        score = self.snusk_db.add_inbetweeny_score(inbetweeny, 1)
-        if score is None:
-            return "Inbetweeny not found"
-        else:
-            description = "out" if score <= SKIP_SCORE else "in"
-            return "New score is {} ({})".format(score, description)
-
-    def downvote_inbetweeny(self, inbetweeny):
-        score = self.snusk_db.add_inbetweeny_score(inbetweeny, -1)
-        if score is None:
-            return "Inbetweeny not found"
-        else:
-            description = "out" if score <= SKIP_SCORE else "in"
-            return "New score is {} ({})".format(score, description)
-
-    def kloofify(self, command, text):
-        for _ in range(command.count("o")-1):
-            text = self.misc_cmds.kloofify(text)
-        return text
-
-    def comp(self, command1, command2_line):
-        return self.RunCommand(command1 + " " + self.RunCommand(command2_line))
+def load_standard_plugins(bot):
+    from pladder.snusk import SnuskPlugin
+    from pladder.misc import MiscPlugin
+    bot.enter_context(SnuskPlugin(bot))
+    bot.enter_context(MiscPlugin(bot))
 
 
 if __name__ == "__main__":
