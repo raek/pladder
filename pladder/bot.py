@@ -4,6 +4,8 @@ from inspect import Parameter, signature
 import os
 import re
 
+from pladder import LAST_COMMIT
+
 
 def main():
     from gi.repository import GLib
@@ -62,6 +64,7 @@ class PladderBot(ExitStack):
         self.state_dir = state_dir
         self.commands = []
         self.register_command("help", self.help)
+        self.register_command("version", self.version)
 
     def RunCommand(self, text):
         return self.interpret(text)
@@ -138,6 +141,9 @@ class PladderBot(ExitStack):
                 return f"Usage: {command.usage}"
             else:
                 return f"Unknown command: {command_name}"
+
+    def version(self):
+        return LAST_COMMIT
 
 
 def load_standard_plugins(bot):
