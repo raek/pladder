@@ -12,18 +12,18 @@ class SnuskPlugin(Plugin):
         snusk_db_path = os.path.join(bot.state_dir, "snusk.db")
         self.snusk_db = self.enter_context(SnuskDb(snusk_db_path))
         bot.register_command("snusk", self.snusk_db.snusk)
-        bot.register_command("snuska", self.snusk_db.directed_snusk, raw=True)
+        bot.register_command("snuska", self.snusk_db.directed_snusk, varargs=True)
         bot.register_command("smak", self.snusk_db.taste)
         bot.register_command("nickförslag", self.snusk_db.nick)
         bot.register_command("add-snusk", self.add_noun)
         bot.register_command("add-noun", self.add_noun)
         bot.register_command("add-preposition", self.add_inbetweeny)
-        bot.register_command("add-inbetweeny", self.add_inbetweeny, raw=True)
+        bot.register_command("add-inbetweeny", self.add_inbetweeny, varargs=True)
         bot.register_command("find-noun", self.find_noun)
         bot.register_command("upvote-noun", self.upvote_noun)
         bot.register_command("downvote-noun", self.downvote_noun)
-        bot.register_command("upvote-inbetweeny", self.upvote_inbetweeny, raw=True)
-        bot.register_command("downvote-inbetweeny", self.downvote_inbetweeny, raw=True)
+        bot.register_command("upvote-inbetweeny", self.upvote_inbetweeny, varargs=True)
+        bot.register_command("downvote-inbetweeny", self.downvote_inbetweeny, varargs=True)
 
     def add_noun(self, prefix, suffix):
         if self.snusk_db.add_noun(prefix, suffix):

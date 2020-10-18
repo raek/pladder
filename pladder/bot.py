@@ -21,7 +21,7 @@ def main():
         loop.run()
 
 
-class Command(namedtuple("Command", "name, fn, raw, regex")):
+class Command(namedtuple("Command", "name, fn, varargs, regex")):
     @property
     def display_name(self):
         if self.regex:
@@ -36,7 +36,7 @@ class Command(namedtuple("Command", "name, fn, raw, regex")):
         if self.regex:
             parameters.pop(0)
         for i, parameter in enumerate(parameters):
-            if i == len(parameters) - 1 and self.raw:
+            if i == len(parameters) - 1 and self.varargs:
                 result += f" {{{parameter.name}...}}"
             elif parameter.default != Parameter.empty:
                 result += f" [{parameter.name}]"
@@ -63,29 +63,30 @@ class PladderBot(ExitStack):
         self.commands = []
         self.register_command("help", self.help)
 
-    def register_command(self, name, fn, raw=False, regex=False):
+    def register_command(self, name, fn, varargs=False, regex=False):
         if regex:
             name = re.compile("^" + name + "$")
-        self.commands.append(Command(name, fn, raw, regex))
+        self.commands.append(Command(name, fn, varargs, regex))
 
     def RunCommand(self, text):
-        parts = text.strip().split(maxsplit=1)
-        if len(parts) == 1:
-            command_name, argument_text = text, ""
-        else:
-            command_name, argument_text = parts
+        words = text.strip().split()
+        if not words:
+            return ""
+        command_name = words[0]
+        arguments = words[1:]
         command = self.find_command(command_name)
         if command is None:
             return f"Unknown command: {command_name}"
-        if command.raw:
-            max_args = self.max_args(command.fn)
-            if command.regex:
-                max_args -= 1
-            arguments = argument_text.split(maxsplit=(max_args - 1))
-        else:
-            arguments = argument_text.split()
         if command.regex:
             arguments.insert(0, command_name)
+        if command.varargs:
+            last_arg_index = self.max_args(command.fn) - 1
+            first_args = arguments[:last_arg_index]
+            last_args = arguments[last_arg_index:]
+            if last_args:
+                arguments = first_args + [" ".join(last_args)]
+            else:
+                arguments = first_args
         if not self.signature_accepts_arguments(command.fn, arguments):
             return f"Usage: {command.usage}"
         return command.fn(*arguments)
