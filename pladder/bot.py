@@ -63,13 +63,22 @@ class PladderBot(ExitStack):
         self.commands = []
         self.register_command("help", self.help)
 
+    def RunCommand(self, text):
+        return self.interpret(text)
+
     def register_command(self, name, fn, varargs=False, regex=False):
         if regex:
             name = re.compile("^" + name + "$")
         self.commands.append(Command(name, fn, varargs, regex))
 
-    def RunCommand(self, text):
-        words = text.strip().split()
+    def interpret(self, text):
+        words = self.eval(text)
+        return self.apply(words)
+
+    def eval(self, text):
+        return text.split()
+
+    def apply(self, words):
         if not words:
             return ""
         command_name = words[0]

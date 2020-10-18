@@ -18,7 +18,7 @@ class MiscPlugin(Plugin):
         return text
 
     def comp(self, command1, command2_line):
-        return self.bot.RunCommand(command1 + " " + self.bot.RunCommand(command2_line))
+        return self.bot.interpret(command1 + " " + self.bot.interpret(command2_line))
 
 
 class MiscCmds:
