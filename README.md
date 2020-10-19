@@ -38,7 +38,7 @@ effective immediately.
 
 # Overview
 
-The pladder package insatlls three console commands:
+The pladder package installs three console commands:
 
 * a bot service (`pladder-bot`) that contains the features of the bot
 (the "business logic", for some value of "business"),
@@ -46,7 +46,7 @@ The pladder package insatlls three console commands:
   server and reacts to commands from users, and
 * a command line tool (`pladder-cli`) that provides a simple way to
   run bot commands during development.
-  
+
 The bot service can serve multiple IRC client. In other words, the bot
 can be present on multiple IRC networks simultaneously.
 
@@ -81,7 +81,7 @@ instance of the service can be started like this:
 To interact with, run the CLI from another shell:
 
     pladder-cli --dbus --command snusk
-    
+
 
 ## Trying out the IRC client
 
@@ -107,7 +107,7 @@ Then start a client process:
 
 A `--config foo` argument results in the file
 `/.config/pladder-irc/foo.json` being used. If `--dbus` is given, then
-the IRC client run commands using the bot service (which has to be
+the IRC client runs commands using the bot service (which has to be
 started separately). If it is not given, then commands are ignored
 (useful for testing the pure IRC parts).
 
@@ -126,7 +126,7 @@ First let systemd know that there is such a thing as pladder-bot:
 
 This sets up symlinks from the location where user services are
 defined (`~/.config/systemd/user/`) to the repo directory. The service
-is still not enable nor started. Enable the service to tell systemd
+is still not enabled nor started. Enable the service to tell systemd
 that it should be started automatically on boot:
 
     systemctl --user enable pladder-bot.service
@@ -138,7 +138,7 @@ start it manually the first time:
 
 The `--dbus` flag can be given to `pladder-cli` to run commands on the
 new background service. To check in on the service you can use this
-command (which also display its most recent log lines):
+command (which also displays its most recent log lines):
 
     systemctl --user status pladder-bot.servcie
 
@@ -150,7 +150,7 @@ If you change the bot code, you can restart the service like this:
 
     systemctl --user restart pladder-bot.service
 
-When changing settins in the `.service` file themselves, reload them using:
+When changing settings in the `.service` files themselves, reload them using:
 
     systemctl --user daemon-reload
 
@@ -163,7 +163,7 @@ template:
 
     systemctl --user link $PWD/pladder-irc@.service
 
-Assuming you have a configuration file named `foo.json`, enable an
+Assuming you have a configuration file named `foo.json`, enable and
 start a service for it like this (the `--now` argument is like running
 `start` immediately afterwards):
 
@@ -185,7 +185,7 @@ The systemd parts:
     systemctl --user disable --now pladder-bot.service
     systemctl --user disable --now pladder-irc@REPLACEME.service
 
-Use `systemctl --user status` to list all the service if you don't know their names.
+Use `systemctl --user status` to list all the services if you don't know their names.
 
 The Python parts:
 
