@@ -38,14 +38,16 @@ effective immediately.
 
 # Overview
 
-The pladder package installs three console commands:
+The pladder package installs four console commands:
 
 * a bot service (`pladder-bot`) that contains the features of the bot
 (the "business logic", for some value of "business"),
 * an IRC client (`pladder-irc`) that keeps a connection to an IRC
-  server and reacts to commands from users, and
+  server and reacts to commands from users,
 * a command line tool (`pladder-cli`) that provides a simple way to
-  run bot commands during development.
+  run bot commands during development, and
+* an optional log service (`pladder-log`) that can store and recall lines seen
+  on a configurable list of IRC networks.
 
 The bot service can serve multiple IRC client. In other words, the bot
 can be present on multiple IRC networks simultaneously.
@@ -78,7 +80,7 @@ instance of the service can be started like this:
 
     pladder-bot
 
-To interact with, run the CLI from another shell:
+To interact with it, run the CLI from another shell:
 
     pladder-cli --dbus --command snusk
 
@@ -111,6 +113,24 @@ A `--config foo` argument results in the file
 the IRC client runs commands using the bot service (which has to be
 started separately). If it is not given, then commands are ignored
 (useful for testing the pure IRC parts).
+
+
+## Configuring the log service
+
+Configure the log service by creating a configuration file:
+
+    mkdir -p ~/.config/pladder-log/
+    editor ~/.config/pladder-log/config.json
+
+Set up the configuration file like this:
+
+    {
+        "networks": ["RaekNet"],
+        "logdir": "/path/to/log/dir"
+    }
+
+Make sure the network names match those given in you pladder-irc configuration
+files. The logs are stored as sqlite databases (one file per network) in the given logdir, or in the `logs` directory next to the config file if one is not specified.
 
 
 # Running automatically using systemd
@@ -179,12 +199,19 @@ stopped independently of each other. The DBus connection between them
 will reconnect automatically.
 
 
+## Installing the log service
+
+Follow the same procedure as for the bot service, using the
+`pladder-log.service` file.
+
+
 # Uninstalling everything
 
 The systemd parts:
 
     systemctl --user disable --now pladder-bot.service
     systemctl --user disable --now pladder-irc@REPLACEME.service
+    systemctl --user disable --now pladder-log.service
 
 Use `systemctl --user status` to list all the services if you don't know their names.
 

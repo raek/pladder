@@ -4,6 +4,7 @@ import logging
 import os
 
 from pladder.irc.client import Config, Hooks, run_client
+from pladder.log import PladderLogProxy
 
 
 logger = logging.getLogger("pladder.irc")
@@ -77,6 +78,7 @@ def set_up_dbus(hooks_base_class):
 
     bus = SessionBus()
     bot = bus.get("se.raek.PladderBot")
+    log = PladderLogProxy(bus)
 
     class DbusHooks(hooks_base_class):
         def on_trigger(self, timestamp, network, channel, sender, text):
@@ -85,5 +87,8 @@ def set_up_dbus(hooks_base_class):
             except GLib.Error as e:
                 logger.error(str(e))
                 return "Oops! Error logged."
+
+        def on_privmsg(self, timestamp, network, channel, sender, text):
+            log.AddLine(timestamp, network, channel, sender.nick, text)
 
     return DbusHooks

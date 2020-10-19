@@ -19,6 +19,7 @@ setuptools.setup(
             "pladder-bot = pladder.bot:main",
             "pladder-cli = pladder.cli:main",
             "pladder-irc = pladder.irc.main:main",
+            "pladder-log = pladder.log:main",
         ],
     },
 )
