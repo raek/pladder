@@ -61,6 +61,7 @@ class PladderBot(ExitStack):
 
     def __init__(self, state_dir):
         super().__init__()
+        os.makedirs(state_dir, exist_ok=True)
         self.state_dir = state_dir
         self.commands = []
         self.register_command("help", self.help)
