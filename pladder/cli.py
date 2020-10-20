@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 import argparse
 import os
 import sys
@@ -28,12 +29,18 @@ def main():
 
 def run_commands(bot, command):
     if command is not None:
-        print(bot.RunCommand(command))
+        print(run_command(bot, command))
     else:
         for line in sys.stdin:
-            print(bot.RunCommand(line.strip()))
+            print(run_command(bot, line.strip()))
 
-            
+def run_command(bot, command):
+    network = 'cli'
+    reply_to = 'cli'
+    sender = 'user'
+    timestamp = datetime.now(timezone.utc).timestamp()
+    return bot.RunCommand(timestamp, network, reply_to, sender, command)
+
 def default_state_dir():
     state_home = os.environ.get("XDG_CONFIG_HOME", os.path.join(os.environ["HOME"], ".config"))
     state_dir = os.path.join(state_home, "pladder-bot")

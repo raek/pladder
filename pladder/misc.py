@@ -9,10 +9,11 @@ class MiscPlugin(Plugin):
         super().__init__()
         self.bot = bot
         self.misc_cmds = MiscCmds()
-        bot.register_command("kloo+fify", self.kloofify, varargs=True, regex=True)
+        bot.register_command("kloo+fify", self.kloofify, varargs=True, regex=True, contextual=True)
         bot.register_command("comp", self.comp, varargs=True)
 
-    def kloofify(self, command, text):
+    def kloofify(self, context, text):
+        command = context['command']
         for _ in range(command.count("o")-1):
             text = self.misc_cmds.kloofify(text)
         return text

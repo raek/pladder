@@ -78,9 +78,9 @@ def set_up_dbus(hooks_base_class):
     bot = bus.get("se.raek.PladderBot")
 
     class DbusHooks(hooks_base_class):
-        def on_trigger(self, sender, text):
+        def on_trigger(self, timestamp, network, channel, sender, text):
             try:
-                return bot.RunCommand(text)
+                return bot.RunCommand(timestamp, network, channel, sender.nick, text)
             except GLib.Error as e:
                 logger.error(str(e))
                 return "Oops! Error logged."

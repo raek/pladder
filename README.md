@@ -94,6 +94,7 @@ that network:
 Set up the configuration file like this:
 
     {
+        "network": "RaekNet",
         "host": "irc.raek.se",
         "port": 6667,
         "nick": "pladder123",
