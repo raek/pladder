@@ -10,8 +10,8 @@ class MiscPlugin(Plugin):
         self.bot = bot
         self.misc_cmds = MiscCmds()
         bot.register_command("kloo+fify", self.kloofify, varargs=True, regex=True, contextual=True)
-        bot.register_command("comp", self.comp, varargs=True)
-        bot.register_command("give", self.give, varargs=True)
+        bot.register_command("comp", self.comp, varargs=True, contextual=True)
+        bot.register_command("give", self.give, varargs=True, contextual=True)
         bot.register_command("echo", lambda text: text, varargs=True)
 
     def kloofify(self, context, text):
@@ -20,11 +20,11 @@ class MiscPlugin(Plugin):
             text = self.misc_cmds.kloofify(text)
         return text
 
-    def comp(self, command1, command2_line):
-        return self.bot.interpret(command1 + " " + self.bot.interpret(command2_line))
+    def comp(self, context, command1, command2_line):
+        return self.bot.interpret(context, command1 + " " + self.bot.interpret(context, command2_line))
 
-    def give(self, target, script):
-        return target + ": " + self.bot.interpret(script)
+    def give(self, context, target, script):
+        return target + ": " + self.bot.interpret(context, script)
 
 
 class MiscCmds:
