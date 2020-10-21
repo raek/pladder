@@ -13,6 +13,8 @@ class MiscPlugin(Plugin):
         bot.register_command("comp", self.comp, varargs=True, contextual=True)
         bot.register_command("give", self.give, varargs=True, contextual=True)
         bot.register_command("echo", lambda text: text, varargs=True)
+        bot.register_command("show-args", lambda *args: repr(args))
+        bot.register_command("show-context", lambda context: repr(context), contextual=True)
 
     def kloofify(self, context, text):
         command = context['command']
