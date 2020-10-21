@@ -76,7 +76,7 @@ def run_client(config, hooks):
             update_status("Authenticating with Q")
             conn.send("PRIVMSG", "Q@CServe.quakenet.org", f"AUTH {config.nick} {config.auth}")
             q_bot = Sender("Q", "TheQBot", "CServe.quakenet.org")
-            for mesage in messages:
+            for message in messages:
                 if message.command == "NOTICE" and message.sender == q_bot:
                     if message.params == [config.nick, f"You are now logged in as {config.nick}."]:
                         break
