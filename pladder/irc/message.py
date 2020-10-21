@@ -1,4 +1,5 @@
 import codecs
+from contextlib import suppress
 from collections import namedtuple
 import logging
 import socket
@@ -99,6 +100,10 @@ def format_message(msg):
     return result
 
 
+class ConnectionError(Exception):
+    pass
+
+
 class MessageConnection:
     RECV_SIZE = 4096
 
@@ -117,6 +122,11 @@ class MessageConnection:
     def close(self):
         self._socket.close()
 
+    def recv_messages(self):
+        with suppress(ConnectionError):
+            while True:
+                yield self.recv_message()
+
     def recv_message(self):
         line_bytes = self._recv_line()
         line = decode_utf8_with_fallback(line_bytes)
@@ -134,7 +144,7 @@ class MessageConnection:
                     return line_bytes
             new_bytes = self._socket.recv(self.RECV_SIZE)
             if not new_bytes:
-                raise Exception("Server closed connection")
+                raise ConnectionError("Server closed connection")
             self._recv_buffer += new_bytes
 
     def send_message(self, message):
