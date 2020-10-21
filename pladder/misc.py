@@ -11,6 +11,7 @@ class MiscPlugin(Plugin):
         self.misc_cmds = MiscCmds()
         bot.register_command("kloo+fify", self.kloofify, varargs=True, regex=True, contextual=True)
         bot.register_command("comp", self.comp, varargs=True)
+        bot.register_command("give", self.give, varargs=True)
 
     def kloofify(self, context, text):
         command = context['command']
@@ -20,6 +21,9 @@ class MiscPlugin(Plugin):
 
     def comp(self, command1, command2_line):
         return self.bot.interpret(command1 + " " + self.bot.interpret(command2_line))
+
+    def give(self, target, script):
+        return target + ": " + self.bot.interpret(script)
 
 
 class MiscCmds:
