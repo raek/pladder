@@ -33,6 +33,7 @@ def read_config(config_name):
 
 CONFIG_DEFAULTS = {
     "port": 6667,
+    "channels": [],
     "auth": None,
     "user_mode": None,
     "trigger_prefix": "~",
