@@ -102,6 +102,7 @@ class PladderBot(ExitStack):
         if command is None:
             return f"Unknown command: {command_name}"
         if command.contextual:
+            context = dict(context)
             context['command'] = command_name
             arguments.insert(0, context)
         if command.varargs:
