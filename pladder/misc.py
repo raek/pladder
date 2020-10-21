@@ -12,6 +12,7 @@ class MiscPlugin(Plugin):
         bot.register_command("kloo+fify", self.kloofify, varargs=True, regex=True, contextual=True)
         bot.register_command("comp", self.comp, varargs=True)
         bot.register_command("give", self.give, varargs=True)
+        bot.register_command("echo", lambda text: text, varargs=True)
 
     def kloofify(self, context, text):
         command = context['command']
