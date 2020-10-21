@@ -1,4 +1,5 @@
 from collections import namedtuple
+from datetime import datetime, timezone
 import logging
 import socket
 
@@ -8,7 +9,7 @@ from pladder.irc.message import MessageConnection
 logger = logging.getLogger("pladder.irc")
 
 
-Config = namedtuple("Config", "host, port, nick, realname, auth, user_mode, channels, trigger_prefix, reply_prefix")
+Config = namedtuple("Config", "network, host, port, nick, realname, auth, user_mode, channels, trigger_prefix, reply_prefix")
 
 
 class Hooks:
@@ -21,7 +22,7 @@ class Hooks:
     def on_status(self, s):
         pass
 
-    def on_trigger(self, sender, text):
+    def on_trigger(self, timestamp, network, channel, sender, text):
         pass
 
 
@@ -65,7 +66,9 @@ def run_client(config, hooks):
                     else:
                         reply_to = message.sender.nick
                     logger.info("{} -> {} : {}".format(message.sender.nick, target, text))
-                    reply = hooks.on_trigger(message.sender, text[len(config.trigger_prefix):])
+                    timestamp = datetime.now(timezone.utc).timestamp()
+                    text_without_prefix = text[len(config.trigger_prefix):]
+                    reply = hooks.on_trigger(timestamp, config.network, reply_to, message.sender, text_without_prefix)
                     if reply:
                         full_reply = config.reply_prefix + reply
                         logger.info("-> {} : {}".format(reply_to, full_reply))

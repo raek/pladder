@@ -1,5 +1,6 @@
 from collections import namedtuple
 from contextlib import ExitStack
+from datetime import datetime, timezone
 from inspect import Parameter, signature
 import os
 import re
@@ -23,7 +24,7 @@ def main():
         loop.run()
 
 
-class Command(namedtuple("Command", "name, fn, varargs, regex")):
+class Command(namedtuple("Command", "name, fn, varargs, regex, contextual")):
     @property
     def display_name(self):
         if self.regex:
@@ -35,7 +36,8 @@ class Command(namedtuple("Command", "name, fn, varargs, regex")):
     def usage(self):
         result = self.display_name
         parameters = list(signature(self.fn).parameters.values())
-        if self.regex:
+        if self.contextual:
+            # pop context argument
             parameters.pop(0)
         for i, parameter in enumerate(parameters):
             if i == len(parameters) - 1 and self.varargs:
@@ -52,6 +54,10 @@ class PladderBot(ExitStack):
     <node>
       <interface name="se.raek.PladderBot">
         <method name="RunCommand">
+          <arg direction="in" name="timestamp" type="u" />
+          <arg direction="in" name="network" type="s" />
+          <arg direction="in" name="channel" type="s" />
+          <arg direction="in" name="nick" type="s" />
           <arg direction="in" name="text" type="s" />
           <arg direction="out" name="return" type="s" />
         </method>
@@ -67,22 +73,27 @@ class PladderBot(ExitStack):
         self.register_command("help", self.help)
         self.register_command("version", self.version)
 
-    def RunCommand(self, text):
-        return self.interpret(text)
+    def RunCommand(self, timestamp, network, channel, nick, text):
+        context = {'timestamp': datetime.fromtimestamp(timestamp, tz=timezone.utc),
+                   'network': network,
+                   'channel': channel,
+                   'nick': nick,
+                   'text': text}
+        return self.interpret(context, text)
 
-    def register_command(self, name, fn, varargs=False, regex=False):
+    def register_command(self, name, fn, varargs=False, regex=False, contextual=False):
         if regex:
             name = re.compile("^" + name + "$")
-        self.commands.append(Command(name, fn, varargs, regex))
+        self.commands.append(Command(name, fn, varargs, regex, contextual))
 
-    def interpret(self, text):
+    def interpret(self, context, text):
         words = self.eval(text)
-        return self.apply(words)
+        return self.apply(context, words)
 
     def eval(self, text):
         return text.split()
 
-    def apply(self, words):
+    def apply(self, context, words):
         if not words:
             return ""
         command_name = words[0]
@@ -90,8 +101,9 @@ class PladderBot(ExitStack):
         command = self.find_command(command_name)
         if command is None:
             return f"Unknown command: {command_name}"
-        if command.regex:
-            arguments.insert(0, command_name)
+        if command.contextual:
+            context['command'] = command_name
+            arguments.insert(0, context)
         if command.varargs:
             last_arg_index = self.max_args(command.fn) - 1
             first_args = arguments[:last_arg_index]
