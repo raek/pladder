@@ -10,6 +10,7 @@ logger = logging.getLogger("pladder.irc")
 Message = namedtuple("Message", "sender, command, params")
 Sender = namedtuple("Sender", "nick, user, host")
 NO_SENDER = Sender(None, None, None)
+MAX_LINE_BYTES = 512
 
 
 def make_message(command, *params):
@@ -139,8 +140,9 @@ class MessageConnection:
     def send_message(self, message):
         line = format_message(message)
         logger.debug("<-- %s", line)
-        line += "\r\n"
         line_bytes = line.encode("utf-8")
+        line_bytes = line_bytes[:MAX_LINE_BYTES - 2]
+        line_bytes += b"\r\n"
         self._socket.sendall(line_bytes)
 
     def send(self, *args):
