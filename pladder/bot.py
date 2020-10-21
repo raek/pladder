@@ -74,7 +74,7 @@ class PladderBot(ExitStack):
         self.register_command("version", self.version)
 
     def RunCommand(self, timestamp, network, channel, nick, text):
-        context = {'timestamp': datetime.fromtimestamp(timestamp, tz=timezone.utc),
+        context = {'datetime': datetime.fromtimestamp(timestamp, tz=timezone.utc),
                    'network': network,
                    'channel': channel,
                    'nick': nick,
