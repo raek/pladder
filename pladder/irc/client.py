@@ -50,6 +50,7 @@ def run_client(config, hooks):
                 reply = hooks.on_trigger(timestamp, config.network, reply_to, message.sender, text_without_prefix)
                 if reply:
                     full_reply = config.reply_prefix + reply
+                    full_reply = full_reply.upper()
                     logger.info("-> {} : {}".format(reply_to, full_reply))
                     conn.send("PRIVMSG", reply_to, full_reply)
 
