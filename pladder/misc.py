@@ -23,7 +23,7 @@ class MiscPlugin(Plugin):
         return text
 
     def comp(self, context, command1, *command2_words):
-        command2_result = self.bot.apply(context, command2_words)
+        command2_result = self.bot.apply(context, list(command2_words))
         return self.bot.apply(context, [command1, command2_result])
 
     def give(self, context, target, script):
