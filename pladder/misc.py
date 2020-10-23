@@ -13,6 +13,7 @@ class MiscPlugin(Plugin):
         bot.register_command("comp", self.comp, contextual=True)
         bot.register_command("give", self.give, varargs=True, contextual=True)
         bot.register_command("echo", lambda text="": text, varargs=True)
+        bot.register_command("vrålify", self.vral, varargs=True)
         bot.register_command("show-args", lambda *args: repr(args))
         bot.register_command("show-context", lambda context: repr(context), contextual=True)
 
@@ -28,6 +29,9 @@ class MiscPlugin(Plugin):
 
     def give(self, context, target, script):
         return target + ": " + self.bot.interpret(context, script)
+    
+    def vral(self, text):
+        return text.upper()
 
 
 class MiscCmds:
