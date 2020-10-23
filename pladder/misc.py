@@ -2,8 +2,6 @@ import re
 
 from pladder.plugin import Plugin
 
-#TODO: Replace multiples of same consonants with single consonant (if between oo and y)
-
 class MiscPlugin(Plugin):
     def __init__(self, bot):
         super().__init__()
@@ -35,6 +33,15 @@ class MiscPlugin(Plugin):
 
 
 class MiscCmds:
+    def check_spoofy(self, target):
+        r_spoof = re.compile('[aeiouyåäö]+[^aeiouyåäö]+i(?=[^aeiouyåäö]+y$)')
+        m_spoof = r_spoof.search(target)
+
+        if (m_spoof):
+            return target[0:m_spoof.start()] + 'oo' + target[m_spoof.end():len(target)]
+
+        return target
+
     def strip_double_consonants(self, target):
         r = re.compile('oo(bb|cc|ck|dd|ff|gg|hh|jj|kk|ll|mm|nn|pp|qq|rr|ss|tt|vv|ww|xx|zz)y$', re.IGNORECASE)
         m = r.search(target)
@@ -66,6 +73,11 @@ class MiscCmds:
         r2s = re.compile('[aeiouyåäö][^aeiouyåäö]+$', re.IGNORECASE)
         # String ends with vowels, with preceding consonant
         r3 = re.compile('[^aeiouyåäö][aeiouyåäö]+$', re.IGNORECASE)
+
+        # Special case for strings matching "spotify"-like patterns
+        spoof = self.check_spoofy(target)
+        if (spoof != target):
+            return spoof
 
         m_multi_1 = r_multi_1.search(target)
         m_multi_2 = r_multi_2.search(target)
