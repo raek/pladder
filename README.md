@@ -15,10 +15,10 @@ Make sure you have Python 3 installed:
 
 To run the bot, run this command in the repository root:
 
-    python3 -m pladder.cli --state-dir test_state/ --command "type command here"
+    python3 -m pladder.cli -c "type command here"
 
-This will store bot state in the test_state directory. (It will be
-initialized the first time.)
+This will store bot state in `~/.config/pladder-bot/`, which will be
+created and initialized the first time.
 
 
 # Development Setup
