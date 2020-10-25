@@ -143,7 +143,7 @@ to be run as a user service (so root is not required for running).
 
 First let systemd know that there is such a thing as pladder-bot:
 
-    systemctl --user link $PWD/pladder-bot.service
+    systemctl --user link ./pladder-bot.service
 
 This sets up symlinks from the location where user services are
 defined (`~/.config/systemd/user/`) to the repo directory. The service
@@ -182,7 +182,7 @@ The IRC client service is parameterized (a "template unit"). The idea
 is that you start one instance for each IRC network. First install the
 template:
 
-    systemctl --user link $PWD/pladder-irc@.service
+    systemctl --user link ./pladder-irc@.service
 
 Assuming you have a configuration file named `foo.json`, enable and
 start a service for it like this (the `--now` argument is like running
