@@ -17,6 +17,7 @@ class SnuskPlugin(Plugin):
         bot.register_command("nickförslag", self.snusk_db.nick)
         bot.register_command("prefix", self.snusk_db.random_prefix)
         bot.register_command("suffix", self.snusk_db.random_suffix)
+        bot.register_command("noun", self.snusk_db.random_noun)
         bot.register_command("inbetweeny", self.snusk_db.random_inbetweeny)
         bot.register_command("add-snusk", self.add_noun)
         bot.register_command("add-noun", self.add_noun)
@@ -166,6 +167,19 @@ class SnuskDb(ExitStack):
                 LIMIT 1
             """, {"skip_score": SKIP_SCORE})
             return c.fetchone()[0]
+
+    def random_noun(self):
+        with self._db:
+            c = self._db.cursor()
+            c.execute("""
+                SELECT prefix, suffix
+                FROM nouns
+                WHERE score > :skip_score
+                ORDER BY RANDOM()
+                LIMIT 1
+            """, {"skip_score": SKIP_SCORE})
+            parts = c.fetchone()
+            return random.choice(parts)
 
     def random_inbetweeny(self):
         with self._db:
