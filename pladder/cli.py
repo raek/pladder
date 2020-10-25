@@ -10,7 +10,7 @@ def main():
                         help="Connect to existing pladder-bot service instead of running command directly.")
     parser.add_argument("--state-dir",
                         help="Directory where bot keeps its state")
-    parser.add_argument("--command",
+    parser.add_argument("-c", "--command",
                         help="Run this command instead of reading commands from stdin.")
     args = parser.parse_args()
     if args.dbus:
