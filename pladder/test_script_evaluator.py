@@ -2,11 +2,7 @@ import re
 
 import pytest
 
-from pladder.script import EvalError, ApplyError, CommandBinding, interpret
-
-
-def command_binding(command_name, fn, varargs=False, regex=False, contextual=False):
-    return CommandBinding(command_name, fn, varargs, regex, contextual)
+from pladder.script import EvalError, ApplyError, command_binding, interpret
 
 
 EMPTY_CONTEXT = {}

@@ -118,6 +118,10 @@ class ApplyError(ScriptError):
 CommandBinding = namedtuple("CommandBinding", "command_name, fn, varargs, regex, contextual")
 
 
+def command_binding(command_name, fn, varargs=False, regex=False, contextual=False):
+    return CommandBinding(command_name, fn, varargs, regex, contextual)
+
+
 def eval_call(bindings, context, call):
     assert isinstance(call, Call)
     evaled_words = []
