@@ -1,11 +1,13 @@
-from collections import namedtuple
+from collections import defaultdict, namedtuple
 from contextlib import ExitStack
 from datetime import datetime, timezone
 from inspect import Parameter, signature
+import logging
 import os
 import re
 
 from pladder import LAST_COMMIT
+from pladder.log import PladderLogProxy
 from pladder.script import ScriptError, ApplyError, CommandBinding, interpret, lookup_command, apply_call
 
 
@@ -17,9 +19,9 @@ def main():
         "XDG_CONFIG_HOME", os.path.join(os.environ["HOME"], ".config"))
     state_dir = os.path.join(state_home, "pladder-bot")
 
-    with PladderBot(state_dir) as bot:
+    bus = SessionBus()
+    with PladderBot(state_dir, bus) as bot:
         load_standard_plugins(bot)
-        bus = SessionBus()
         bus.publish("se.raek.PladderBot", bot)
         loop = GLib.MainLoop()
         loop.run()
@@ -41,13 +43,16 @@ class PladderBot(ExitStack):
     </node>
     """
 
-    def __init__(self, state_dir):
+    def __init__(self, state_dir, bus):
         super().__init__()
         os.makedirs(state_dir, exist_ok=True)
         self.state_dir = state_dir
+        self.bus = bus
+        self.log = PladderLogProxy(bus)
         self.bindings = []
         self.register_command("help", self.help)
         self.register_command("version", self.version)
+        self.register_command("lastlog", self.lastlog, contextual=True)
 
     def RunCommand(self, timestamp, network, channel, nick, text):
         context = {'datetime': datetime.fromtimestamp(timestamp, tz=timezone.utc),
@@ -112,6 +117,31 @@ class PladderBot(ExitStack):
 
     def version(self):
         return LAST_COMMIT
+
+    def lastlog(self, context, needle, skip=0):
+        try:
+            skip = int(skip)
+            assert(skip >= 0)
+        except (ValueError, AssertionError):
+            return "'skip' needs to be a non-negative number!"
+
+        def format_log_line(date, nick, text):
+            return '{} {}: {}'.format(date.strftime('%H:%M'), nick, text)
+
+        # Add one to skip to ignore the line where the command was issued
+        lines = self.log.SearchLines(context['network'], context['channel'], needle, 3, skip + 1)
+        lines_by_day = defaultdict(list)
+        for timestamp, nick, text in lines:
+            date = datetime.fromtimestamp(timestamp, tz=timezone.utc).astimezone(tz=None)
+            line = format_log_line(date, nick, text)
+            lines_by_day[(date.year, date.month, date.day)].append(line)
+        formatted = ['{}-{}-{}: '.format(*day) + ', '.join(lines)
+                     for (day, lines) in lines_by_day.items()]
+        result = '; '.join(formatted)
+        if result:
+            return result
+        else:
+            return "Found no matches for '{}'".format(needle)
 
 
 def load_standard_plugins(bot):

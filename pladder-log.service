@@ -1,0 +1,12 @@
+[Unit]
+Description=Pladder Log
+
+[Service]
+Type=dbus
+BusName=se.raek.PladderLog
+ExecStart=/usr/bin/python3 -u -m pladder.log
+Restart=on-failure
+SyslogIdentifier=pladder-log
+
+[Install]
+WantedBy=default.target

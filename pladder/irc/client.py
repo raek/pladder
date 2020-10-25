@@ -25,6 +25,9 @@ class Hooks:
     def on_trigger(self, timestamp, network, channel, sender, text):
         pass
 
+    def on_privmsg(self, timestamp, network, channel, sender, text):
+        pass
+
 
 def run_client(config, hooks):
     def update_status(s):
@@ -39,11 +42,13 @@ def run_client(config, hooks):
 
         def handle_privmsg(message):
             target, text = message.params
+            if target[0] in "&#+!":
+                reply_to = target
+            else:
+                reply_to = message.sender.nick
+            timestamp = datetime.now(timezone.utc).timestamp()
+            hooks.on_privmsg(timestamp, config.network, reply_to, message.sender, text)
             if text.startswith(config.trigger_prefix):
-                if target[0] in "&#+!":
-                    reply_to = target
-                else:
-                    reply_to = message.sender.nick
                 logger.info("{} -> {} : {}".format(message.sender.nick, target, text))
                 timestamp = datetime.now(timezone.utc).timestamp()
                 text_without_prefix = text[len(config.trigger_prefix):]
