@@ -11,6 +11,7 @@ class ParseError(ScriptError):
 
 
 Call = namedtuple("Call", "words")
+Quote = namedtuple("Quote", "words")
 Word = namedtuple("Word", "fragments")
 Literal = namedtuple("Literal", "string")
 
@@ -56,20 +57,33 @@ class _Parser:
 
     def parse(self):
         call = self.parse_call()
-        if self.at_end():
-            return call
-        else:
+        if self.try_peek("]"):
             raise ParseError("Excessive closing bracket")
+        elif self.try_peek("}"):
+            raise ParseError("Excessive closing brace")
+        else:
+            assert self.at_end()  # Should always be true
+            return call
 
     def parse_call(self):
         words = []
         while True:
             self.parse_whitespace()
-            if self.at_end() or self.try_peek("]"):
+            if self.at_end() or self.try_peek("]") or self.try_peek("}"):
                 break
             word = self.parse_word()
             words.append(word)
         return Call(words)
+
+    def parse_quote(self):
+        words = []
+        while True:
+            self.parse_whitespace()
+            if self.at_end() or self.try_peek("]") or self.try_peek("}"):
+                break
+            word = self.parse_word()
+            words.append(word)
+        return Quote(words)
 
     def parse_whitespace(self):
         while True:
@@ -80,7 +94,7 @@ class _Parser:
         fragments = []
         fragment_start = self.pos
         while True:
-            if self.at_end() or self.try_peek("]") or self.try_peek(" "):
+            if self.at_end() or self.try_peek("]") or self.try_peek("}") or self.try_peek(" "):
                 fragment_end = self.pos
                 if fragment_start != fragment_end:
                     fragment = Literal(self.text[fragment_start:fragment_end])
@@ -94,9 +108,25 @@ class _Parser:
                 call = self.parse_call()
                 if self.at_end():
                     raise ParseError("Missing closing bracket")
+                elif self.try_peek("}"):
+                    raise ParseError("Expected closing bracket, found closing brace")
                 else:
                     assert self.pop() == "]"  # Should always be true
                 fragments.append(call)
+                fragment_start = self.pos
+            elif self.try_pop("{"):
+                fragment_end = self.pos - 1
+                if fragment_start != fragment_end:
+                    fragment = Literal(self.text[fragment_start:fragment_end])
+                    fragments.append(fragment)
+                quote = self.parse_quote()
+                if self.at_end():
+                    raise ParseError("Missing closing brace")
+                elif self.try_peek("]"):
+                    raise ParseError("Expected closing brace, found closing bracket")
+                else:
+                    assert self.pop() == "}"  # Should always be true
+                fragments.append(quote)
                 fragment_start = self.pos
             else:
                 self.pop()
