@@ -1,3 +1,4 @@
+import random
 import re
 
 from pladder.plugin import Plugin
@@ -14,6 +15,7 @@ class MiscPlugin(Plugin):
         bot.register_command("vrålify", self.vral, varargs=True)
         bot.register_command("show-args", lambda *args: repr(args))
         bot.register_command("show-context", lambda context: repr(context), contextual=True)
+        bot.register_command("pick", lambda *args: random.choice(args) if args else "")
 
     def kloofify(self, context, text):
         command = context['command']
