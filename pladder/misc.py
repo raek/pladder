@@ -12,7 +12,7 @@ class MiscPlugin(Plugin):
         bot.register_command("comp", self.comp, contextual=True)
         bot.register_command("give", self.give, varargs=True)
         bot.register_command("echo", lambda text="": text, varargs=True)
-        bot.register_command("vrålify", self.vral, varargs=True)
+        bot.register_command("vrå+lify", self.vral, varargs=True, regex=True, contextual=True)
         bot.register_command("show-args", lambda *args: repr(args))
         bot.register_command("show-context", lambda context: repr(context), contextual=True)
         bot.register_command("pick", lambda *args: random.choice(args) if args else "")
@@ -30,8 +30,10 @@ class MiscPlugin(Plugin):
     def give(self, target, text):
         return f"{target}: {text}"
     
-    def vral(self, text):
-        return text.upper()
+    def vral(self, context, text):
+        i = context['command'].lower().count("å")-1
+        text = self.misc_cmds.vral(i, text)
+        return text
 
 
 class MiscCmds:
@@ -107,3 +109,12 @@ class MiscCmds:
         for word in target.split(' '):
             new_str = new_str + self.strip_double_consonants(self.kloofify_word(word)) + " "
         return new_str.rstrip()
+
+    def dupe_vowel_pre_consonant(self, text):
+        pattern = re.compile('([aeiouyåäö])([bcdfghjklmnpqrstvzx])', re.IGNORECASE)
+        return pattern.sub(r"\1\1\2", text)
+
+    def vral(self, i, text):
+        for _ in range(i):
+            text = self.dupe_vowel_pre_consonant(text)
+        return text.upper()
