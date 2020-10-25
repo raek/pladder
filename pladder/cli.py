@@ -22,7 +22,7 @@ def main():
     else:
         from pladder.bot import PladderBot, load_standard_plugins
         state_dir = args.state_dir or default_state_dir()
-        with PladderBot(state_dir) as bot:
+        with PladderBot(state_dir, None) as bot:
             load_standard_plugins(bot)
             run_commands(bot, args.command)
 
@@ -34,12 +34,14 @@ def run_commands(bot, command):
         for line in sys.stdin:
             print(run_command(bot, line.strip()))
 
+
 def run_command(bot, command):
     network = 'cli'
     reply_to = 'cli'
     sender = 'user'
     timestamp = datetime.now(timezone.utc).timestamp()
     return bot.RunCommand(timestamp, network, reply_to, sender, command)
+
 
 def default_state_dir():
     state_home = os.environ.get("XDG_CONFIG_HOME", os.path.join(os.environ["HOME"], ".config"))
