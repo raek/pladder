@@ -15,6 +15,9 @@ class SnuskPlugin(Plugin):
         bot.register_command("snuska", self.snusk_db.directed_snusk, varargs=True)
         bot.register_command("smak", self.snusk_db.taste)
         bot.register_command("nickförslag", self.snusk_db.nick)
+        bot.register_command("prefix", self.snusk_db.random_prefix)
+        bot.register_command("suffix", self.snusk_db.random_suffix)
+        bot.register_command("inbetweeny", self.snusk_db.random_inbetweeny)
         bot.register_command("add-snusk", self.add_noun)
         bot.register_command("add-noun", self.add_noun)
         bot.register_command("add-preposition", self.add_inbetweeny)
@@ -139,6 +142,15 @@ class SnuskDb(ExitStack):
     def nick(self):
         parts = self._random_parts()
         return parts[random.choice([0, 1])]
+
+    def random_prefix(self):
+        return self._random_parts()[0]
+
+    def random_suffix(self):
+        return self._random_parts()[1]
+
+    def random_inbetweeny(self):
+        return self._random_parts()[2]
 
     def example_snusk(self, a, b):
         parts = self._random_parts()
