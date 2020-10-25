@@ -1,13 +1,23 @@
 from collections import namedtuple
+from inspect import signature, Parameter
 
 
-class ParseError(Exception):
+class ScriptError(Exception):
+    pass
+
+
+class ParseError(ScriptError):
     pass
 
 
 Call = namedtuple("Call", "words")
 Word = namedtuple("Word", "fragments")
 Literal = namedtuple("Literal", "string")
+
+
+def interpret(bindings, context, text):
+    call = parse(text)
+    return eval_call(bindings, context, call)
 
 
 def parse(text):
@@ -91,3 +101,89 @@ class _Parser:
             else:
                 self.pop()
         return Word(fragments)
+
+
+class EvalError(ScriptError):
+    pass
+
+
+class ApplyError(ScriptError):
+    def __init__(self, msg, command, command_name, arguments):
+        super().__init__(msg)
+        self.command = command
+        self.command_name = command_name
+        self.arguments = arguments
+
+
+CommandBinding = namedtuple("CommandBinding", "command_name, fn, varargs, regex, contextual")
+
+
+def eval_call(bindings, context, call):
+    assert isinstance(call, Call)
+    evaled_words = []
+    for word in call.words:
+        evaled_fragments = []
+        for fragment in word.fragments:
+            if isinstance(fragment, Literal):
+                evaled_fragment = fragment.string
+            elif isinstance(fragment, Call):
+                evaled_fragment = eval_call(bindings, context, fragment)
+            evaled_fragments.append(evaled_fragment)
+        evaled_word = "".join(evaled_fragments)
+        evaled_words.append(evaled_word)
+    if not evaled_words:
+        return ""
+    command_name, arguments = evaled_words[0], evaled_words[1:]
+    command = lookup_command(bindings, command_name)
+    return apply_call(context, command, command_name, arguments)
+
+
+def lookup_command(bindings, command_name):
+    for command in bindings:
+        if command.regex:
+            if command.command_name.match(command_name):
+                return command
+        else:
+            if command.command_name == command_name:
+                return command
+    raise EvalError(f"Unkown command name: {command_name}")
+
+
+def apply_call(context, command, command_name, arguments):
+    if command.contextual:
+        context = dict(context)
+        context['command'] = command_name
+        arguments = [context] + arguments
+    if command.varargs:
+        last_arg_index = _max_positional_arguments(command.fn) - 1
+        first_args = arguments[:last_arg_index]
+        last_args = arguments[last_arg_index:]
+        if last_args:
+            arguments = first_args + [" ".join(last_args)]
+        else:
+            arguments = first_args
+    if not _signature_accepts_arguments(command.fn, arguments):
+        raise ApplyError("Argument count does not match what command accepts",
+                         command, command_name, arguments)
+    result = command.fn(*arguments)
+    assert isinstance(result, str), "Commands must return strings"
+    return result
+
+
+def _max_positional_arguments(fn):
+    sig = signature(fn)
+    max_args = 0
+    for parameter in sig.parameters.values():
+        if parameter.kind in [Parameter.POSITIONAL_ONLY,
+                              Parameter.POSITIONAL_OR_KEYWORD]:
+            max_args += 1
+    return max_args
+
+
+def _signature_accepts_arguments(fn, arguments):
+    try:
+        sig = signature(fn)
+        sig.bind(*arguments)
+        return True
+    except TypeError:
+        return False
