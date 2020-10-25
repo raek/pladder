@@ -144,13 +144,40 @@ class SnuskDb(ExitStack):
         return parts[random.choice([0, 1])]
 
     def random_prefix(self):
-        return self._random_parts()[0]
+        with self._db:
+            c = self._db.cursor()
+            c.execute("""
+                SELECT prefix
+                FROM nouns
+                WHERE score > :skip_score
+                ORDER BY RANDOM()
+                LIMIT 1
+            """, {"skip_score": SKIP_SCORE})
+            return c.fetchone()[0]
 
     def random_suffix(self):
-        return self._random_parts()[1]
+        with self._db:
+            c = self._db.cursor()
+            c.execute("""
+                SELECT suffix
+                FROM nouns
+                WHERE score > :skip_score
+                ORDER BY RANDOM()
+                LIMIT 1
+            """, {"skip_score": SKIP_SCORE})
+            return c.fetchone()[0]
 
     def random_inbetweeny(self):
-        return self._random_parts()[2]
+        with self._db:
+            c = self._db.cursor()
+            c.execute("""
+                SELECT inbetweeny
+                FROM inbetweenies
+                WHERE score > :skip_score
+                ORDER BY RANDOM()
+                LIMIT 1
+            """, {"skip_score": SKIP_SCORE})
+            return c.fetchone()[0]
 
     def example_snusk(self, a, b):
         parts = self._random_parts()
@@ -171,33 +198,13 @@ class SnuskDb(ExitStack):
         return "{}{} {} {}{}".format(*parts)
 
     def _random_parts(self):
-        with self._db:
-            c = self._db.cursor()
-            c.execute("""
-                WITH
-                random_noun AS (
-                    SELECT rowid
-                    FROM nouns
-                    WHERE score > :skip_score
-                    ORDER BY RANDOM()
-                    LIMIT 1
-                ),
-                random_inbetweeny AS (
-                    SELECT rowid
-                    FROM inbetweenies
-                    WHERE score > :skip_score
-                    ORDER BY RANDOM()
-                    LIMIT 1
-                )
-                SELECT a.prefix, b.suffix, c.inbetweeny, d.prefix, e.suffix
-                FROM nouns a, nouns b, inbetweenies c, nouns d, nouns e
-                WHERE a.rowid IN random_noun
-                AND b.rowid IN random_noun
-                AND c.rowid IN random_inbetweeny
-                AND d.rowid IN random_noun
-                AND e.rowid IN random_noun;
-            """, {"skip_score": SKIP_SCORE})
-            return list(c.fetchone())
+        return [
+            self.random_prefix(),
+            self.random_suffix(),
+            self.random_inbetweeny(),
+            self.random_prefix(),
+            self.random_suffix(),
+        ]
 
     def add_noun(self, prefix, suffix):
         with self._db:
