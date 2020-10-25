@@ -67,9 +67,6 @@ class PladderBot(ExitStack):
         except ScriptError as e:
             return str(e)
 
-    def interpret(self, context, text):
-        return interpret(self.bindings, context, text)
-
     def apply(self, context, words):
         if not words:
             return ""

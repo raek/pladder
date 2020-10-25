@@ -10,7 +10,7 @@ class MiscPlugin(Plugin):
         self.misc_cmds = MiscCmds()
         bot.register_command("kloo+fify", self.kloofify, varargs=True, regex=True, contextual=True)
         bot.register_command("comp", self.comp, contextual=True)
-        bot.register_command("give", self.give, varargs=True, contextual=True)
+        bot.register_command("give", self.give, varargs=True)
         bot.register_command("echo", lambda text="": text, varargs=True)
         bot.register_command("vrålify", self.vral, varargs=True)
         bot.register_command("show-args", lambda *args: repr(args))
@@ -27,8 +27,8 @@ class MiscPlugin(Plugin):
         command2_result = self.bot.apply(context, list(command2_words))
         return self.bot.apply(context, [command1, command2_result])
 
-    def give(self, context, target, script):
-        return target + ": " + self.bot.interpret(context, script)
+    def give(self, target, text):
+        return f"{target}: {text}"
     
     def vral(self, text):
         return text.upper()
