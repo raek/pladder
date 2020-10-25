@@ -4,6 +4,7 @@ import random
 import sqlite3
 
 from pladder.plugin import Plugin
+from pladder.script import interpret
 
 
 class SnuskPlugin(Plugin):
@@ -13,8 +14,8 @@ class SnuskPlugin(Plugin):
         self.snusk_db = self.enter_context(SnuskDb(snusk_db_path))
         bot.register_command("snusk", self.snusk_db.snusk)
         bot.register_command("snuska", self.snusk_db.directed_snusk, varargs=True)
-        bot.register_command("smak", self.snusk_db.taste)
-        bot.register_command("nickförslag", self.snusk_db.nick)
+        bot.register_command("smak", self.smak)
+        bot.register_command("nickförslag", self.snusk_db.random_noun)
         bot.register_command("prefix", self.snusk_db.random_prefix)
         bot.register_command("suffix", self.snusk_db.random_suffix)
         bot.register_command("noun", self.snusk_db.random_noun)
@@ -28,6 +29,10 @@ class SnuskPlugin(Plugin):
         bot.register_command("downvote-noun", self.downvote_noun)
         bot.register_command("upvote-inbetweeny", self.upvote_inbetweeny, varargs=True)
         bot.register_command("downvote-inbetweeny", self.downvote_inbetweeny, varargs=True)
+
+    def smak(self):
+        return "{}/{}".format(self.snusk_db.random_prefix().upper(),
+                              self.snusk_db.random_prefix().upper())
 
     def add_noun(self, prefix, suffix):
         if self.snusk_db.add_noun(prefix, suffix):
@@ -135,14 +140,6 @@ class SnuskDb(ExitStack):
             part = target + "ern"
         parts[i] = part
         return self._format_parts(parts)
-
-    def taste(self):
-        parts = self._random_parts()
-        return "{}/{}".format(parts[0].upper(), parts[3].upper())
-
-    def nick(self):
-        parts = self._random_parts()
-        return parts[random.choice([0, 1])]
 
     def random_prefix(self):
         with self._db:
