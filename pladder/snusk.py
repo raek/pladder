@@ -22,7 +22,7 @@ class SnuskPlugin(Plugin):
         bot.register_command("inbetweeny", self.snusk_db.random_inbetweeny)
         bot.register_command("add-snusk", self.add_noun)
         bot.register_command("add-noun", self.add_noun)
-        bot.register_command("add-preposition", self.add_inbetweeny)
+        bot.register_command("add-preposition", self.add_inbetweeny, varargs=True)
         bot.register_command("add-inbetweeny", self.add_inbetweeny, varargs=True)
         bot.register_command("find-noun", self.find_noun)
         bot.register_command("upvote-noun", self.upvote_noun)
