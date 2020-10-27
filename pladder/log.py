@@ -144,7 +144,7 @@ class LogDb(ExitStack):
                     SELECT ROW_NUMBER() OVER(ORDER BY timestamp DESC) AS row_number,
                            timestamp, nick, text
                     FROM lines
-                    WHERE channel = :channel AND text LIKE :substring
+                    WHERE channel = :channel AND (text LIKE :substring OR nick LIKE :substring)
                 )
                 WHERE row_number > :skip
                 LIMIT :max_count
