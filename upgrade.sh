@@ -16,3 +16,4 @@ pip3 install --user --no-warn-script-location "$1"
 git checkout -- pladder/__init__.py
 systemctl --user daemon-reload
 systemctl --user restart pladder-bot.service
+systemctl --user restart pladder-log.service
