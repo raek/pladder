@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from inspect import Parameter, signature
 import logging
 import os
+import random
 import re
 
 from pladder import LAST_COMMIT
@@ -53,6 +54,19 @@ class PladderBot(ExitStack):
         self.register_command("help", self.help)
         self.register_command("version", self.version)
         self.register_command("lastlog", self.lastlog, contextual=True)
+        self.register_command("comp", self.comp, contextual=True)
+        self.register_command("give", self.give, varargs=True)
+        self.register_command("echo", lambda text="": text, varargs=True)
+        self.register_command("show-args", lambda *args: repr(args))
+        self.register_command("show-context", lambda context: repr(context), contextual=True)
+        self.register_command("pick", lambda *args: random.choice(args) if args else "")
+
+    def comp(self, context, command1, *command2_words):
+        command2_result = self.apply(context, list(command2_words))
+        return self.apply(context, [command1, command2_result])
+
+    def give(self, target, text):
+        return f"{target}: {text}"
 
     def RunCommand(self, timestamp, network, channel, nick, text):
         context = {'datetime': datetime.fromtimestamp(timestamp, tz=timezone.utc),
