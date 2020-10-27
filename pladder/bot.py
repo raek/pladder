@@ -60,6 +60,8 @@ class PladderBot(ExitStack):
         self.register_command("show-args", lambda *args: repr(args))
         self.register_command("show-context", lambda context: repr(context), contextual=True)
         self.register_command("pick", lambda *args: random.choice(args) if args else "")
+        self.register_command("concat", lambda *args: " ".join(arg.strip() for arg in args))
+        self.register_command("eval", self.eval_command, contextual=True)
 
     def comp(self, context, command1, *command2_words):
         command2_result = self.apply(context, list(command2_words))
@@ -153,6 +155,10 @@ class PladderBot(ExitStack):
             return result
         else:
             return "Found no matches for '{}'".format(needle)
+
+    def eval_command(self, context, *args):
+        script = " ".join(arg.strip() for arg in args)
+        return interpret(self.bindings, context, script)
 
 
 def load_standard_plugins(bot):
