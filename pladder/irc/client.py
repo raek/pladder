@@ -28,6 +28,9 @@ class Hooks:
     def on_privmsg(self, timestamp, network, channel, sender, text):
         pass
 
+    def on_send_privmsg(self, timestamp, network, channel, sender, text):
+        pass
+
 
 def run_client(config, hooks):
     def update_status(s):
@@ -56,6 +59,7 @@ def run_client(config, hooks):
                 if reply:
                     full_reply = config.reply_prefix + reply
                     logger.info("-> {} : {}".format(reply_to, full_reply))
+                    hooks.on_send_privmsg(timestamp, config.network, reply_to, config.nick, full_reply)
                     conn.send("PRIVMSG", reply_to, full_reply)
 
         def messages_with_default_handling():

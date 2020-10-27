@@ -91,4 +91,7 @@ def set_up_dbus(hooks_base_class):
         def on_privmsg(self, timestamp, network, channel, sender, text):
             log.AddLine(timestamp, network, channel, sender.nick, text)
 
+        def on_send_privmsg(self, timestamp, network, channel, nick, text):
+            log.AddLine(timestamp, network, channel, nick, text)
+
     return DbusHooks
