@@ -123,7 +123,7 @@ class PladderBot(ExitStack):
             return "'skip' needs to be a non-negative number!"
 
         def format_log_line(date, nick, text):
-            return '{} {}: {}'.format(date.strftime('%H:%M'), nick, text)
+            return '[{} {}: {}]'.format(date.strftime('%H:%M'), nick, text)
 
         # Add one to skip to ignore the line where the command was issued
         lines = self.log.SearchLines(context['network'], context['channel'], needle, 3, skip + 1)
@@ -132,7 +132,7 @@ class PladderBot(ExitStack):
             date = datetime.fromtimestamp(timestamp, tz=timezone.utc).astimezone(tz=None)
             line = format_log_line(date, nick, text)
             lines_by_day[(date.year, date.month, date.day)].append(line)
-        formatted = ['{}-{}-{}: '.format(*day) + ', '.join(lines)
+        formatted = ['{}-{}-{}: {}'.format(*day, ', '.join(lines))
                      for (day, lines) in lines_by_day.items()]
         result = '; '.join(formatted)
         if result:
