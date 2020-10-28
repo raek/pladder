@@ -101,6 +101,12 @@ class MiscCmds:
         return pattern.sub(r"\1\1\2", text)
 
     def vral(self, i, text):
+        i = i*2 if len(text)<16 else i
+        i = i*2 if len(text)<8 else i
+        # vrålify 'n' if there are no vowels
+        if not re.search(r'[aeiouyåäö]', text, re.I):
+            for _ in range(i):
+                text = re.sub(r'(n)([bcdfghjklmpqrstvzx])', r'\1\1\2', text, 0, re.IGNORECASE)
         for _ in range(i):
             text = self.dupe_vowel_pre_consonant(text)
         return text.upper()
