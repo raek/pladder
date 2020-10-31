@@ -164,8 +164,10 @@ class PladderBot(ExitStack):
 def load_standard_plugins(bot):
     from pladder.snusk import SnuskPlugin
     from pladder.misc import MiscPlugin
+	from pladder.bjbot import BjBotPlugin
     bot.enter_context(SnuskPlugin(bot))
     bot.enter_context(MiscPlugin(bot))
+    bot.enter_context(BjBotPlugin(bot))
 
 
 if __name__ == "__main__":
