@@ -1,18 +1,20 @@
 import os
 from pladder.plugin import Plugin
 
+
 class BjBotPlugin(Plugin):
     def __init__(self, bot):
         super().__init__()
         self._datorbas = dict()
-        self.importera(self._datorbas, os.path.join(bot.statedir, "bunny.txt"))
+        self.importera(self._datorbas, os.path.join(bot.state_dir, "bunny.txt"))
         if not bot is None:
             bot.register_command("jb", self.jb)
 
     def importera(self, db, path):
         if os.path.exists(path):
-            with open(path) as fp:
+            with open(path, "rt", encoding="latin1") as fp:
                 for line in fp:
+                    line = line.strip()
                     delim_index = line.find("¤")
                     db[line[0:delim_index]] = line[delim_index + 1:]
 
