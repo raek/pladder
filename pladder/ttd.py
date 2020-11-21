@@ -10,7 +10,7 @@ class TTDPlugin(Plugin):
         super().__init__()
         self.se1 = ["Gamla ", "Lilla ", "Nya ", "Stora "]
         self.se2 = ["Boll", "Bor", "Ed", "En", "Erik", "Es", "Fin", "Fisk", "Grön", "Hag", "Halm", "Karl", "Kram", "Kung", "Land", "Lid", "Lin", "Mal", "Malm", "Marie",
-                    "Ner", "Norr", "Oskar", "Sand", "Skog", "Stock", "Stor", "Ström", "Sund", "Söder", "Tall", "Tratt", "Troll", "Upp", "Var", "Väster", "Ångel", "Öster"]
+                    "Ner", "Norr", "Oskar", "Sand", "Skog", "Stock", "Stor", "Ström", "Sund", "Söder", "Tall", "Tratt", "Troll", "Upp", "Var", "Väster", "Ängel", "Öster", "Strut"]
         self.se2a = ["B", "Br", "D", "Dr", "Dv", "F", "Fj", "Fl", "Fr", "G", "Gl", "Gn", "Gr", "H", "J", "K", "Kl", "Kn", "Kr", "Kv",
                      "L", "M", "N", "P", "Pl", "Pr", "R", "S", "Sk", "Skr", "Sl", "Sn", "Sp", "Spr", "St", "Str", "Sv", "T", "Tr", "Tv", "V", "Vr"]
         self.se2b = ["a", "e", "i", "o", "u", "y", "å", "ä", "ö"]
@@ -23,7 +23,7 @@ class TTDPlugin(Plugin):
 
     def gentown(self):
         town = ""
-        if (random.random() > 0.75):
+        if (random.random() > 0.7):
             town += random.choice(self.se1)
         if (random.random() > 0.6):
             town += random.choice(self.se2)
