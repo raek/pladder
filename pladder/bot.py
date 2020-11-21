@@ -165,9 +165,11 @@ def load_standard_plugins(bot):
     from pladder.snusk import SnuskPlugin
     from pladder.misc import MiscPlugin
     from pladder.bjbot import BjBotPlugin
+    from pladder.ttd import TTDPlugin
     bot.enter_context(SnuskPlugin(bot))
     bot.enter_context(MiscPlugin(bot))
     bot.enter_context(BjBotPlugin(bot))
+    bot.enter_context(TTDPlugin(bot))
 
 
 if __name__ == "__main__":
