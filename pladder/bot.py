@@ -90,10 +90,10 @@ class PladderBot(ExitStack):
         command = lookup_command(self.bindings, command_name)
         return apply_call(context, command, command_name, arguments)
 
-    def register_command(self, name, fn, varargs=False, regex=False, contextual=False):
+    def register_command(self, name, fn, varargs=False, regex=False, contextual=False, parseoutput=False):
         if regex:
             name = re.compile("^" + name + "$")
-        self.bindings.append(CommandBinding(name, fn, varargs, regex, contextual))
+        self.bindings.append(CommandBinding(name, fn, varargs, regex, contextual, parseoutput))
 
     def command_display_name(self, command):
         if command.regex:

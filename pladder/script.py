@@ -33,6 +33,11 @@ class _Parser:
     def at_end(self):
         return self.pos == self.end_pos
 
+    def del_previous_char(self):
+        self.pos -= 1
+        self.end_pos -= 1
+        self.text = self.text[0:self.pos:] + self.text[self.pos+1::]
+
     def pop(self):
         c = self.text[self.pos]
         self.pos += 1
@@ -86,6 +91,13 @@ class _Parser:
                     fragment = Literal(self.text[fragment_start:fragment_end])
                     fragments.append(fragment)
                 break
+            elif self.try_pop("{"):
+                self.del_previous_char()
+                while not self.try_pop("}"):
+                    if self.at_end():
+                        raise ParseError("Missing closing stabby-bracket")
+                    self.pop()
+                self.del_previous_char()
             elif self.try_pop("["):
                 fragment_end = self.pos - 1
                 if fragment_start != fragment_end:
@@ -115,11 +127,11 @@ class ApplyError(ScriptError):
         self.arguments = arguments
 
 
-CommandBinding = namedtuple("CommandBinding", "command_name, fn, varargs, regex, contextual")
+CommandBinding = namedtuple("CommandBinding", "command_name, fn, varargs, regex, contextual, parseoutput")
 
 
-def command_binding(command_name, fn, varargs=False, regex=False, contextual=False):
-    return CommandBinding(command_name, fn, varargs, regex, contextual)
+def command_binding(command_name, fn, varargs=False, regex=False, contextual=False, parseoutput=False):
+    return CommandBinding(command_name, fn, varargs, regex, contextual, parseoutput)
 
 
 def eval_call(bindings, context, call):
@@ -139,7 +151,10 @@ def eval_call(bindings, context, call):
         return ""
     command_name, arguments = evaled_words[0], evaled_words[1:]
     command = lookup_command(bindings, command_name)
-    return apply_call(context, command, command_name, arguments)
+    result = apply_call(context, command, command_name, arguments)
+    if command.parseoutput and result.find("[")>=0:
+        result = interpret(bindings, context, "echo " + result)
+    return result
 
 
 def lookup_command(bindings, command_name):
