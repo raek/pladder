@@ -115,6 +115,20 @@ started separately). If it is not given, then commands are ignored
 (useful for testing the pure IRC parts).
 
 
+### Authentication
+
+Support for Q authentication on QuakeNet is available. Add an "auth" section like this in the IRC config:
+
+    {
+        ...
+        "auth": {
+            "system": "Q",
+            "username": "foo",
+            "password": "bar"
+        }
+    }
+
+
 ## Configuring the log service
 
 Configure the log service by creating a configuration file:
