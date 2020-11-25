@@ -84,12 +84,12 @@ def run_client(config, hooks):
 
         def authenticate():
             if config.auth.system == "Q":
-                update_status(f"Authenticating with Q as {config.auth.user}")
+                update_status(f"Authenticating with Q as {config.auth.username}")
                 conn.send("PRIVMSG", "Q@CServe.quakenet.org", f"AUTH {config.auth.username} {config.auth.password}")
                 q_bot = Sender("Q", "TheQBot", "CServe.quakenet.org")
                 for message in messages:
                     if message.command == "NOTICE" and message.sender == q_bot:
-                        if message.params == [config.nick, f"You are now logged in as {config.auth.user}."]:
+                        if message.params == [config.nick, f"You are now logged in as {config.auth.username}."]:
                             break
                         else:
                             raise Exception("Authentication failed: " + message.params[1])
