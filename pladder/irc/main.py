@@ -3,7 +3,7 @@ import json
 import logging
 import os
 
-from pladder.irc.client import Config, Hooks, run_client
+from pladder.irc.client import AuthConfig, Config, Hooks, run_client
 from pladder.log import PladderLogProxy
 
 
@@ -29,7 +29,10 @@ def read_config(config_name):
     config_path = os.path.join(config_home, "pladder-irc", config_name + ".json")
     with open(config_path, "rt") as f:
         config_data = json.load(f)
-        return Config(**{**CONFIG_DEFAULTS, **config_data})
+        config = Config(**{**CONFIG_DEFAULTS, **config_data})
+        if config.auth:
+            config = config._replace(auth=AuthConfig(**config.auth))
+        return config
 
 
 CONFIG_DEFAULTS = {

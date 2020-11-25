@@ -10,6 +10,7 @@ logger = logging.getLogger("pladder.irc")
 
 
 Config = namedtuple("Config", "network, host, port, nick, realname, auth, user_mode, channels, trigger_prefix, reply_prefix")
+AuthConfig = namedtuple("AuthConfig", "system, username, password")
 
 
 class Hooks:
@@ -82,15 +83,18 @@ def run_client(config, hooks):
                     break
 
         def authenticate():
-            update_status("Authenticating with Q")
-            conn.send("PRIVMSG", "Q@CServe.quakenet.org", f"AUTH {config.nick} {config.auth}")
-            q_bot = Sender("Q", "TheQBot", "CServe.quakenet.org")
-            for message in messages:
-                if message.command == "NOTICE" and message.sender == q_bot:
-                    if message.params == [config.nick, f"You are now logged in as {config.nick}."]:
-                        break
-                    else:
-                        raise Exception("Authentication failed: " + message.params[1])
+            if config.auth.system == "Q":
+                update_status(f"Authenticating with Q as {config.auth.user}")
+                conn.send("PRIVMSG", "Q@CServe.quakenet.org", f"AUTH {config.auth.username} {config.auth.password}")
+                q_bot = Sender("Q", "TheQBot", "CServe.quakenet.org")
+                for message in messages:
+                    if message.command == "NOTICE" and message.sender == q_bot:
+                        if message.params == [config.nick, f"You are now logged in as {config.auth.user}."]:
+                            break
+                        else:
+                            raise Exception("Authentication failed: " + message.params[1])
+            else:
+                Exception("Unknown authentication system: " + config.auth.system)
 
         def set_user_mode():
             update_status(f"Setting user mode to {config.user_mode}")
