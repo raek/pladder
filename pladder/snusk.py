@@ -2,6 +2,7 @@ from contextlib import ExitStack
 import os
 import random
 import sqlite3
+from re import search
 
 from pladder.plugin import Plugin
 
@@ -204,6 +205,12 @@ class SnuskDb(ExitStack):
         return self._format_parts(parts)
 
     def _format_parts(self, parts):
+        if search('([a-z])\\1\\1', parts[0].lower() + parts[1].lower()):
+            parts[0] += '-'
+        
+        if search('([a-z])\\1\\1', parts[3].lower() + parts[4].lower()):
+            parts[3] += '-'
+               
         return "{}{} {} {}{}".format(*parts)
 
     def _random_parts(self):
