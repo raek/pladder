@@ -1,6 +1,7 @@
 import re
 
 from pladder.plugin import Plugin
+from datetime import datetime
 
 class MiscPlugin(Plugin):
     def __init__(self, bot):
@@ -9,6 +10,7 @@ class MiscPlugin(Plugin):
         self.misc_cmds = MiscCmds()
         bot.register_command("kloo+fify", self.kloofify, varargs=True, regex=True, contextual=True)
         bot.register_command("vrå+lify", self.vral, varargs=True, regex=True, contextual=True)
+        bot.register_command("time", self.time)
 
     def kloofify(self, context, text):
         command = context['command']
@@ -20,6 +22,12 @@ class MiscPlugin(Plugin):
         i = context['command'].lower().count("å")-1
         text = self.misc_cmds.vral(i, text)
         return text
+    
+    def time(self):
+        now = datetime.now()
+        t = now.strftime("%H:%M:%S")
+        return t
+
 
 
 class MiscCmds:
