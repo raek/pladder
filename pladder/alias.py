@@ -63,7 +63,7 @@ class AliasPlugin(Plugin):
         except:
             return "Det lär ju inte bara vara ett ord ditt mähulkande våp! ~add-alias hest {[prefix] gillar hest!}"
         if self.binding_exists(name):
-            return "Hallå farfar den finns ju redan."
+            return "Hallå farfar, den finns ju redan."
         if result := self.alias_db.add_alias(name, data):
             self.register_binding(name)
         return result
