@@ -25,7 +25,7 @@ class MiscPlugin(Plugin):
     
     def time(self):
         now = datetime.now()
-        t = now.strftime("%H:%M:%S")
+        t = now.strftime("%H:%M:%S.%f")
         return t
 
 
