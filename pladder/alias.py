@@ -116,7 +116,7 @@ class AliasDb(ExitStack):
                     data TEXT
                 );
                 INSERT INTO alias(name, data) VALUES
-                ('hello', 'Hej [nickförslag]!');
+                ('hello', 'Hej!');
             """)
 
         self._db.commit()
