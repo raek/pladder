@@ -11,6 +11,7 @@ class MiscPlugin(Plugin):
         bot.register_command("kloo+fify", self.kloofify, varargs=True, regex=True, contextual=True)
         bot.register_command("vrå+lify", self.vral, varargs=True, regex=True, contextual=True)
         bot.register_command("time", self.time)
+        bot.register_command("capify", self.capify, varargs=True, regex=False, contextual=False)
 
     def kloofify(self, context, text):
         command = context['command']
@@ -27,6 +28,9 @@ class MiscPlugin(Plugin):
         now = datetime.now()
         t = now.strftime("%H:%M:%S.%f")
         return t
+
+    def capify(self, text):
+        return text.title()
 
 
 
