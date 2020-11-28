@@ -1,11 +1,8 @@
 from contextlib import ExitStack
 import os
-from os import name
 import sqlite3
 import random
-
 from pladder.plugin import Plugin
-from pladder.script import CommandBinding
 
 
 class DBError(Exception):
@@ -28,7 +25,7 @@ class AliasPlugin(Plugin):
 
 
     def help(self):
-        return "Functions: get-alias [name], del-alias [name], add-alias [name] [content], list-alias *[name]*, random-alias *[name]*. Use {} when adding PladderScript to database."
+        return "Functions: get-alias [name], del-alias [name], add-alias [name] [content], list-alias *[name]*, random-alias *[name]*. Wildcards are % and _. Use {} when adding PladderScript to database."
     
     def binding_exists(self, name):
         for binding in self.bot.bindings:
@@ -70,8 +67,13 @@ class AliasPlugin(Plugin):
     
     def del_alias(self, args):
         if self.binding_exists(args):
-            self.remove_binding(args)
-            return self.alias_db.del_alias(args)
+            try: 
+                result = self.alias_db.del_alias(args)
+            except:
+                return "Det blir inget med det."
+            else:
+                self.remove_binding(args)
+            return result
         else:
             return "Nej"
 
