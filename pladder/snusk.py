@@ -47,7 +47,8 @@ class SnuskPlugin(Plugin):
 
     def find_noun(self, word):
         nouns = self.snusk_db.find_noun(word)
-        return "{} found:   ".format(len(nouns)) + ",   ".join(prefix + " " + suffix for prefix, suffix in nouns)
+        hits = len(nouns) if len(nouns) < 11 else "10+"
+        return "{} found:  ".format(hits) + ",  ".join(prefix + " " + suffix + " (" + str(score) + ")" for prefix, suffix, score in nouns)
 
     def upvote_noun(self, prefix, suffix):
         score = self.snusk_db.add_noun_score(prefix, suffix, 1)
@@ -242,12 +243,14 @@ class SnuskDb(ExitStack):
 
     def find_noun(self, word):
         with self._db:
+            searchstr = "%" + word + "%"
             c = self._db.cursor()
             c.execute("""
-                SELECT prefix, suffix
+                SELECT prefix, suffix, score
                 FROM nouns
-                WHERE ? IN (prefix, suffix);
-            """, (word,))
+                WHERE prefix LIKE ? OR suffix LIKE ?
+                LIMIT 11;
+            """, (searchstr, searchstr))
             return c.fetchall()
 
     def add_noun_score(self, prefix, suffix, delta):
