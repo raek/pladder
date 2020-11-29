@@ -6,9 +6,42 @@ class BjukkifyPlugin(Plugin):
         self.bot = bot
         bot.register_command("bjukkify", self.bjukkify)
 
+    def _should_be_caps(self, char):
+        caps_chars = "acegmnopqrsuvwz"
+        return char in caps_chars
+
+    def _replace_occurences(self, word, lut):
+        for item in lut.items():
+            word = word.replace(*item)
+        return word
+
     def _is_vowel(self, char):
         swedish_vowels = "aouåeiyäö"
         return char in swedish_vowels
+
+    def _find_first_vowel(self, word):
+        last_char = len(word) - 1
+        for pos, char in enumerate(word):
+            if self._is_vowel(char):
+                return pos
+        return last_char
+
+    def _lookup_and_replace(self, char, lut):
+        if char in lut.keys():
+            char = lut[char]
+        return char
+
+    def _soften_other_vowels(self, word):
+        softened_vowels = {
+            "i": "e",
+        }
+        return self._replace_occurences(word, softened_vowels)
+
+    def _soften_last_vowel(self, char):
+        softened_last_vowels = {
+            "a": "e",
+        }
+        return self._lookup_and_replace(char, softened_last_vowels)
 
     def _is_special_word(self, word):
         special_words = {
@@ -24,38 +57,13 @@ class BjukkifyPlugin(Plugin):
     def _replace_special_sequences(self, word):
         special_sequences = {
             "haxx": "hoggz",
-            "hax": "hogz",
         }
-        for sequence in special_sequences.items():
-            word = word.replace(*sequence)
-        return word
+        return self._replace_occurences(word, special_sequences)
 
-    def _lookup_and_replace(self, word, lut):
-        if word in lut.keys():
-            word = lut[word]
-        return word
-
-    def _soften_vowel(self, vowel):
-        softened_vowels = {
-            "i": "e",
-        }
-        return self._lookup_and_replace(vowel, softened_vowels)
-
-    def _soften_last_vowel(self, vowel):
-        softened_last_vowels = {
-            "a": "e",
-        }
-        return self._lookup_and_replace(vowel, softened_last_vowels)
-
-    def _soften_multiple_consonants(self, consonants):
-        softened_multiple_consonants = {
+    def _soften_consonants(self, word):
+        softened_consonants = {
             "zz": "ddz",
             "xx": "ggz",
-        }
-        return self._lookup_and_replace(consonants, softened_multiple_consonants)
-
-    def _soften_single_consonant(self, consonant):
-        softened_consonants = {
             "c": "g",
             "k": "g",
             "s": "z",
@@ -64,43 +72,16 @@ class BjukkifyPlugin(Plugin):
             "q": "g",
             "x": "gz",
         }
-        return self._lookup_and_replace(consonant, softened_consonants)
+        first_vowel = self._find_first_vowel(word)
+        return word[:first_vowel] \
+            + self._replace_occurences(word[first_vowel:], softened_consonants)
 
-    def _next_vowel_position(self, word):
-        for pos, char in enumerate(word):
-            if self._is_vowel(char):
-                return pos
-        return len(word)
-
-    def _bjukkify_word(self, word):
-        last_char = len(word) - 1
-        bjukkified_word = ""
-        skip_to = 0
-        for pos, char in enumerate(word):
-            if self._is_vowel(char) and pos < last_char:
-                consonant_group_start = pos + 1
-                consonant_group_end = consonant_group_start + \
-                    self._next_vowel_position(word[(consonant_group_start):])
-                consonant_group = word[consonant_group_start:consonant_group_end]
-                softened_consonants = ""
-                temp = self._soften_multiple_consonants(consonant_group)
-                for temp_char in temp:
-                    softened_consonants += self._soften_single_consonant(temp_char)
-                vowel = word[pos]
-                if softened_consonants != consonant_group:
-                    vowel = self._soften_vowel(vowel)
-                bjukkified_word += vowel
-                bjukkified_word += softened_consonants
-                skip_to = consonant_group_end
-            elif skip_to <= pos:
-                if pos == last_char:
-                    char = self._soften_last_vowel(char)
-                bjukkified_word += char
-        return bjukkified_word
-
-    def _should_be_caps(self, char):
-        caps_chars = "acegmnopqrsuvwz"
-        return char in caps_chars
+    def _soften_vowels(self, word):
+        if len(word) >= 3:
+            word = word[0] \
+                + self._soften_other_vowels(word[1:-1]) \
+                + self._soften_last_vowel(word[-1])
+        return word
 
     def _capsify_text(self, text):
         capsified_text = ""
@@ -118,12 +99,16 @@ class BjukkifyPlugin(Plugin):
         words = text.split(" ")
         bjukkified_words = []
         for word in words:
+            if word == "":
+                continue
             is_special, special_word = self._is_special_word(word)
             if is_special:
                 bjukkified_words.append(special_word)
             else:
                 word = self._replace_special_sequences(word)
-                bjukkified_words.append(self._bjukkify_word(word))
+                word = self._soften_consonants(word)
+                word = self._soften_vowels(word)
+                bjukkified_words.append(word)
         return self._capsify_text(" ".join(bjukkified_words))
 
 if __name__ == "__main__":

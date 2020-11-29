@@ -13,7 +13,12 @@ def test_registers_command():
     mockbot.register_command.assert_called_with("bjukkify", plugin.bjukkify)
 
 examples = {
-    "ape": "AbE",
+    "": "",
+    "a": "A",
+    "ab": "Ab",
+    "b": "b",
+    "bo": "bO",
+    "apa": "AbE",
     "bjuckern": "bjUGGERN",
     "fiska": "fEZGE",
     "fika": "fEGE",
@@ -21,6 +26,7 @@ examples = {
     "friskis": "fREZGEZ",
     "hestar": "hEZdAR",
     "hest": "hEZd",
+    "ingenting": "iNGENdENG",
     "läsa": "läZE",
     "läska": "läZGE",
     "kjol": "kjOl",
@@ -31,7 +37,7 @@ examples = {
     "pizza": "PEddZE",
     "pizzor": "PEddZOR",
     "ringklocka": "RENGGlOGGE",
-    "spilla": "SPillE",
+    "spela": "SPElE",
     "Elon Musk": "ElON MUZG",
     "Mona Lisa": "MONE lEZE",
     "Morgon_kaffet, kanske i den sköna sängen idag":
