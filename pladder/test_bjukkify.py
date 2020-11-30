@@ -10,7 +10,7 @@ def test_registers_command():
     """
     Should register command bjukkify that calls the bjukkifier
     """
-    mockbot.register_command.assert_called_with("bjukkify", plugin.bjukkify)
+    mockbot.register_command.assert_called_with("bjukkify", plugin.bjukkify, varargs=True)
 
 examples = {
     "": "",

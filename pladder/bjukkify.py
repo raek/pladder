@@ -4,7 +4,7 @@ class BjukkifyPlugin(Plugin):
     def __init__(self, bot):
         super().__init__()
         self.bot = bot
-        bot.register_command("bjukkify", self.bjukkify)
+        bot.register_command("bjukkify", self.bjukkify, varargs=True)
 
     def _should_be_caps(self, char):
         caps_chars = "acegmnopqrsuvwz"
