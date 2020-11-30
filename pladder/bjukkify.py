@@ -7,7 +7,7 @@ class BjukkifyPlugin(Plugin):
         bot.register_command("bjukkify", self.bjukkify, varargs=True)
 
     def _should_be_caps(self, char):
-        caps_chars = "acegmnopqrsuvwz"
+        caps_chars = "acegmnopqrsuvwyz"
         return char in caps_chars
 
     def _replace_occurences(self, word, lut):
