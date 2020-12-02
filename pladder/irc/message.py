@@ -103,8 +103,8 @@ def format_message(msg):
 def message_generator(msgtype, target, reply_prefix, text):
     header = f"{msgtype} {target} :{reply_prefix}"
     while len(text) > 0:
-        if len(text) > MAX_LINE_BYTES - 50 - len(header):
-            msgpart = text[:(MAX_LINE_BYTES - 58 - len(header))]
+        if len(text) > MAX_LINE_BYTES - 60 - len(header):
+            msgpart = text[:(MAX_LINE_BYTES - 68 - len(header))]
             endpos = msgpart.rfind(" ")
             if endpos < 0:
                 endpos = len(msgpart)
