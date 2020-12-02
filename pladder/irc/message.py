@@ -99,6 +99,24 @@ def format_message(msg):
         result += separator + last_param
     return result
 
+# Takes message and returns generator to split long lines into separate messages
+def message_generator(msgtype, target, reply_prefix, text):
+    header = f"{msgtype} {target} :{reply_prefix}"
+    while len(text) > 0:
+        if len(text) > MAX_LINE_BYTES - 50 - len(header):
+            msgpart = text[:(MAX_LINE_BYTES - 58 - len(header))]
+            endpos = msgpart.rfind(" ")
+            if endpos < 0:
+                endpos = len(msgpart)
+            text = text[endpos:].lstrip()
+            msgpart = msgpart[:endpos]
+            msgpart = f"{header}{msgpart} <more>"
+        else:
+            msgpart = f"{header}{text}"
+            text = ""
+        yield msgpart
+
+
 
 class ConnectionError(Exception):
     pass

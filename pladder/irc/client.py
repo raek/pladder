@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 import logging
 import socket
 
-from pladder.irc.message import MessageConnection, Sender
+from pladder.irc.message import MessageConnection, Sender, message_generator
 
 
 logger = logging.getLogger("pladder.irc")
@@ -12,6 +12,7 @@ logger = logging.getLogger("pladder.irc")
 Config = namedtuple("Config", "network, host, port, nick, realname, auth, user_mode, channels, trigger_prefix, reply_prefix")
 AuthConfig = namedtuple("AuthConfig", "system, username, password")
 
+msgsplitter = {}
 
 class Hooks:
     def on_ready(self):
@@ -58,10 +59,15 @@ def run_client(config, hooks):
                 text_without_prefix = text[len(config.trigger_prefix):]
                 reply = hooks.on_trigger(timestamp, config.network, reply_to, message.sender, text_without_prefix)
                 if reply:
-                    full_reply = config.reply_prefix + reply
-                    logger.info("-> {} : {}".format(reply_to, full_reply))
-                    hooks.on_send_privmsg(timestamp, config.network, reply_to, config.nick, full_reply)
-                    conn.send("PRIVMSG", reply_to, full_reply)
+                    logger.info("-> {} : {}".format(reply_to, config.reply_prefix + reply))
+                    hooks.on_send_privmsg(timestamp, config.network, reply_to, config.nick, config.reply_prefix + reply)
+                    msgsplitter[reply_to] = message_generator("PRIVMSG", reply_to, config.reply_prefix, reply)
+                    conn.send(next(msgsplitter[reply_to]))
+            if text == "more":
+                try:
+                    conn.send(next(msgsplitter[reply_to]))
+                except:
+                    pass
 
         def messages_with_default_handling():
             for message in conn.recv_messages():
