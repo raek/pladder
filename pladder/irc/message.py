@@ -106,7 +106,7 @@ def message_generator(msgtype, target, reply_prefix, text):
         if len(text) > MAX_LINE_BYTES - 60 - len(header):
             msgpart = text[:(MAX_LINE_BYTES - 68 - len(header))]
             endpos = msgpart.rfind(" ")
-            if endpos < 0:
+            if endpos < 350:
                 endpos = len(msgpart)
             text = text[endpos:].lstrip()
             msgpart = msgpart[:endpos]

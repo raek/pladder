@@ -59,15 +59,21 @@ def run_client(config, hooks):
                 text_without_prefix = text[len(config.trigger_prefix):]
                 reply = hooks.on_trigger(timestamp, config.network, reply_to, message.sender, text_without_prefix)
                 if reply:
-                    logger.info("-> {} : {}".format(reply_to, config.reply_prefix + reply))
-                    hooks.on_send_privmsg(timestamp, config.network, reply_to, config.nick, config.reply_prefix + reply)
                     msgsplitter[reply_to] = message_generator("PRIVMSG", reply_to, config.reply_prefix, reply)
-                    conn.send(next(msgsplitter[reply_to]))
+                    msgpart = next(msgsplitter[reply_to])
+                    logger.info("-> {} : {}".format(reply_to, msgpart[msgpart.find(":")+1:]))
+                    hooks.on_send_privmsg(timestamp, config.network, reply_to, config.nick, msgpart[msgpart.find(":")+1:])
+                    conn.send(msgpart)
             if text == "more":
                 try:
-                    conn.send(next(msgsplitter[reply_to]))
+                    msgpart = next(msgsplitter[reply_to])
                 except:
                     pass
+                else:
+                    logger.info("{} -> {} : {}".format(message.sender.nick, target, text))
+                    logger.info("-> {} : {}".format(reply_to, msgpart[msgpart.find(":")+1:]))
+                    hooks.on_send_privmsg(timestamp, config.network, reply_to, config.nick, msgpart[msgpart.find(":")+1:])
+                    conn.send(msgpart)
 
         def messages_with_default_handling():
             for message in conn.recv_messages():
