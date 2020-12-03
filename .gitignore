@@ -1,3 +1,6 @@
 __pycache__
 /pladder.egg-info
 /test_state
+
+.vscode
+virtualenv/

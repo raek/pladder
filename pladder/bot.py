@@ -163,18 +163,28 @@ class PladderBot(ExitStack):
 
 def load_standard_plugins(bot):
     from pladder.snusk import SnuskPlugin
-    from pladder.misc import MiscPlugin
-    from pladder.bjbot import BjBotPlugin
-    from pladder.ttd import TTDPlugin
-    from pladder.alias import AliasPlugin
-    from pladder.bjukkify import BjukkifyPlugin
     bot.enter_context(SnuskPlugin(bot))
+    
+    from pladder.misc import MiscPlugin
     bot.enter_context(MiscPlugin(bot))
+    
+    from pladder.bjbot import BjBotPlugin
     bot.enter_context(BjBotPlugin(bot))
+    
+    from pladder.ttd import TTDPlugin
     bot.enter_context(TTDPlugin(bot))
+    
+    from pladder.alias import AliasPlugin
     bot.enter_context(AliasPlugin(bot))
+    
+    from pladder.bjukkify import BjukkifyPlugin
     bot.enter_context(BjukkifyPlugin(bot))
-
+    
+    try:
+        from pladder.pladdble import PladdblePlugin
+        bot.enter_context(PladdblePlugin(bot))
+    except ImportError:
+        print ('Failed to import Pladdble. Skipping.')
 
 if __name__ == "__main__":
     main()
