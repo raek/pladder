@@ -287,29 +287,3 @@ class SnuskDb(ExitStack):
             """, (inbetweeny,))
             row = c.fetchone()
             return None if row is None else row[0]
-
-
-if __name__ == "__main__":
-    import argparse
-    import json
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("db_file_path")
-    parser.add_argument("--import-noun-json")
-    parser.add_argument("--import-inbetweeny-json")
-    args = parser.parse_args()
-
-    with SnuskDb(args.db_file_path) as db:
-        if args.import_noun_json:
-            with open(args.import_noun_json, "rt") as f:
-                nouns = json.load(f)
-            for prefix, suffix in nouns:
-                db.add_noun(prefix, suffix)
-        if args.import_inbetweeny_json:
-            with open(args.import_inbetweeny_json, "rt") as f:
-                inbetweenies = json.load(f)
-            for inbetweeny in inbetweenies:
-                db.add_inbetweeny(inbetweeny)
-        print(db.snusk())
-        print(db.directed_snusk("raek"))
-        print(db.example_snusk("don", "donet"))
