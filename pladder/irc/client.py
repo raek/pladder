@@ -59,7 +59,7 @@ def run_client(config, hooks):
                 text_without_prefix = text[len(config.trigger_prefix):]
                 reply = hooks.on_trigger(timestamp, config.network, reply_to, message.sender, text_without_prefix)
                 if reply:
-                    msgsplitter[reply_to] = message_generator("PRIVMSG", reply_to, config.reply_prefix, reply)
+                    msgsplitter[reply_to] = message_generator("PRIVMSG", reply_to, config.reply_prefix, reply, conn.headerlen)
                     msgpart = next(msgsplitter[reply_to])
                     logger.info("-> {} : {}".format(reply_to, msgpart[msgpart.find(":")+1:]))
                     hooks.on_send_privmsg(timestamp, config.network, reply_to, config.nick, msgpart[msgpart.find(":")+1:])
@@ -133,6 +133,18 @@ def run_client(config, hooks):
                                                                                 ", ".join(sorted(joined_channels))))
                             if joined_channels == channels_to_join:
                                 break
+        
+        def whois_self():
+            conn.send("WHOIS", config.nick)
+            for message in messages:
+                if message.command == "311":
+                    conn.username = message.params[2]
+                    conn.hostname = message.params[3]
+                    conn.header = f":{config.nick}!{conn.username}@{conn.hostname} "
+                    conn.headerlen = len(conn.header.encode("utf-8"))
+                    logger.info(f"Whois {config.nick}: {conn.username}@{conn.hostname} - length {conn.headerlen}")
+                    break
+
 
         def run():
             update_status("Joined all channels: {}".format(", ".join(config.channels)))
@@ -147,4 +159,5 @@ def run_client(config, hooks):
             set_user_mode()
         if config.channels:
             join_channels()
+        whois_self()
         run()

@@ -100,11 +100,17 @@ def format_message(msg):
     return result
 
 # Takes message and returns generator to split long lines into separate messages
-def message_generator(msgtype, target, reply_prefix, text):
+def message_generator(msgtype, target, reply_prefix, text, conn_overhead):
     header = f"{msgtype} {target} :{reply_prefix}"
+    max_msglength = MAX_LINE_BYTES - 2 - len(header.encode("utf-8")) - conn_overhead
     while len(text) > 0:
-        if len(text) > MAX_LINE_BYTES - 60 - len(header):
-            msgpart = text[:(MAX_LINE_BYTES - 68 - len(header))]
+        if len(text.encode("utf-8")) > max_msglength:
+            msgpart = text.encode("utf-8")[:(MAX_LINE_BYTES - 2 - len(header.encode("utf-8")) - conn_overhead - 6)]
+            try:
+                msgpart.decode()
+            except:
+                msgpart = msgpart[:(len(msgpart)-1)]
+            msgpart = msgpart.decode()
             endpos = msgpart.rfind(" ")
             if endpos < 350:
                 endpos = len(msgpart)
