@@ -105,7 +105,7 @@ def message_generator(msgtype, target, reply_prefix, text, conn_overhead):
     max_msglength = MAX_LINE_BYTES - 2 - len(header.encode("utf-8")) - conn_overhead
     while len(text) > 0:
         if len(text.encode("utf-8")) > max_msglength:
-            msgpart = text.encode("utf-8")[:(MAX_LINE_BYTES - 2 - len(header.encode("utf-8")) - conn_overhead - 6)]
+            msgpart = text.encode("utf-8")[:(max_msglength - 6)]
             try:
                 msgpart.decode()
             except:
