@@ -1,9 +1,12 @@
 
 from pladder.plugin import Plugin
-import pymumble_py3 as mumble
 import json
 import os
-
+try:
+    import pymumble_py3 as mumble
+    mumble_available = True
+except (ImportError, Exception):
+    mumble_available = False
 
 class PladdblePlugin(Plugin):
     ''' Pladdble is class that helps pladder to interface with a mumble server. '''
@@ -12,6 +15,9 @@ class PladdblePlugin(Plugin):
         super().__init__()
         self.bot = bot
         bot.register_command('mömb', self.connected_users)
+
+        if not mumble_available:
+            raise ImportError
 
         try:
             state_home = os.environ.get(
