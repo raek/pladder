@@ -16,6 +16,7 @@ class PladdblePlugin(Plugin):
         self.bot = bot
         bot.register_command('mömb', self.connected_users)
         bot.register_command('mömb-users', self.list_users)
+        bot.register_command('mömb-info', self.get_info)
 
         if not mumble_available:
             raise ImportError
@@ -41,7 +42,10 @@ class PladdblePlugin(Plugin):
         certfile = os.path.join(self.config_dir_path, certfile)
 
         self.user_name = user
-        self.mumble = mumble.Mumble(host, self.user_name, password=password, certfile=certfile, reconnect=reconnect)
+        self.host = host
+        self.port = port
+
+        self.mumble = mumble.Mumble(self.host, self.user_name, port=self.port, password=password, certfile=certfile, reconnect=reconnect)
         
         self.mumble.set_application_string('StrutOS')
         
@@ -73,6 +77,11 @@ class PladdblePlugin(Plugin):
         
         users.remove(self.user_name) # Remove the bot itself from the list
         return ", ".join(users)
+
+    def get_info(self) -> str:
+        info_string = [f'Bot name: {self.user_name}', f'Server address: {self.host}', f'Port: {self.port}']
+        max_len = max(len(x) for x in info_string)
+        return ("-" * (max_len + 2)) + "\n" + "\n".join(info_string) + "\n" + ("-" * (max_len + 2))
 
 
 if __name__ == "__main__":
