@@ -15,6 +15,7 @@ class PladdblePlugin(Plugin):
         super().__init__()
         self.bot = bot
         bot.register_command('mömb', self.connected_users)
+        bot.register_command('mömb-users', self.list_users)
 
         if not mumble_available:
             raise ImportError
@@ -38,7 +39,9 @@ class PladdblePlugin(Plugin):
     def connect(self, host, user, password, port=64738, certfile=None, reconnect=True):
 
         certfile = os.path.join(self.config_dir_path, certfile)
-        self.mumble = mumble.Mumble(host, user, password=password, certfile=certfile, reconnect=reconnect)
+
+        self.user_name = user
+        self.mumble = mumble.Mumble(host, self.user_name, password=password, certfile=certfile, reconnect=reconnect)
         
         self.mumble.set_application_string('StrutOS')
         
@@ -62,6 +65,15 @@ class PladdblePlugin(Plugin):
             return f'Antalet anslutna nötter är: {self.mumble.users.count() - 1}' #Exclude the bot itself
         else:
             return f'Icke ansluten till servern'
+
+    def list_users(self) -> str:
+        users = []
+        for id in self.mumble.users:
+            users.append(self.mumble.users[id]['name'])
+        
+        users.remove(self.user_name) # Remove the bot itself from the list
+        return ", ".join(users)
+
 
 if __name__ == "__main__":
     m = PladdblePlugin()
