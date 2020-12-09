@@ -80,8 +80,7 @@ class PladdblePlugin(Plugin):
 
     def get_info(self) -> str:
         info_string = [f'Bot name: {self.user_name}', f'Server address: {self.host}', f'Port: {self.port}']
-        max_len = max(len(x) for x in info_string)
-        return ("-" * (max_len + 2)) + "\n" + "\n".join(info_string) + "\n" + ("-" * (max_len + 2))
+        return '\t'.join(info_string)
 
 
 if __name__ == "__main__":
