@@ -16,7 +16,7 @@ class AliasPlugin(Plugin):
         self.alias_db = self.enter_context(AliasDb(alias_db_path))
         self.bot = bot
         bot.register_command("alias", self.help)
-        bot.register_command("add-alias", self.add_alias)
+        bot.register_command("add-alias", self.add_alias, varargs=True)
         bot.register_command("get-alias", self.alias_db.get_alias)
         bot.register_command("del-alias", self.del_alias)
         bot.register_command("list-alias", self.alias_db.list_alias)
