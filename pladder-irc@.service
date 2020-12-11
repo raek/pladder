@@ -6,9 +6,9 @@ Wants=pladder-bot.service
 Type=notify
 ExecStart=/usr/bin/python3 -u -m pladder.irc --systemd --dbus --config=%I
 Restart=always
-RestartSec=15min
+RestartSec=5min
 StartLimitInterval=4h
-StartLimitBurst=16
+StartLimitBurst=48
 WatchdogSec=30min
 SyslogIdentifier=pladder-irc-%I
 
