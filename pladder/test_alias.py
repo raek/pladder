@@ -48,7 +48,7 @@ def test_db_addalias():
     assert result == '"testdb" added'
 
 def test_alias_create():
-    result = aliasplugin.add_alias("testalias testtest")
+    result = aliasplugin.add_alias("testalias", "testtest")
     assert result == '"testalias" added'
 
 def test_binding_exists():
@@ -85,5 +85,5 @@ def test_invalid_delete():
     assert result == "Det blir inget med det."
 
 def test_invalid_add():
-    result = aliasplugin.add_alias("get-alias hehu jag är smart")
+    result = aliasplugin.add_alias("get-alias", "hehu jag är smart")
     assert result == "Hallå farfar, den finns ju redan."
