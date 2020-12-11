@@ -99,29 +99,32 @@ def format_message(msg):
         result += separator + last_param
     return result
 
+
 # Takes message and returns generator to split long lines into separate messages
 def message_generator(msgtype, target, reply_prefix, text, conn_overhead):
     header = f"{msgtype} {target} :{reply_prefix}"
+    # -2 because CR LF will be added
     max_msglength = MAX_LINE_BYTES - 2 - len(header.encode("utf-8")) - conn_overhead
     while len(text) > 0:
         if len(text.encode("utf-8")) > max_msglength:
-            msgpart = text.encode("utf-8")[:(max_msglength - 6)]
-            try:
-                msgpart.decode()
-            except:
-                msgpart = msgpart[:(len(msgpart)-1)]
-            msgpart = msgpart.decode()
+            more = ' <more>'
+            max_partlength = max_msglength - len(more.encode("utf-8"))
+            # Take the longest utf-8 encodable part of the text that will fit
+            msgpart = text[:max_partlength]
+            while len(msgpart.encode('utf-8')) > max_partlength:
+                msgpart = msgpart[:-1]
+            # Avoid cutting a word in part, by finding the previous space,
+            # within reason
             endpos = msgpart.rfind(" ")
             if endpos < 350:
                 endpos = len(msgpart)
             text = text[endpos:].lstrip()
             msgpart = msgpart[:endpos]
-            msgpart = f"{header}{msgpart} <more>"
+            msgpart = f"{header}{msgpart}{more}"
         else:
             msgpart = f"{header}{text}"
             text = ""
         yield msgpart
-
 
 
 class ConnectionError(Exception):
