@@ -1,16 +1,15 @@
 from unittest.mock import Mock
 import pytest
 
-from pladder.bjukkify import BjukkifyPlugin
-
-mockbot = Mock()
-plugin = BjukkifyPlugin(mockbot)
+from pladder.bjukkify import BjukkifyPlugin, bjukkify
 
 def test_registers_command():
     """
     Should register command bjukkify that calls the bjukkifier
     """
-    mockbot.register_command.assert_called_with("bjukkify", plugin.bjukkify, varargs=True)
+    mockbot = Mock()
+    plugin = BjukkifyPlugin(mockbot)
+    mockbot.register_command.assert_called_with("bjukkify", bjukkify, varargs=True)
 
 examples = {
     "": "",
@@ -53,7 +52,7 @@ def test_bjukkify(swedish, bjukkish):
     """
     Should bjukkify test data correctly
     """
-    assert plugin.bjukkify(swedish) == bjukkish
+    assert bjukkify(swedish) == bjukkish
 
 if __name__ == '__main__':
     pytest.main([__file__])
