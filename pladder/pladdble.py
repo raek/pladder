@@ -23,7 +23,11 @@ class PladdblePlugin(Plugin):
         bot.register_command('mömb-users', self.list_users)
         bot.register_command('mömb-info', self.get_info)
 
-        config_defaults = {'certfile': os.path.join(self.bot.state_dir, 'pladdble.pem')}
+        config_defaults = {
+            'certfile': os.path.join(self.bot.state_dir, 'pladdble.pem'),
+            'port': 64738,
+            'reconnect': True,
+        }
         if not mumble:
             raise PladdbleError("'pymumble' or its dependencies are not installed correctly")
 
@@ -38,7 +42,7 @@ class PladdblePlugin(Plugin):
         except json.JSONDecodeError:
             raise PladdbleError('Could not parse Pladdble config file.')
 
-    def connect(self, host, user, password, certfile, port=64738, reconnect=True):
+    def connect(self, host, user, password, certfile, port, reconnect):
 
         self.user_name = user
         self.host = host
