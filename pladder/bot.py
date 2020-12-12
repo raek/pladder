@@ -1,6 +1,7 @@
 from collections import defaultdict, namedtuple
 from contextlib import ExitStack
 from datetime import datetime, timezone
+from importlib import import_module
 from inspect import Parameter, signature
 import logging
 import os
@@ -162,29 +163,25 @@ class PladderBot(ExitStack):
 
 
 def load_standard_plugins(bot):
-    from pladder.snusk import SnuskPlugin
-    bot.enter_context(SnuskPlugin(bot))
-    
-    from pladder.misc import MiscPlugin
-    bot.enter_context(MiscPlugin(bot))
-    
-    from pladder.bjbot import BjBotPlugin
-    bot.enter_context(BjBotPlugin(bot))
-    
-    from pladder.ttd import TTDPlugin
-    bot.enter_context(TTDPlugin(bot))
-    
-    from pladder.alias import AliasPlugin
-    bot.enter_context(AliasPlugin(bot))
-    
-    from pladder.bjukkify import BjukkifyPlugin
-    bot.enter_context(BjukkifyPlugin(bot))
-    
-    try:
-        from pladder.pladdble import PladdblePlugin
-        bot.enter_context(PladdblePlugin(bot))
-    except ImportError:
-        print ('Failed to import Pladdble. Skipping.')
+    plugins = [
+        ("pladder.snusk", "SnuskPlugin"),
+        ("pladder.misc", "MiscPlugin"),
+        ("pladder.bjbot", "BjBotPlugin"),
+        ("pladder.ttd", "TTDPlugin"),
+        ("pladder.alias", "AliasPlugin"),
+        ("pladder.bjukkify", "BjukkifyPlugin"),
+        ("pladder.pladdble", "PladdblePlugin"),
+    ]
+    for module_name, class_name in plugins:
+        try:
+            plugin_module = import_module(module_name)
+            plugin_class = getattr(plugin_module, class_name)
+            plugin_object = plugin_class(bot)
+            bot.enter_context(plugin_object)
+            print(f"Loaded '{module_name}.{class_name}'.")
+        except Exception as e:
+            print(f"Could not load '{module_name}.{class_name}'. Skipping. Error: {e}")
+
 
 if __name__ == "__main__":
     main()

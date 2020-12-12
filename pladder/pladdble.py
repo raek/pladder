@@ -1,12 +1,17 @@
-
 from pladder.plugin import Plugin
 import json
 import os
+
+
 try:
     import pymumble_py3 as mumble
-    mumble_available = True
-except (ImportError, Exception):
-    mumble_available = False
+except Exception:
+    mumble = None
+
+
+class PladdbleError(Exception):
+    pass
+
 
 class PladdblePlugin(Plugin):
     ''' Pladdble is class that helps pladder to interface with a mumble server. '''
@@ -18,8 +23,8 @@ class PladdblePlugin(Plugin):
         bot.register_command('mömb-users', self.list_users)
         bot.register_command('mömb-info', self.get_info)
 
-        if not mumble_available:
-            raise ImportError
+        if not mumble:
+            raise PladdbleError("'pymumble' or its dependencies are not installed correctly")
 
         try:
             state_home = os.environ.get(
@@ -31,11 +36,9 @@ class PladdblePlugin(Plugin):
                 config = json.load(f)
                 self.connect(**config)
         except FileNotFoundError:
-            print ("Could not open Pladdble config file.")
-            raise ImportError
+            raise PladdbleError("Could not open Pladdble config file.")
         except json.JSONDecodeError:
-            print ('Could not parse Pladdble config file.')
-            raise ImportError
+            raise PladdbleError('Could not parse Pladdble config file.')
 
     def connect(self, host, user, password, port=64738, certfile=None, reconnect=True):
 
