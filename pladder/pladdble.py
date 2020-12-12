@@ -83,7 +83,7 @@ class PladdblePlugin(Plugin):
 
     def get_info(self) -> str:
         info_string = [f'Bot name: {self.user_name}', f'Server address: {self.host}', f'Port: {self.port}']
-        return '\t'.join(info_string)
+        return '   '.join(info_string)
 
 
 if __name__ == "__main__":
