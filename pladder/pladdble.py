@@ -23,26 +23,22 @@ class PladdblePlugin(Plugin):
         bot.register_command('mömb-users', self.list_users)
         bot.register_command('mömb-info', self.get_info)
 
+        config_defaults = {'certfile': os.path.join(self.bot.state_dir, 'pladdble.pem')}
         if not mumble:
             raise PladdbleError("'pymumble' or its dependencies are not installed correctly")
 
         try:
-            state_home = os.environ.get(
-        "XDG_CONFIG_HOME", os.path.join(os.environ["HOME"], ".config"))
-            self.config_dir_path = os.path.join(state_home, "pladder-pladdble")
-            config_path = os.path.join(self.config_dir_path, 'config.json')
-
+            config_path = os.path.join(self.bot.state_dir, 'pladdble.json')
             with open(config_path, 'rt') as f:
                 config = json.load(f)
+                config = {**config_defaults, **config}
                 self.connect(**config)
         except FileNotFoundError:
             raise PladdbleError("Could not open Pladdble config file.")
         except json.JSONDecodeError:
             raise PladdbleError('Could not parse Pladdble config file.')
 
-    def connect(self, host, user, password, port=64738, certfile=None, reconnect=True):
-
-        certfile = os.path.join(self.config_dir_path, certfile)
+    def connect(self, host, user, password, certfile, port=64738, reconnect=True):
 
         self.user_name = user
         self.host = host
