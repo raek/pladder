@@ -1,32 +1,23 @@
+from contextlib import contextmanager
+from functools import partial
 import os
-from pladder.plugin import Plugin
 
 
-class BjBotPlugin(Plugin):
-    def __init__(self, bot):
-        super().__init__()
-        self._datorbas = dict()
-        self.importera(self._datorbas, os.path.join(bot.state_dir, "bunny.txt"))
-        if not bot is None:
-            bot.register_command("jb", self.jb)
+@contextmanager
+def pladder_plugin(bot):
+    datorbas = importera(os.path.join(bot.state_dir, "bunny.txt"))
+    def jb(trigger):
+        return datorbas.get(trigger, "Trigger not found.")
+    bot.register_command("jb", jb)
+    yield
 
-    def importera(self, db, path):
-        if os.path.exists(path):
-            with open(path, "rt", encoding="latin1") as fp:
-                for line in fp:
-                    line = line.strip()
-                    delim_index = line.find("¤")
-                    db[line[0:delim_index]] = line[delim_index + 1:]
-
-    def jb(self, trigger):
-        if trigger in self._datorbas.keys():
-            return self._datorbas[trigger]
-        else:
-            return "Trigger not found."
-
-
-if __name__ == "__main__":
-    import sys
-
-    bot = BjBotPlugin(None)
-    print(bot.jb(sys.argv[1]))
+    
+def importera(path):
+    db = {}
+    if os.path.exists(path):
+        with open(path, "rt", encoding="latin1") as fp:
+            for line in fp:
+                line = line.strip()
+                delim_index = line.find("¤")
+                db[line[0:delim_index]] = line[delim_index + 1:]
+    return db

@@ -1,37 +1,44 @@
-from contextlib import ExitStack
+from contextlib import ExitStack, contextmanager
 import os
 import random
 import sqlite3
 from re import search
 
-from pladder.plugin import Plugin
+
+@contextmanager
+def pladder_plugin(bot):
+    snusk_db_path = os.path.join(bot.state_dir, "snusk.db")
+    with SnuskDb(snusk_db_path) as snusk_db:
+        snusk_commands = SnuskCommands(snusk_db)
+
+        bot.register_command("snusk",       snusk_db.snusk,             parseoutput=True)
+        bot.register_command("snuska",      snusk_db.directed_snusk,    parseoutput=True, varargs=True)
+        bot.register_command("nickförslag", snusk_db.random_noun,       parseoutput=True)
+        bot.register_command("prefix",      snusk_db.random_prefix,     parseoutput=True)
+        bot.register_command("suffix",      snusk_db.random_suffix,     parseoutput=True)
+        bot.register_command("noun",        snusk_db.random_noun,       parseoutput=True)
+        bot.register_command("inbetweeny",  snusk_db.random_inbetweeny, parseoutput=True)
+
+        bot.register_command("smak",                snusk_commands.smak,                parseoutput=True)
+        bot.register_command("add-snusk",           snusk_commands.add_noun)
+        bot.register_command("add-noun",            snusk_commands.add_noun)
+        bot.register_command("add-preposition",     snusk_commands.add_inbetweeny,      varargs=True)
+        bot.register_command("add-inbetweeny",      snusk_commands.add_inbetweeny,      varargs=True)
+        bot.register_command("find-snusk",          snusk_commands.find_noun)
+        bot.register_command("find-noun",           snusk_commands.find_noun)
+        bot.register_command("upvote-snusk",        snusk_commands.upvote_noun)
+        bot.register_command("upvote-noun",         snusk_commands.upvote_noun)
+        bot.register_command("downvote-snusk",      snusk_commands.downvote_noun)
+        bot.register_command("downvote-noun",       snusk_commands.downvote_noun)
+        bot.register_command("upvote-inbetweeny",   snusk_commands.upvote_inbetweeny,   varargs=True)
+        bot.register_command("downvote-inbetweeny", snusk_commands.downvote_inbetweeny, varargs=True)
+
+        yield
 
 
-class SnuskPlugin(Plugin):
-    def __init__(self, bot):
-        super().__init__()
-        snusk_db_path = os.path.join(bot.state_dir, "snusk.db")
-        self.snusk_db = self.enter_context(SnuskDb(snusk_db_path))
-        bot.register_command("snusk", self.snusk_db.snusk, parseoutput=True)
-        bot.register_command("snuska", self.snusk_db.directed_snusk, varargs=True, parseoutput=True)
-        bot.register_command("smak", self.smak, parseoutput=True)
-        bot.register_command("nickförslag", self.snusk_db.random_noun, parseoutput=True)
-        bot.register_command("prefix", self.snusk_db.random_prefix, parseoutput=True)
-        bot.register_command("suffix", self.snusk_db.random_suffix, parseoutput=True)
-        bot.register_command("noun", self.snusk_db.random_noun, parseoutput=True)
-        bot.register_command("inbetweeny", self.snusk_db.random_inbetweeny, parseoutput=True)
-        bot.register_command("add-snusk", self.add_noun)
-        bot.register_command("add-noun", self.add_noun)
-        bot.register_command("add-preposition", self.add_inbetweeny, varargs=True)
-        bot.register_command("add-inbetweeny", self.add_inbetweeny, varargs=True)
-        bot.register_command("find-snusk", self.find_noun)
-        bot.register_command("find-noun", self.find_noun)
-        bot.register_command("upvote-snusk", self.upvote_noun)
-        bot.register_command("upvote-noun", self.upvote_noun)
-        bot.register_command("downvote-snusk", self.downvote_noun)
-        bot.register_command("downvote-noun", self.downvote_noun)
-        bot.register_command("upvote-inbetweeny", self.upvote_inbetweeny, varargs=True)
-        bot.register_command("downvote-inbetweeny", self.downvote_inbetweeny, varargs=True)
+class SnuskCommands:
+    def __init__(self, snusk_db):
+        self.snusk_db = snusk_db
 
     def smak(self):
         return "{}/{}".format(self.snusk_db.random_prefix().upper(), self.snusk_db.random_prefix().upper())

@@ -164,23 +164,22 @@ class PladderBot(ExitStack):
 
 def load_standard_plugins(bot):
     plugins = [
-        ("pladder.snusk", "SnuskPlugin"),
-        ("pladder.misc", "MiscPlugin"),
-        ("pladder.bjbot", "BjBotPlugin"),
-        ("pladder.ttd", "TTDPlugin"),
-        ("pladder.alias", "AliasPlugin"),
-        ("pladder.bjukkify", "BjukkifyPlugin"),
-        ("pladder.pladdble", "PladdblePlugin"),
+        "pladder.snusk",
+        "pladder.misc",
+        "pladder.bjbot",
+        "pladder.ttd",
+        "pladder.alias",
+        "pladder.bjukkify",
+        "pladder.pladdble",
     ]
-    for module_name, class_name in plugins:
+    for module_name in plugins:
         try:
             plugin_module = import_module(module_name)
-            plugin_class = getattr(plugin_module, class_name)
-            plugin_object = plugin_class(bot)
-            bot.enter_context(plugin_object)
-            print(f"Loaded '{module_name}.{class_name}'.")
+            plugin_ctxmgr = getattr(plugin_module, "pladder_plugin")
+            bot.enter_context(plugin_ctxmgr(bot))
+            print(f"Loaded '{module_name}'.")
         except Exception as e:
-            print(f"Could not load '{module_name}.{class_name}'. Skipping. Error: {e}")
+            print(f"Could not load '{module_name}'. Skipping. Error: {e}")
 
 
 if __name__ == "__main__":

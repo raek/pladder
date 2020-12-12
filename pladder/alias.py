@@ -1,20 +1,25 @@
-from contextlib import ExitStack
+from contextlib import ExitStack, contextmanager
 import os
 import sqlite3
 import random
-from pladder.plugin import Plugin
+
+
+@contextmanager
+def pladder_plugin(bot):
+    alias_db_path = os.path.join(bot.state_dir, "alias.db")
+    with AliasDb(alias_db_path) as alias_db:
+        alias_cmds = AliasCommands(bot, alias_db)
+        yield
 
 
 class DBError(Exception):
     pass
 
 
-class AliasPlugin(Plugin):
-    def __init__(self, bot):
-        super().__init__()
-        alias_db_path = os.path.join(bot.state_dir, "alias.db")
-        self.alias_db = self.enter_context(AliasDb(alias_db_path))
+class AliasCommands:
+    def __init__(self, bot, alias_db):
         self.bot = bot
+        self.alias_db = alias_db
         bot.register_command("alias", self.help)
         bot.register_command("add-alias", self.add_alias, varargs=True)
         bot.register_command("get-alias", self.alias_db.get_alias)
@@ -71,11 +76,6 @@ class AliasPlugin(Plugin):
             return result
         else:
             return "Nej"
-
-
-
-
-
 
 
 class AliasDb(ExitStack):
@@ -187,5 +187,3 @@ class AliasDb(ExitStack):
     def random_alias(self, name_pattern):
         list = self.list_alias(name_pattern)
         return random.choice(list.split())
-
-

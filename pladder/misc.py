@@ -1,18 +1,17 @@
+from contextlib import contextmanager
+from datetime import datetime
 import re
 
-from pladder.plugin import Plugin
-from datetime import datetime
+
+@contextmanager
+def pladder_plugin(bot):
+    bot.register_command("kloo+fify", kloooofify, varargs=True, regex=True, contextual=True)
+    bot.register_command("vrå+lify",  vraaaal,    varargs=True, regex=True, contextual=True)
+    bot.register_command("time",      time)
+    bot.register_command("capify",    capify,     varargs=True)
+    yield
 
 
-class MiscPlugin(Plugin):
-    def __init__(self, bot):
-        super().__init__()
-        bot.register_command("kloo+fify", kloooofify, varargs=True, regex=True, contextual=True)
-        bot.register_command("vrå+lify", vraaaal, varargs=True, regex=True, contextual=True)
-        bot.register_command("time", time)
-        bot.register_command("capify", capify, varargs=True)
-
-        
 def kloooofify(context, text):
     command = context['command']
     for _ in range(command.count("o")-1):

@@ -1,4 +1,4 @@
-from pladder.plugin import Plugin
+from contextlib import contextmanager
 import json
 import os
 
@@ -9,22 +9,25 @@ except Exception:
     mumble = None
 
 
+@contextmanager
+def pladder_plugin(bot):
+    pladdble = Pladdble(bot.state_dir)
+    bot.register_command('mömb', pladdble.connected_users)
+    bot.register_command('mömb-users', pladdble.list_users)
+    bot.register_command('mömb-info', pladdble.get_info)
+    yield
+
+
 class PladdbleError(Exception):
     pass
 
 
-class PladdblePlugin(Plugin):
+class Pladdble:
     ''' Pladdble is class that helps pladder to interface with a mumble server. '''
 
-    def __init__(self, bot):
-        super().__init__()
-        self.bot = bot
-        bot.register_command('mömb', self.connected_users)
-        bot.register_command('mömb-users', self.list_users)
-        bot.register_command('mömb-info', self.get_info)
-
+    def __init__(self, config_dir):
         config_defaults = {
-            'certfile': os.path.join(self.bot.state_dir, 'pladdble.pem'),
+            'certfile': os.path.join(config_dir, 'pladdble.pem'),
             'port': 64738,
             'reconnect': True,
         }
@@ -32,7 +35,7 @@ class PladdblePlugin(Plugin):
             raise PladdbleError("'pymumble' or its dependencies are not installed correctly")
 
         try:
-            config_path = os.path.join(self.bot.state_dir, 'pladdble.json')
+            config_path = os.path.join(config_dir, 'pladdble.json')
             with open(config_path, 'rt') as f:
                 config = json.load(f)
                 config = {**config_defaults, **config}

@@ -1,10 +1,9 @@
-from pladder.plugin import Plugin
+from contextlib import contextmanager
 
-class BjukkifyPlugin(Plugin):
-    def __init__(self, bot):
-        super().__init__()
-        self.bot = bot
-        bot.register_command("bjukkify", bjukkify, varargs=True)
+@contextmanager
+def pladder_plugin(bot):
+    bot.register_command("bjukkify", bjukkify, varargs=True)
+    yield
 
 def _should_be_caps(char):
     caps_chars = "acegmnopqrsuvwyz"
@@ -113,6 +112,4 @@ def bjukkify(text):
 
 if __name__ == "__main__":
     import sys
-    from unittest.mock import Mock
-    plugin = BjukkifyPlugin(Mock())
-    print(plugin.bjukkify(sys.argv[1]))
+    print(bjukkify(sys.argv[1]))
