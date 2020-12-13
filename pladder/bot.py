@@ -166,22 +166,30 @@ class PladderBot(ExitStack):
         return interpret(self.bindings, context, script)
 
     def eq(self, value1, value2):
-        return "true" if value1 == value2 else "false"
+        return self.bool_py_to_pladder(value1 == value2)
 
     def ne(self, value1, value2):
-        return "true" if value1 != value2 else "false"
+        return self.bool_py_to_pladder(value2 == value1)
 
     def bool_command(self, value):
-        if value in ["false", "true"]:
-            return value
-        else:
-            raise ScriptError(f'Expected "true" or "false", got "{value}"')
+        return self.bool_py_to_pladder(self.bool_pladder_to_py(value))
 
     def if_command(self, context, condition, then_script, else_script):
-        if self.bool_command(condition):
+        if self.bool_pladder_to_py(condition):
             return interpret(self.bindings, context, then_script)
         else:
             return interpret(self.bindings, context, else_script)
+
+    def bool_py_to_pladder(self, b):
+        return "true" if b else "false"
+
+    def bool_pladder_to_py(self, string):
+        if string == "true":
+            return True
+        elif string == "false":
+            return False
+        else:
+            raise ScriptError(f'Expected "true" or "false", got "{string}"')
 
 
 def load_standard_plugins(bot):
