@@ -161,8 +161,7 @@ class PladderBot(ExitStack):
         else:
             return "Found no matches for '{}'".format(needle)
 
-    def eval_command(self, context, *args):
-        script = " ".join(arg.strip() for arg in args)
+    def eval_command(self, context, script):
         return interpret(self.bindings, context, script)
 
     def eq(self, value1, value2):
