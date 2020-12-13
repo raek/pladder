@@ -66,7 +66,7 @@ class PladderBot(ExitStack):
         self.register_command("=", self.eq)
         self.register_command("/=", self.ne)
         self.register_command("bool", self.bool_command)
-        self.register_command("if", self.if_command, contextual=True)
+        self.register_command("if", self.if_command)
 
     def comp(self, context, command1, *command2_words):
         command2_result = self.apply(context, list(command2_words))
@@ -174,11 +174,11 @@ class PladderBot(ExitStack):
     def bool_command(self, value):
         return self.bool_py_to_pladder(self.bool_pladder_to_py(value))
 
-    def if_command(self, context, condition, then_script, else_script):
+    def if_command(self, condition, then_value, else_value):
         if self.bool_pladder_to_py(condition):
-            return interpret(self.bindings, context, then_script)
+            return then_value
         else:
-            return interpret(self.bindings, context, else_script)
+            return else_value
 
     def bool_py_to_pladder(self, b):
         return "true" if b else "false"
