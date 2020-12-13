@@ -63,6 +63,10 @@ class PladderBot(ExitStack):
         self.register_command("pick", lambda *args: random.choice(args) if args else "")
         self.register_command("concat", lambda *args: " ".join(arg.strip() for arg in args))
         self.register_command("eval", self.eval_command, contextual=True)
+        self.register_command("=", self.eq)
+        self.register_command("/=", self.ne)
+        self.register_command("bool", self.bool_command)
+        self.register_command("if", self.if_command, contextual=True)
 
     def comp(self, context, command1, *command2_words):
         command2_result = self.apply(context, list(command2_words))
@@ -160,6 +164,24 @@ class PladderBot(ExitStack):
     def eval_command(self, context, *args):
         script = " ".join(arg.strip() for arg in args)
         return interpret(self.bindings, context, script)
+
+    def eq(self, value1, value2):
+        return "true" if value1 == value2 else "false"
+
+    def ne(self, value1, value2):
+        return "true" if value1 != value2 else "false"
+
+    def bool_command(self, value):
+        if value in ["false", "true"]:
+            return value
+        else:
+            raise ScriptError(f'Expected "true" or "false", got "{value}"')
+
+    def if_command(self, context, condition, then_script, else_script):
+        if self.bool_command(condition):
+            return interpret(self.bindings, context, then_script)
+        else:
+            return interpret(self.bindings, context, else_script)
 
 
 def load_standard_plugins(bot):
