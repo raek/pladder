@@ -87,6 +87,11 @@ class PladderBot(ExitStack):
             return "Usage: {}".format(self.command_usage(e.command))
         except ScriptError as e:
             return str(e)
+        except RecursionError:
+            return "RecursionError: Maximum recursion depth exceeded"
+        except Exception as e:
+            print(str(e))
+            return "Oops! Error logged."
 
     def apply(self, context, words):
         if not words:
