@@ -101,7 +101,7 @@ def set_up_dbus(hooks_base_class):
                             continue
                         else:
                             self._bot = None
-                            return "Internal error: could not reach pladder-bot"
+                            return "Internal error: could not reach pladder-bot. Please check the log: \"journalctl --user-unit pladder-bot -e\""
                     else:
                         logger.error(str(e))
                         return "Internal error: " + str(e)
