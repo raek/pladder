@@ -79,22 +79,37 @@ def set_up_dbus(hooks_base_class):
     from gi.repository import GLib
     from pydbus import SessionBus
 
-    bus = SessionBus()
-    bot = bus.get("se.raek.PladderBot")
-    log = PladderLogProxy(bus)
-
     class DbusHooks(hooks_base_class):
+        def __init__(self):
+            super().__init__()
+            self._bus = SessionBus()
+            self._bot = None
+            self._log = PladderLogProxy(self._bus)
+
         def on_trigger(self, timestamp, network, channel, sender, text):
-            try:
-                return bot.RunCommand(timestamp, network, channel, sender.nick, text)
-            except GLib.Error as e:
-                logger.error(str(e))
-                return "Oops! Error logged."
+            retry = True
+            while True:
+                try:
+                    if self._bot is None:
+                        self._bot = self._bus.get("se.raek.PladderBot")
+                    return self._bot.RunCommand(timestamp, network, channel, sender.nick, text)
+                except GLib.Error as e:
+                    if "org.freedesktop.DBus.Error.ServiceUnknown" in str(e):
+                        if retry:
+                            retry = False
+                            self._bot = None
+                            continue
+                        else:
+                            self._bot = None
+                            return "Internal error: could not reach pladder-bot"
+                    else:
+                        logger.error(str(e))
+                        return "Internal error: " + str(e)
 
         def on_privmsg(self, timestamp, network, channel, sender, text):
-            log.AddLine(timestamp, network, channel, sender.nick, text)
+            self._log.AddLine(timestamp, network, channel, sender.nick, text)
 
         def on_send_privmsg(self, timestamp, network, channel, nick, text):
-            log.AddLine(timestamp, network, channel, nick, text)
+            self._log.AddLine(timestamp, network, channel, nick, text)
 
     return DbusHooks
