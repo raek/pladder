@@ -91,7 +91,7 @@ class PladderBot(ExitStack):
             return "RecursionError: Maximum recursion depth exceeded"
         except Exception as e:
             print(str(e))
-            return "Oops! Error logged."
+            return "Internal error: " + str(e)
 
     def apply(self, context, words):
         if not words:
