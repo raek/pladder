@@ -54,7 +54,7 @@ class PladderBot(ExitStack):
         self.bindings = []
         self.register_command("help", self.help)
         self.register_command("version", self.version)
-        self.register_command("log", self.searchlog, contextual=True)
+        self.register_command("searchlog", self.searchlog, contextual=True)
         self.register_command("comp", self.comp, contextual=True)
         self.register_command("give", self.give, varargs=True)
         self.register_command("echo", lambda text="": text, varargs=True)
