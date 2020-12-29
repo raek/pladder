@@ -152,9 +152,6 @@ class PladderBot(ExitStack):
             index = int(index)
         except ValueError:
             return "'index' needs to be a number!"
-        if index < 0:
-            # Subtract one from index to ignore the line where the command was issued
-            index -= 1
 
         def format_log_line(index, date, nick, text):
             return '[{}: {} {}: {}]'.format(index, date.strftime('%H:%M'), nick, text)
