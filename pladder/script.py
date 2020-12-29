@@ -127,11 +127,16 @@ class ApplyError(ScriptError):
         self.arguments = arguments
 
 
-CommandBinding = namedtuple("CommandBinding", "command_name, fn, varargs, regex, contextual, parseoutput")
+CommandBinding = namedtuple("CommandBinding", "command_name, fn, varargs, regex, contextual, parseoutput, display_name")
 
 
-def command_binding(command_name, fn, varargs=False, regex=False, contextual=False, parseoutput=False):
-    return CommandBinding(command_name, fn, varargs, regex, contextual, parseoutput)
+def command_binding(command_name, fn, varargs=False, regex=False, contextual=False, parseoutput=False, display_name=False):
+    if not display_name:
+        if regex:
+            display_name = f"/{command_name.pattern[1:-1]}/"
+        else:
+            display_name = command_name
+    return CommandBinding(command_name, fn, varargs, regex, contextual, parseoutput, display_name)
 
 
 def eval_call(bindings, context, call):
@@ -143,7 +148,7 @@ def eval_call(bindings, context, call):
             if isinstance(fragment, Literal):
                 evaled_fragment = fragment.string
             elif isinstance(fragment, Call):
-                evaled_fragment = eval_call(bindings, context, fragment)
+                evaled_fragment, _display_name = eval_call(bindings, context, fragment)
             evaled_fragments.append(evaled_fragment)
         evaled_word = "".join(evaled_fragments)
         evaled_words.append(evaled_word)
@@ -153,8 +158,9 @@ def eval_call(bindings, context, call):
     command = lookup_command(bindings, command_name)
     result = apply_call(context, command, command_name, arguments)
     if command.parseoutput and result.find("[")>=0:
-        result = interpret(bindings, context, "echo " + result)
-    return result
+        result, _display_name = interpret(bindings, context, "echo " + result)
+    print("command: ", command)
+    return result, command.display_name
 
 
 def lookup_command(bindings, command_name):

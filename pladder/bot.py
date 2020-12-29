@@ -10,7 +10,7 @@ import re
 
 from pladder import LAST_COMMIT
 from pladder.log import PladderLogProxy
-from pladder.script import ScriptError, ApplyError, CommandBinding, interpret, lookup_command, apply_call
+from pladder.script import ScriptError, ApplyError, command_binding, interpret, lookup_command, apply_call
 
 
 def main():
@@ -39,7 +39,7 @@ class PladderBot(ExitStack):
           <arg direction="in" name="channel" type="s" />
           <arg direction="in" name="nick" type="s" />
           <arg direction="in" name="text" type="s" />
-          <arg direction="out" name="return" type="s" />
+          <arg direction="out" name="return" type="a{ss}" />
         </method>
       </interface>
     </node>
@@ -82,16 +82,22 @@ class PladderBot(ExitStack):
                    'nick': nick,
                    'text': text}
         try:
-            return interpret(self.bindings, context, text)
+            result, display_name = interpret(self.bindings, context, text)
+            return {'text': result,
+                    'command': display_name}
         except ApplyError as e:
-            return "Usage: {}".format(self.command_usage(e.command))
+            return {'text': "Usage: {}".format(self.command_usage(e.command)),
+                    'command': e.command.display_name}
         except ScriptError as e:
-            return str(e)
+            return {'text': str(e),
+                    'command': 'error'}
         except RecursionError:
-            return "RecursionError: Maximum recursion depth exceeded"
+            return {'text': "RecursionError: Maximum recursion depth exceeded",
+                    'command': 'error'}
         except Exception as e:
             print(str(e))
-            return "Internal error: " + str(e)
+            return {'text': "Internal error: " + str(e),
+                    'command': 'error'}
 
     def apply(self, context, words):
         if not words:
@@ -103,16 +109,10 @@ class PladderBot(ExitStack):
     def register_command(self, name, fn, varargs=False, regex=False, contextual=False, parseoutput=False):
         if regex:
             name = re.compile("^" + name + "$")
-        self.bindings.append(CommandBinding(name, fn, varargs, regex, contextual, parseoutput))
-
-    def command_display_name(self, command):
-        if command.regex:
-            return f"/{command.command_name.pattern[1:-1]}/"
-        else:
-            return command.command_name
+        self.bindings.append(command_binding(name, fn, varargs, regex, contextual, parseoutput))
 
     def command_usage(self, command):
-        result = self.command_display_name(command)
+        result = command.display_name
         parameters = list(signature(command.fn).parameters.values())
         if command.contextual:
             # pop context argument
@@ -129,7 +129,7 @@ class PladderBot(ExitStack):
     def help(self, command_name=None):
         if not command_name:
             result = "Available commands: "
-            result += ", ".join(self.command_display_name(command) for command in self.bindings)
+            result += ", ".join(command.display_name for command in self.bindings)
             return result
         else:
             command = lookup_command(self.bindings, command_name)
@@ -168,7 +168,8 @@ class PladderBot(ExitStack):
             return "Found no matches for '{}'".format(needle)
 
     def eval_command(self, context, script):
-        return interpret(self.bindings, context, script)
+        text, _display_name = interpret(self.bindings, context, script)
+        return text
 
     def eq(self, value1, value2):
         return self.bool_py_to_pladder(value1 == value2)
