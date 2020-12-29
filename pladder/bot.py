@@ -39,7 +39,7 @@ class PladderBot(ExitStack):
           <arg direction="in" name="channel" type="s" />
           <arg direction="in" name="nick" type="s" />
           <arg direction="in" name="text" type="s" />
-          <arg direction="out" name="return" type="s" />
+          <arg direction="out" name="return" type="a{ss}" />
         </method>
       </interface>
     </node>
@@ -82,16 +82,22 @@ class PladderBot(ExitStack):
                    'nick': nick,
                    'text': text}
         try:
-            return interpret(self.bindings, context, text)
+            result, command_name = interpret(self.bindings, context, text)
+            return {'text': result,
+                    'command': command_name}
         except ApplyError as e:
-            return "Usage: {}".format(self.command_usage(e.command))
+            return {'text': "Usage: {}".format(self.command_usage(e.command)),
+                    'command': e.command.command_name}
         except ScriptError as e:
-            return str(e)
+            return {'text': str(e),
+                    'command': 'error'}
         except RecursionError:
-            return "RecursionError: Maximum recursion depth exceeded"
+            return {'text': "RecursionError: Maximum recursion depth exceeded",
+                    'command': 'error'}
         except Exception as e:
             print(str(e))
-            return "Internal error: " + str(e)
+            return {'text': "Internal error: " + str(e),
+                    'command': 'error'}
 
     def apply(self, context, words):
         if not words:
@@ -168,7 +174,8 @@ class PladderBot(ExitStack):
             return "Found no matches for '{}'".format(needle)
 
     def eval_command(self, context, script):
-        return interpret(self.bindings, context, script)
+        text, _command_name = interpret(self.bindings, context, script)
+        return text
 
     def eq(self, value1, value2):
         return self.bool_py_to_pladder(value1 == value2)

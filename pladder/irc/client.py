@@ -59,7 +59,7 @@ def run_client(config, hooks):
                 text_without_prefix = text[len(config.trigger_prefix):]
                 reply = hooks.on_trigger(timestamp, config.network, reply_to, message.sender, text_without_prefix)
                 if reply:
-                    msgsplitter[reply_to] = message_generator("PRIVMSG", reply_to, config.reply_prefix, reply, conn.headerlen)
+                    msgsplitter[reply_to] = message_generator("PRIVMSG", reply_to, config.reply_prefix, reply['text'], conn.headerlen)
                     msgpart = next(msgsplitter[reply_to])
                     logger.info("-> {} : {}".format(reply_to, msgpart[msgpart.find(":")+1:]))
                     hooks.on_send_privmsg(timestamp, config.network, reply_to, config.nick, msgpart[msgpart.find(":")+1:])
