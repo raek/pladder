@@ -77,15 +77,15 @@ class PladderLog(ExitStack):
           <arg direction="in" name="network" type="s" />
           <arg direction="in" name="channel" type="s" />
           <arg direction="in" name="line_count" type="u" />
-          <arg direction="out" name="return" type="a(uss)" />
+          <arg direction="out" name="return" type="a(iuss)" />
         </method>
         <method name="SearchLines">
           <arg direction="in" name="network" type="s" />
           <arg direction="in" name="channel" type="s" />
           <arg direction="in" name="substring" type="s" />
           <arg direction="in" name="max_count" type="u" />
-          <arg direction="in" name="skip" type="u" />
-          <arg direction="out" name="return" type="a(uss)" />
+          <arg direction="in" name="index" type="d" />
+          <arg direction="out" name="return" type="a(iuss)" />
         </method>
       </interface>
     </node>
@@ -107,9 +107,9 @@ class PladderLog(ExitStack):
         else:
             return []
 
-    def SearchLines(self, network, channel, substring, max_count, skip):
+    def SearchLines(self, network, channel, substring, max_count, index):
         if network in self.logdbs:
-            return self.logdbs[network].search_lines(channel, '%{}%'.format(substring), max_count, skip)
+            return self.logdbs[network].search_lines(channel, '%{}%'.format(substring), max_count, index)
         else:
             return []
 
@@ -136,23 +136,32 @@ class LogDb(ExitStack):
     def get_lines(self, channel, line_count):
         return self.search_lines(channel, '%', line_count, 0)
 
-    def search_lines(self, channel, substring, max_count, skip):
+    def search_lines(self, channel, substring, max_count, index):
         with self._db:
             c = self._db.cursor()
+            if index < 0:
+                c.execute("""
+                    SELECT COUNT(*)
+                    FROM lines
+                    WHERE channel = :channel AND (text LIKE :substring OR nick LIKE :substring)
+                """, {"channel": channel,
+                      "substring": substring}),
+                (row_count,) = c.fetchone()
+                index = row_count + index
             c.execute("""
-                SELECT timestamp, nick, text FROM (
-                    SELECT ROW_NUMBER() OVER(ORDER BY timestamp DESC) AS row_number,
+                SELECT row_number - 1, timestamp, nick, text FROM (
+                    SELECT ROW_NUMBER() OVER(ORDER BY timestamp ASC) AS row_number,
                            timestamp, nick, text
                     FROM lines
                     WHERE channel = :channel AND (text LIKE :substring OR nick LIKE :substring)
                 )
-                WHERE row_number > :skip
+                WHERE row_number > :index
                 LIMIT :max_count
             """, {"channel": channel,
                   "substring": substring,
                   "max_count": max_count,
-                  "skip": skip})
-            return list(reversed(c.fetchall()))
+                  "index": index})
+            return list(c.fetchall())
 
     def add_line(self, timestamp, channel, nick, text):
         with self._db:

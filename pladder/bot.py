@@ -54,7 +54,7 @@ class PladderBot(ExitStack):
         self.bindings = []
         self.register_command("help", self.help)
         self.register_command("version", self.version)
-        self.register_command("lastlog", self.lastlog, contextual=True)
+        self.register_command("log", self.searchlog, contextual=True)
         self.register_command("comp", self.comp, contextual=True)
         self.register_command("give", self.give, varargs=True)
         self.register_command("echo", lambda text="": text, varargs=True)
@@ -141,22 +141,23 @@ class PladderBot(ExitStack):
     def version(self):
         return LAST_COMMIT
 
-    def lastlog(self, context, needle, skip=0):
+    def searchlog(self, context, needle, index=0):
         try:
-            skip = int(skip)
-            assert(skip >= 0)
-        except (ValueError, AssertionError):
-            return "'skip' needs to be a non-negative number!"
+            index = int(index)
+        except ValueError:
+            return "'index' needs to be a number!"
+        if index < 0:
+            # Subtract one from index to ignore the line where the command was issued
+            index -= 1
 
-        def format_log_line(date, nick, text):
-            return '[{} {}: {}]'.format(date.strftime('%H:%M'), nick, text)
+        def format_log_line(index, date, nick, text):
+            return '[{}: {} {}: {}]'.format(index, date.strftime('%H:%M'), nick, text)
 
-        # Add one to skip to ignore the line where the command was issued
-        lines = self.log.SearchLines(context['network'], context['channel'], needle, 3, skip + 1)
+        lines = self.log.SearchLines(context['network'], context['channel'], needle, 3, index)
         lines_by_day = defaultdict(list)
-        for timestamp, nick, text in lines:
+        for index, timestamp, nick, text in lines:
             date = datetime.fromtimestamp(timestamp, tz=timezone.utc).astimezone(tz=None)
-            line = format_log_line(date, nick, text)
+            line = format_log_line(index, date, nick, text)
             lines_by_day[(date.year, date.month, date.day)].append(line)
         formatted = ['{}-{}-{}: {}'.format(*day, ', '.join(lines))
                      for (day, lines) in lines_by_day.items()]
