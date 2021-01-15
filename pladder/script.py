@@ -154,7 +154,7 @@ def eval_call(bindings, context, call):
     result = apply_call(context, command, command_name, arguments)
     if command.parseoutput and result.find("[")>=0:
         result = interpret(bindings, context, "echo " + result)
-    return result
+    return result, command.command_name
 
 
 def lookup_command(bindings, command_name):

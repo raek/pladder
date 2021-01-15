@@ -13,6 +13,7 @@ Config = namedtuple("Config", "network, host, port, nick, realname, auth, user_m
 AuthConfig = namedtuple("AuthConfig", "system, username, password")
 
 msgsplitter = {}
+commands = {}
 
 class Hooks:
     def on_ready(self):
@@ -52,28 +53,35 @@ def run_client(config, hooks):
             else:
                 reply_to = message.sender.nick
             timestamp = datetime.now(timezone.utc).timestamp()
-            hooks.on_privmsg(timestamp, config.network, reply_to, message.sender, text)
+            reply = None
+            command = None
+            msgpart = None
             if text.startswith(config.trigger_prefix):
                 logger.info("{} -> {} : {}".format(message.sender.nick, target, text))
                 timestamp = datetime.now(timezone.utc).timestamp()
                 text_without_prefix = text[len(config.trigger_prefix):]
                 reply = hooks.on_trigger(timestamp, config.network, reply_to, message.sender, text_without_prefix)
-                if reply:
-                    msgsplitter[reply_to] = message_generator("PRIVMSG", reply_to, config.reply_prefix, reply, conn.headerlen)
-                    msgpart = next(msgsplitter[reply_to])
-                    logger.info("-> {} : {}".format(reply_to, msgpart[msgpart.find(":")+1:]))
-                    hooks.on_send_privmsg(timestamp, config.network, reply_to, config.nick, msgpart[msgpart.find(":")+1:])
-                    conn.send(msgpart)
+            if reply:
+                commands[reply_to] = reply['command']
+                msgsplitter[reply_to] = message_generator("PRIVMSG", reply_to, config.reply_prefix, reply['text'], conn.headerlen)
+                command = reply['command']
+                msgpart = next(msgsplitter[reply_to])
             if text == "more":
                 try:
+                    command = commands[reply_to]
                     msgpart = next(msgsplitter[reply_to])
                 except:
                     pass
                 else:
                     logger.info("{} -> {} : {}".format(message.sender.nick, target, text))
-                    logger.info("-> {} : {}".format(reply_to, msgpart[msgpart.find(":")+1:]))
+            if msgpart:
+                logger.info("-> {} : {}".format(reply_to, msgpart[msgpart.find(":")+1:]))
+                if command != 'searchlog':
+                    hooks.on_privmsg(timestamp, config.network, reply_to, message.sender, text)
                     hooks.on_send_privmsg(timestamp, config.network, reply_to, config.nick, msgpart[msgpart.find(":")+1:])
-                    conn.send(msgpart)
+                conn.send(msgpart)
+            else:
+                hooks.on_privmsg(timestamp, config.network, reply_to, message.sender, text)
 
         def messages_with_default_handling():
             for message in conn.recv_messages():

@@ -40,7 +40,10 @@ def run_command(bot, command):
     reply_to = 'cli'
     sender = 'user'
     timestamp = datetime.now(timezone.utc).timestamp()
-    return bot.RunCommand(timestamp, network, reply_to, sender, command)
+    reply = bot.RunCommand(timestamp, network, reply_to, sender, command)
+    if reply:
+        reply = reply['text']
+    return reply
 
 
 def default_state_dir():
