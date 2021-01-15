@@ -39,7 +39,7 @@ class PladderBot(ExitStack):
           <arg direction="in" name="channel" type="s" />
           <arg direction="in" name="nick" type="s" />
           <arg direction="in" name="text" type="s" />
-          <arg direction="out" name="return" type="a{ss}" />
+          <arg direction="out" name="return" type="s" />
         </method>
       </interface>
     </node>
@@ -82,22 +82,16 @@ class PladderBot(ExitStack):
                    'nick': nick,
                    'text': text}
         try:
-            result, command_name = interpret(self.bindings, context, text)
-            return {'text': result,
-                    'command': command_name}
+            return interpret(self.bindings, context, text)
         except ApplyError as e:
-            return {'text': "Usage: {}".format(self.command_usage(e.command)),
-                    'command': e.command.command_name}
+            return "Usage: {}".format(self.command_usage(e.command))
         except ScriptError as e:
-            return {'text': str(e),
-                    'command': 'error'}
+            return str(e)
         except RecursionError:
-            return {'text': "RecursionError: Maximum recursion depth exceeded",
-                    'command': 'error'}
+            return "RecursionError: Maximum recursion depth exceeded"
         except Exception as e:
             print(str(e))
-            return {'text': "Internal error: " + str(e),
-                    'command': 'error'}
+            return "Internal error: " + str(e)
 
     def apply(self, context, words):
         if not words:
@@ -152,6 +146,9 @@ class PladderBot(ExitStack):
             index = int(index)
         except ValueError:
             return "'index' needs to be a number!"
+        if index < 0:
+            # Subtract one from index to ignore the line where the command was issued
+            index -= 1
 
         def format_log_line(index, date, nick, text):
             return '[{}: {} {}: {}]'.format(index, date.strftime('%H:%M'), nick, text)
@@ -171,8 +168,7 @@ class PladderBot(ExitStack):
             return "Found no matches for '{}'".format(needle)
 
     def eval_command(self, context, script):
-        text, _command_name = interpret(self.bindings, context, script)
-        return text
+        return interpret(self.bindings, context, script)
 
     def eq(self, value1, value2):
         return self.bool_py_to_pladder(value1 == value2)
