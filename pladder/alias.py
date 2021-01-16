@@ -11,6 +11,11 @@ def pladder_plugin(bot):
         alias_cmds = AliasCommands(bot, alias_db)
         yield
 
+def errorstr():
+    if random.random() > 0.95:
+        return "https://i.imgur.com/6cpffM4.jpeg"
+    else:
+        return "Nej"
 
 class DBError(Exception):
     pass
@@ -75,7 +80,7 @@ class AliasCommands:
                 self.remove_binding(name)
             return result
         else:
-            return "Nej"
+            return errorstr()
 
 
 class AliasDb(ExitStack):
@@ -152,7 +157,7 @@ class AliasDb(ExitStack):
                 row = c.fetchone()
                 return f"{row[0]}: {row[1]}"
         else:
-            return "Nej"
+            return errorstr()
     
     def del_alias(self, name):
         if self._alias_exists(name):
