@@ -61,7 +61,7 @@ def run_client(config, hooks):
                 timestamp = datetime.now(timezone.utc).timestamp()
                 text_without_prefix = text[len(config.trigger_prefix):]
                 reply = hooks.on_trigger(timestamp, config.network, reply_to, message.sender, text_without_prefix)
-            if reply:
+            if reply and reply['text']:
                 commands[reply_to] = reply['command']
                 msgsplitter[reply_to] = message_generator("PRIVMSG", reply_to, config.reply_prefix, reply['text'], conn.headerlen)
                 command = reply['command']
