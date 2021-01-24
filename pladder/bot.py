@@ -204,6 +204,7 @@ def load_standard_plugins(bot):
         "pladder.alias",
         "pladder.bjukkify",
         "pladder.pladdble",
+        "pladder.name"
     ]
     for module_name in plugins:
         try:
