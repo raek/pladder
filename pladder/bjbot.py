@@ -11,7 +11,7 @@ def pladder_plugin(bot):
     bot.register_command("jb", jb)
     yield
 
-    
+
 def importera(path):
     db = {}
     if os.path.exists(path):
