@@ -51,43 +51,39 @@ class Pladdble:
         self.host = host
         self.port = port
 
-        self.mumble = mumble.Mumble(self.host, self.user_name, port=self.port, password=password, certfile=certfile, reconnect=reconnect)
-        
+        self.mumble = mumble.Mumble(self.host, self.user_name, port=self.port,
+                                    password=password, certfile=certfile, reconnect=reconnect)
+
         self.mumble.set_application_string('StrutOS')
-        
+
         # Set callbacks
         self.mumble.callbacks.set_callback(mumble.constants.PYMUMBLE_CLBK_CONNECTED, self.connected)
         self.mumble.callbacks.set_callback(mumble.constants.PYMUMBLE_CLBK_DISCONNECTED, self.disconnected)
-        
-        self.mumble.start()
 
+        self.mumble.start()
 
     # Callback functions
 
     def connected(self):
-        print ('Pladdble connected sucessfully')
+        print('Pladdble connected sucessfully')
 
     def disconnected(self):
-        print ('Pladdble disconnected from server')
+        print('Pladdble disconnected from server')
 
     def connected_users(self) -> str:
         if self.mumble.connected:
-            return f'Antalet anslutna nötter är: {self.mumble.users.count() - 1}' #Exclude the bot itself
+            return f'Antalet anslutna nötter är: {self.mumble.users.count() - 1}'  # Exclude the bot itself
         else:
-            return f'Icke ansluten till servern'
+            return 'Icke ansluten till servern'
 
     def list_users(self) -> str:
         users = []
         for id in self.mumble.users:
             users.append(self.mumble.users[id]['name'])
-        
-        users.remove(self.user_name) # Remove the bot itself from the list
+
+        users.remove(self.user_name)  # Remove the bot itself from the list
         return ", ".join(users)
 
     def get_info(self) -> str:
         info_string = [f'Bot name: {self.user_name}', f'Server address: {self.host}', f'Port: {self.port}']
         return '   '.join(info_string)
-
-
-if __name__ == "__main__":
-    m = PladdblePlugin()

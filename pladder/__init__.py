@@ -1,1 +1,1 @@
-LAST_COMMIT="(unknown)"
+LAST_COMMIT = "(unknown)"

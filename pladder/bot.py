@@ -1,9 +1,8 @@
-from collections import defaultdict, namedtuple
+from collections import defaultdict
 from contextlib import ExitStack
 from datetime import datetime, timezone
 from importlib import import_module
 from inspect import Parameter, signature
-import logging
 import os
 import random
 import re

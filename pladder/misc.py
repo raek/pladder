@@ -119,8 +119,8 @@ def dupe_vowel_pre_consonant(text):
 
 
 def vral(i, text):
-    i = i*2 if len(text)<16 else i
-    i = i*2 if len(text)<8 else i
+    i = i*2 if len(text) < 16 else i
+    i = i*2 if len(text) < 8 else i
     # vrålify 'n' if there are no vowels
     if not re.search(r'[aeiouyåäö]', text, re.I):
         for _ in range(i):

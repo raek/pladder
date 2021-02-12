@@ -14,7 +14,6 @@ def main():
                         help="Run this command instead of reading commands from stdin.")
     args = parser.parse_args()
     if args.dbus:
-        from gi.repository import GLib
         from pydbus import SessionBus
         bus = SessionBus()
         bot = bus.get("se.raek.PladderBot")

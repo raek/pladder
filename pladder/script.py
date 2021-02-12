@@ -141,7 +141,9 @@ class ApplyError(ScriptError):
 CommandBinding = namedtuple("CommandBinding", "command_name, fn, varargs, regex, contextual, parseoutput, display_name")
 
 
-def command_binding(command_name, fn, varargs=False, regex=False, contextual=False, parseoutput=False, display_name=False):
+def command_binding(command_name, fn, varargs=False,
+                    regex=False, contextual=False,
+                    parseoutput=False, display_name=False):
     if not display_name:
         if regex:
             display_name = f"/{command_name.pattern[1:-1]}/"
@@ -168,7 +170,7 @@ def eval_call(bindings, context, call):
     command_name, arguments = evaled_words[0], evaled_words[1:]
     command = lookup_command(bindings, command_name)
     result = apply_call(context, command, command_name, arguments)
-    if command.parseoutput and result.find("[")>=0:
+    if command.parseoutput and result.find("[") >= 0:
         result, _display_name = interpret(bindings, context, "echo " + result)
     return result, command.display_name
 

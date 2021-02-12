@@ -61,21 +61,21 @@ class _Parser:
             return False
 
     def _parse_word(self):
-        l = self._rest.find(" ")
-        if l == -1:
+        length = self._rest.find(" ")
+        if length == -1:
             word = self._rest
             self._rest = ""
         else:
-            word = self._rest[:l]
-            self._rest = self._rest[l+1:]
+            word = self._rest[:length]
+            self._rest = self._rest[length+1:]
         return word
 
     def _split_off_optional_suffix(self, s, delimiter):
-        l = s.find(delimiter)
-        if l == -1:
+        length = s.find(delimiter)
+        if length == -1:
             return s, None
         else:
-            return s[:l], s[l+1:]
+            return s[:length], s[length+1:]
 
 
 def format_message(msg):
@@ -163,10 +163,10 @@ class MessageConnection:
 
     def _recv_line(self):
         while True:
-            l = self._recv_buffer.find(b"\r\n")
-            if l != -1:
-                line_bytes = self._recv_buffer[:l]
-                self._recv_buffer = self._recv_buffer[l+2:]
+            length = self._recv_buffer.find(b"\r\n")
+            if length != -1:
+                line_bytes = self._recv_buffer[:length]
+                self._recv_buffer = self._recv_buffer[length+2:]
                 if line_bytes:
                     return line_bytes
             new_bytes = self._socket.recv(self.RECV_SIZE)

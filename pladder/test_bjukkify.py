@@ -3,6 +3,7 @@ import pytest
 
 from pladder.bjukkify import pladder_plugin, bjukkify
 
+
 def test_registers_command():
     """
     Should register command bjukkify that calls the bjukkifier
@@ -11,6 +12,7 @@ def test_registers_command():
     with pladder_plugin(mockbot):
         pass
     mockbot.register_command.assert_called_with("bjukkify", bjukkify, varargs=True)
+
 
 examples = {
     "": "",
@@ -48,12 +50,14 @@ examples = {
 }
 test_data = examples.items()
 
+
 @pytest.mark.parametrize("swedish,bjukkish", test_data)
 def test_bjukkify(swedish, bjukkish):
     """
     Should bjukkify test data correctly
     """
     assert bjukkify(swedish) == bjukkish
+
 
 if __name__ == '__main__':
     pytest.main([__file__])

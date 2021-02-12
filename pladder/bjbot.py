@@ -1,13 +1,14 @@
 from contextlib import contextmanager
-from functools import partial
 import os
 
 
 @contextmanager
 def pladder_plugin(bot):
     datorbas = importera(os.path.join(bot.state_dir, "bunny.txt"))
+
     def jb(trigger):
         return datorbas.get(trigger, "Trigger not found.")
+
     bot.register_command("jb", jb)
     yield
 

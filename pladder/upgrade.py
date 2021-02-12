@@ -16,13 +16,13 @@ def github_webhook():
     try:
         signature = request.headers["X-Hub-Signature"]
         assert valid_signature(secret, payload, signature)
-    except:
+    except Exception:
         return make_response(("Forbidden", 403))
     try:
         event_type = request.headers["X-GitHub-Event"]
         assert request.content_type == "application/json"
         event = json.loads(payload.decode("utf8"))
-    except:
+    except Exception:
         return make_response(("Bad Request", 400))
     print("Got event {} from user {}".format(event_type, event["sender"]["login"]))
     if event_type == "push":

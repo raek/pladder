@@ -58,7 +58,8 @@ class SnuskCommands:
     def find_noun(self, word):
         nouns = self.snusk_db.find_noun(word)
         hits = len(nouns) if len(nouns) < 11 else "10+"
-        return "{} found:  ".format(hits) + ",  ".join(prefix + " " + suffix + " (" + str(score) + ")" for prefix, suffix, score in nouns)
+        results = [prefix + " " + suffix + " (" + str(score) + ")" for prefix, suffix, score in nouns]
+        return "{} found:  ".format(hits) + ",  ".join(results)
 
     def upvote_noun(self, prefix, suffix):
         score = self.snusk_db.add_noun_score(prefix, suffix, 1)
@@ -218,10 +219,10 @@ class SnuskDb(ExitStack):
     def _format_parts(self, parts):
         if search('([a-z])\\1\\1', parts[0].lower() + parts[1].lower()):
             parts[0] += '-'
-        
+
         if search('([a-z])\\1\\1', parts[3].lower() + parts[4].lower()):
             parts[3] += '-'
-               
+
         return "{}{} {} {}{}".format(*parts)
 
     def _random_parts(self):

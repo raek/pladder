@@ -1,7 +1,6 @@
 from collections import namedtuple
 from datetime import datetime, timezone
 import logging
-import socket
 
 from pladder.irc.message import MessageConnection, Sender, message_generator
 
@@ -9,11 +8,24 @@ from pladder.irc.message import MessageConnection, Sender, message_generator
 logger = logging.getLogger("pladder.irc")
 
 
-Config = namedtuple("Config", "network, host, port, nick, realname, auth, user_mode, channels, trigger_prefix, reply_prefix")
+Config = namedtuple("Config", [
+    "network",
+    "host",
+    "port",
+    "nick",
+    "realname",
+    "auth",
+    "user_mode",
+    "channels",
+    "trigger_prefix",
+    "reply_prefix"
+])
 AuthConfig = namedtuple("AuthConfig", "system, username, password")
+
 
 msgsplitter = {}
 commands = {}
+
 
 class Hooks:
     def on_ready(self):
@@ -63,14 +75,18 @@ def run_client(config, hooks):
                 reply = hooks.on_trigger(timestamp, config.network, reply_to, message.sender, text_without_prefix)
             if reply and reply['text']:
                 commands[reply_to] = reply['command']
-                msgsplitter[reply_to] = message_generator("PRIVMSG", reply_to, config.reply_prefix, reply['text'], conn.headerlen)
+                msgsplitter[reply_to] = message_generator("PRIVMSG",
+                                                          reply_to,
+                                                          config.reply_prefix,
+                                                          reply['text'],
+                                                          conn.headerlen)
                 command = reply['command']
                 msgpart = next(msgsplitter[reply_to])
             if text == "more":
                 try:
                     command = commands[reply_to]
                     msgpart = next(msgsplitter[reply_to])
-                except:
+                except Exception:
                     pass
                 else:
                     logger.info("{} -> {} : {}".format(message.sender.nick, target, text))
@@ -78,7 +94,8 @@ def run_client(config, hooks):
                 logger.info("-> {} : {}".format(reply_to, msgpart[msgpart.find(":")+1:]))
                 if command != 'searchlog':
                     hooks.on_privmsg(timestamp, config.network, reply_to, message.sender, text)
-                    hooks.on_send_privmsg(timestamp, config.network, reply_to, config.nick, msgpart[msgpart.find(":")+1:])
+                    hooks.on_send_privmsg(timestamp, config.network, reply_to,
+                                          config.nick, msgpart[msgpart.find(":")+1:])
                 conn.send(msgpart)
             else:
                 hooks.on_privmsg(timestamp, config.network, reply_to, message.sender, text)
@@ -141,7 +158,7 @@ def run_client(config, hooks):
                                                                                 ", ".join(sorted(joined_channels))))
                             if joined_channels == channels_to_join:
                                 break
-        
+
         def whois_self():
             conn.send("WHOIS", config.nick)
             for message in messages:
@@ -152,7 +169,6 @@ def run_client(config, hooks):
                     conn.headerlen = len(conn.header.encode("utf-8"))
                     logger.info(f"Whois {config.nick}: {conn.username}@{conn.hostname} - length {conn.headerlen}")
                     break
-
 
         def run():
             update_status("Joined all channels: {}".format(", ".join(config.channels)))

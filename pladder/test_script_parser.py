@@ -75,13 +75,13 @@ def test_nested_calls():
 def test_missing_closing_bracket():
     text = "cmd1 [cmd2"
     with pytest.raises(ParseError, match="Missing closing bracket"):
-        invocation = parse(text)
+        parse(text)
 
 
 def test_excessive_closing_bracket():
     text = "cmd1]"
     with pytest.raises(ParseError, match="Excessive closing bracket"):
-        invocation = parse(text)
+        parse(text)
 
 
 def test_quote():
@@ -113,10 +113,10 @@ def test_nested_quotes():
 def test_missing_closing_brace():
     text = "cmd1 {cmd2"
     with pytest.raises(ParseError, match="Missing closing brace"):
-        invocation = parse(text)
+        parse(text)
 
 
 def test_excessive_closing_brace():
     text = "cmd1}"
     with pytest.raises(ParseError, match="Excessive closing brace"):
-        invocation = parse(text)
+        parse(text)

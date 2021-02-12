@@ -64,7 +64,7 @@ def test_eval_optional_arg_unfilled():
     assert command == "maybe"
 
 
-def test_eval_optional_arg_unfilled():
+def test_eval_optional_arg_filled():
     script = "maybe foo"
     bindings = [command_binding("maybe", lambda x="bar": x)]
     result, command = interpret(bindings, EMPTY_CONTEXT, script)
@@ -154,7 +154,8 @@ def test_eval_regex_command():
 
 def test_eval_contextual_regex_command():
     script = "grooooovy"
-    bindings = [command_binding(re.compile("^groo+vy$"), lambda context: context["command"], regex=True, contextual=True)]
+    bindings = [command_binding(re.compile("^groo+vy$"), lambda context: context["command"],
+                                regex=True, contextual=True)]
     result, command = interpret(bindings, EMPTY_CONTEXT, script)
     assert result == "grooooovy"
     assert command == "/groo+vy/"

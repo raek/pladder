@@ -1,5 +1,4 @@
 from contextlib import contextmanager
-from functools import partial
 from random import randrange
 import os
 
