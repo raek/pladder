@@ -33,11 +33,6 @@ class _Parser:
     def at_end(self):
         return self.pos == self.end_pos
 
-    def del_previous_char(self):
-        self.pos -= 1
-        self.end_pos -= 1
-        self.text = self.text[0:self.pos:] + self.text[self.pos+1::]
-
     def pop(self):
         c = self.text[self.pos]
         self.pos += 1
@@ -91,13 +86,6 @@ class _Parser:
                     fragment = Literal(self.text[fragment_start:fragment_end])
                     fragments.append(fragment)
                 break
-            elif self.try_pop("{"):
-                self.del_previous_char()
-                while not self.try_pop("}"):
-                    if self.at_end():
-                        raise ParseError("Missing closing stabby-bracket")
-                    self.pop()
-                self.del_previous_char()
             elif self.try_pop("["):
                 fragment_end = self.pos - 1
                 if fragment_start != fragment_end:
@@ -110,6 +98,29 @@ class _Parser:
                     assert self.pop() == "]"  # Should always be true
                 fragments.append(call)
                 fragment_start = self.pos
+            elif self.try_pop("{"):
+                fragment_end = self.pos - 1
+                if fragment_start != fragment_end:
+                    fragment = Literal(self.text[fragment_start:fragment_end])
+                    fragments.append(fragment)
+                fragment_start = self.pos
+                level = 1
+                while not self.at_end():
+                    c = self.pop()
+                    if c == "{":
+                        level += 1
+                    elif c == "}":
+                        level -= 1
+                        if level == 0:
+                            break
+                if level != 0:
+                    raise ParseError("Missing closing brace")
+                fragment_end = self.pos - 1
+                fragment = Literal(self.text[fragment_start:fragment_end])
+                fragments.append(fragment)
+                fragment_start = self.pos
+            elif self.try_pop("}"):
+                raise ParseError("Excessive closing brace")
             else:
                 self.pop()
         return Word(fragments)
