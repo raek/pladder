@@ -24,7 +24,6 @@ def pladder_plugin(bot):
 
 
 def importera(path):
-    print(path)
     db = []
     if os.path.exists(path):
         with open(path, "rt", encoding="latin1") as fp:
