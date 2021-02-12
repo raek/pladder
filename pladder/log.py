@@ -9,8 +9,8 @@ Config = namedtuple("Config", "networks, logdir")
 
 
 def main():
-    from gi.repository import GLib
-    from pydbus import SessionBus
+    from gi.repository import GLib  # type: ignore
+    from pydbus import SessionBus  # type: ignore
 
     config_home = os.environ.get("XDG_CONFIG_HOME", os.path.join(os.environ["HOME"], ".config"))
     config = read_config(config_home)

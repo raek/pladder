@@ -13,8 +13,8 @@ from pladder.script import ScriptError, ApplyError, command_binding, interpret, 
 
 
 def main():
-    from gi.repository import GLib
-    from pydbus import SessionBus
+    from gi.repository import GLib  # type: ignore
+    from pydbus import SessionBus  # type: ignore
 
     state_home = os.environ.get(
         "XDG_CONFIG_HOME", os.path.join(os.environ["HOME"], ".config"))

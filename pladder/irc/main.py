@@ -55,8 +55,8 @@ def parse_arguments():
 
 
 def set_up_systemd(hooks_base_class):
-    from systemd.journal import JournalHandler
-    from systemd.daemon import notify
+    from systemd.journal import JournalHandler  # type: ignore
+    from systemd.daemon import notify  # type: ignore
 
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.INFO)
@@ -76,8 +76,8 @@ def set_up_systemd(hooks_base_class):
 
 
 def set_up_dbus(hooks_base_class):
-    from gi.repository import GLib
-    from pydbus import SessionBus
+    from gi.repository import GLib  # type: ignore
+    from pydbus import SessionBus  # type: ignore
 
     class DbusHooks(hooks_base_class):
         def __init__(self):

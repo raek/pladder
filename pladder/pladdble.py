@@ -4,7 +4,7 @@ import os
 
 
 try:
-    import pymumble_py3 as mumble
+    import pymumble_py3 as mumble  # type: ignore
 except Exception:
     mumble = None
 
