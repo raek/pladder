@@ -153,7 +153,7 @@ def eval_call(bindings, context, call):
         evaled_word = "".join(evaled_fragments)
         evaled_words.append(evaled_word)
     if not evaled_words:
-        return ""
+        return "", ""
     command_name, arguments = evaled_words[0], evaled_words[1:]
     command = lookup_command(bindings, command_name)
     result = apply_call(context, command, command_name, arguments)
