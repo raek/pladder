@@ -150,7 +150,7 @@ class AliasDb(ExitStack):
             raise DBError("You cannot insert ye value :(")
         else:
             self._db.commit()
-            return f"\"{name}\" added"
+            return f"\"{name}\" added. value is: \"{data}\""
 
     def add_alias(self, name, data):
         if self._alias_exists(name):

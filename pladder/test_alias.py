@@ -45,12 +45,12 @@ def test_init_binding():
 
 def test_db_addalias():
     result = alias_db.add_alias("testdb", "datamaskin")
-    assert result == '"testdb" added'
+    assert result == '"testdb" added. value is: "datamaskin"'
 
 
 def test_alias_create():
     result = alias_cmds.add_alias("testalias", "testtest")
-    assert result == '"testalias" added'
+    assert result == '"testalias" added. value is: "testtest"'
 
 
 def test_binding_exists():
