@@ -1,4 +1,4 @@
-from collections import namedtuple
+from typing import Any, Callable, Dict, List, NamedTuple, Optional, Pattern, Tuple, Union, cast
 from inspect import signature, Parameter
 
 
@@ -10,35 +10,65 @@ class ParseError(ScriptError):
     pass
 
 
-Call = namedtuple("Call", "words")
-Word = namedtuple("Word", "fragments")
-Literal = namedtuple("Literal", "string")
+class Call(NamedTuple):
+    # Actually this should be List[Word], but mypy does not support recursive types.
+    words: List[Any]
 
 
-def interpret(bindings, context, text):
+class Literal(NamedTuple):
+    string: str
+
+
+Fragment = Union[Call, Literal]
+
+
+class Word(NamedTuple):
+    fragments: List[Fragment]
+
+
+CommandName = Union[str, Pattern[str]]
+
+
+class CommandBinding(NamedTuple):
+    command_name: CommandName
+    fn: Callable[..., str]
+    varargs: bool
+    regex: bool
+    contextual: bool
+    parseoutput: bool
+    display_name: str
+
+
+Bindings = List[CommandBinding]
+Context = Dict[str, Any]
+Result = Tuple[str, str]
+Char = str
+
+
+def interpret(bindings: Bindings, context: Context, text: str) -> Result:
     call = parse(text)
     return eval_call(bindings, context, call)
 
 
-def parse(text):
+def parse(text: str) -> Call:
     return _Parser(text).parse()
 
 
 class _Parser:
-    def __init__(self, text):
+    def __init__(self, text: str) -> None:
         self.text = text
         self.end_pos = len(text)
         self.pos = 0
 
-    def at_end(self):
+    def at_end(self) -> bool:
         return self.pos == self.end_pos
 
-    def pop(self):
+    def pop(self) -> Char:
         c = self.text[self.pos]
         self.pos += 1
         return c
 
-    def try_pop(self, c):
+    def try_pop(self, c: Char) -> bool:
         if self.at_end():
             return False
         else:
@@ -48,20 +78,20 @@ class _Parser:
             else:
                 return False
 
-    def try_peek(self, c):
+    def try_peek(self, c: Char) -> bool:
         if self.at_end():
             return False
         else:
             return self.text[self.pos] == c
 
-    def parse(self):
+    def parse(self) -> Call:
         call = self.parse_call()
         if self.at_end():
             return call
         else:
             raise ParseError("Excessive closing bracket")
 
-    def parse_call(self):
+    def parse_call(self) -> Call:
         words = []
         while True:
             self.parse_whitespace()
@@ -71,13 +101,13 @@ class _Parser:
             words.append(word)
         return Call(words)
 
-    def parse_whitespace(self):
+    def parse_whitespace(self) -> None:
         while True:
             if not self.try_pop(" "):
                 break
 
-    def parse_word(self):
-        fragments = []
+    def parse_word(self) -> Word:
+        fragments: List[Fragment] = []
         fragment_start = self.pos
         while True:
             if self.at_end() or self.try_peek("]") or self.try_peek(" "):
@@ -131,29 +161,30 @@ class EvalError(ScriptError):
 
 
 class ApplyError(ScriptError):
-    def __init__(self, msg, command, command_name, arguments):
+    def __init__(self, msg: str, command: CommandBinding, command_name: str, arguments: List[Any]):
         super().__init__(msg)
         self.command = command
         self.command_name = command_name
         self.arguments = arguments
 
 
-CommandBinding = namedtuple("CommandBinding", "command_name, fn, varargs, regex, contextual, parseoutput, display_name")
-
-
-def command_binding(command_name, fn, varargs=False,
-                    regex=False, contextual=False,
-                    parseoutput=False, display_name=False):
-    if not display_name:
+def command_binding(command_name: CommandName,
+                    fn: Callable[..., str],
+                    varargs: bool = False,
+                    regex: bool = False,
+                    contextual: bool = False,
+                    parseoutput: bool = False,
+                    display_name: Optional[str] = None) -> CommandBinding:
+    if display_name is None:
         if regex:
-            display_name = f"/{command_name.pattern[1:-1]}/"
+            command_name_pattern = cast(Pattern[str], command_name)
+            new_display_name = f"/{command_name_pattern.pattern[1:-1]}/"
         else:
-            display_name = command_name
-    return CommandBinding(command_name, fn, varargs, regex, contextual, parseoutput, display_name)
+            new_display_name = cast(str, command_name)
+    return CommandBinding(command_name, fn, varargs, regex, contextual, parseoutput, new_display_name)
 
 
-def eval_call(bindings, context, call):
-    assert isinstance(call, Call)
+def eval_call(bindings: Bindings, context: Context, call: Call) -> Result:
     evaled_words = []
     for word in call.words:
         evaled_fragments = []
@@ -175,39 +206,42 @@ def eval_call(bindings, context, call):
     return result, command.display_name
 
 
-def lookup_command(bindings, command_name):
+def lookup_command(bindings: Bindings, command_name: str) -> CommandBinding:
     for command in bindings:
         if command.regex:
-            if command.command_name.match(command_name):
+            command_name_pattern = cast(Pattern[str], command.command_name)
+            if command_name_pattern.match(command_name):
                 return command
         else:
-            if command.command_name == command_name:
+            command_name_string = cast(str, command.command_name)
+            if command_name_string == command_name:
                 return command
     raise EvalError(f"Unkown command name: {command_name}")
 
 
-def apply_call(context, command, command_name, arguments):
+def apply_call(context: Context, command: CommandBinding, command_name: str, arguments: List[str]) -> str:
+    fn_arguments: List[Any] = arguments
     if command.contextual:
         context = dict(context)
         context['command'] = command_name
-        arguments = [context] + arguments
+        fn_arguments.insert(0, context)
     if command.varargs:
         last_arg_index = _max_positional_arguments(command.fn) - 1
-        first_args = arguments[:last_arg_index]
-        last_args = arguments[last_arg_index:]
+        first_args = fn_arguments[:last_arg_index]
+        last_args = fn_arguments[last_arg_index:]
         if last_args:
-            arguments = first_args + [" ".join(last_args)]
+            fn_arguments = first_args + [" ".join(last_args)]
         else:
-            arguments = first_args
-    if not _signature_accepts_arguments(command.fn, arguments):
+            fn_arguments = first_args
+    if not _signature_accepts_arguments(command.fn, fn_arguments):
         raise ApplyError("Argument count does not match what command accepts",
-                         command, command_name, arguments)
-    result = command.fn(*arguments)
+                         command, command_name, fn_arguments)
+    result = command.fn(*fn_arguments)
     assert isinstance(result, str), "Commands must return strings"
     return result
 
 
-def _max_positional_arguments(fn):
+def _max_positional_arguments(fn: Callable[..., Any]) -> int:
     sig = signature(fn)
     max_args = 0
     for parameter in sig.parameters.values():
@@ -217,7 +251,7 @@ def _max_positional_arguments(fn):
     return max_args
 
 
-def _signature_accepts_arguments(fn, arguments):
+def _signature_accepts_arguments(fn: Callable[..., Any], arguments: List[Any]) -> bool:
     try:
         sig = signature(fn)
         sig.bind(*arguments)

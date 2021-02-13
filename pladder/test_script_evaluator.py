@@ -1,12 +1,11 @@
 import re
-from typing import Any, Dict
 
 import pytest
 
-from pladder.script import EvalError, ApplyError, command_binding, interpret
+from pladder.script import EvalError, ApplyError, Context, command_binding, interpret
 
 
-EMPTY_CONTEXT: Dict[str, Any] = {}
+EMPTY_CONTEXT: Context = {}
 
 
 def test_eval_simple():
