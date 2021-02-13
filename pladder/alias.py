@@ -154,7 +154,7 @@ class AliasDb(ExitStack):
 
     def add_alias(self, name, data):
         if self._alias_exists(name):
-            raise DBError("Om du ser det här har Krille fuckat upp")
+            raise DBError("Om du ser det här har kodaren som inte vill bli highlightad fuckat upp")
         return self._insert_alias(name, data)
 
     def get_alias(self, name):
