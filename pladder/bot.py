@@ -82,6 +82,7 @@ class PladderBot(ExitStack):
                    'text': text}
         try:
             result, display_name = interpret(self.bindings, context, text)
+            result = result[:10000]
             return {'text': result,
                     'command': display_name}
         except ApplyError as e:
