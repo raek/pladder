@@ -81,7 +81,7 @@ def test_db_randomalias():
 def test_db_delalias():
     res1 = alias_db.del_alias("hello")
     res2 = alias_db.get_alias("hello")
-    assert res1 == "Alias removed" and res2 == "Nej"
+    assert res1 == "Alias removed" and res2 in ["Nej", "https://i.imgur.com/6cpffM4.jpeg"]
 
 
 def test_delalias():
