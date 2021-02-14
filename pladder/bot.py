@@ -108,8 +108,8 @@ class PladderBot(ExitStack):
         command_context = context._replace(command_name=command_name)
         return apply_call(command_context, command, command_name, arguments)
 
-    def register_command(self, name, fn, varargs=False, contextual=False, parseoutput=False):
-        self.bindings.append(command_binding(name, fn, varargs, contextual, parseoutput))
+    def register_command(self, name, fn, varargs=False, contextual=False):
+        self.bindings.append(command_binding(name, fn, varargs, contextual))
 
     def command_usage(self, command):
         result = command.display_name

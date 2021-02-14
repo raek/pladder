@@ -36,14 +36,12 @@ class CommandBinding(NamedTuple):
     fn: Callable[..., str]
     varargs: bool
     contextual: bool
-    parseoutput: bool
 
 
 def command_binding(name_pattern: NamePattern,
                     fn: Callable[..., str],
                     varargs: bool = False,
-                    contextual: bool = False,
-                    parseoutput: bool = False) -> CommandBinding:
+                    contextual: bool = False) -> CommandBinding:
     if isinstance(name_pattern, str):
         name: str = name_pattern
         display_name = name
@@ -61,8 +59,7 @@ def command_binding(name_pattern: NamePattern,
     else:
         raise TypeError(name_pattern)
 
-    return CommandBinding(name_matches, display_name, fn,
-                          varargs, contextual, parseoutput)
+    return CommandBinding(name_matches, display_name, fn, varargs, contextual)
 
 
 Bindings = List[CommandBinding]
@@ -222,8 +219,6 @@ def eval_call(context: Context, call: Call) -> Result:
     command = lookup_command(context.bindings, command_name)
     command_context = context._replace(command_name=command_name)
     result = apply_call(command_context, command, command_name, arguments)
-    if command.parseoutput and result.find("[") >= 0:
-        result, _display_name = interpret(context, "echo " + result)
     return result, command.display_name
 
 
