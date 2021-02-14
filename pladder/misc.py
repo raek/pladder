@@ -5,10 +5,10 @@ import re
 
 @contextmanager
 def pladder_plugin(bot):
-    bot.register_command("kloo+fify", kloooofify, varargs=True, regex=True, contextual=True)
-    bot.register_command("vrå+lify",  vraaaal,    varargs=True, regex=True, contextual=True)
-    bot.register_command("time",      time)
-    bot.register_command("capify",    capify,     varargs=True)
+    bot.register_command(re.compile("^kloo+fify$"), kloooofify, varargs=True, contextual=True)
+    bot.register_command(re.compile("^vrå+lify$"), vraaaal, varargs=True, contextual=True)
+    bot.register_command("time", time)
+    bot.register_command("capify", capify, varargs=True)
     yield
 
 

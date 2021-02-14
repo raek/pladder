@@ -1,4 +1,5 @@
-from typing import Any, Callable, Dict, List, NamedTuple, Optional, Pattern, Tuple, Union, cast
+import re
+from typing import Any, Callable, Dict, List, NamedTuple, Pattern, Tuple, Union
 from inspect import signature, Parameter
 
 
@@ -26,17 +27,42 @@ class Word(NamedTuple):
     fragments: List[Fragment]
 
 
-CommandName = Union[str, Pattern[str]]
+NamePattern = Union[str, Pattern[str]]
 
 
 class CommandBinding(NamedTuple):
-    command_name: CommandName
+    name_matches: Callable[[str], bool]
+    display_name: str
     fn: Callable[..., str]
     varargs: bool
-    regex: bool
     contextual: bool
     parseoutput: bool
-    display_name: str
+
+
+def command_binding(name_pattern: NamePattern,
+                    fn: Callable[..., str],
+                    varargs: bool = False,
+                    contextual: bool = False,
+                    parseoutput: bool = False) -> CommandBinding:
+    if isinstance(name_pattern, str):
+        name: str = name_pattern
+        display_name = name
+
+        def name_matches(name: str) -> bool:
+            return name == name_pattern
+
+    elif isinstance(name_pattern, re.Pattern):
+        pattern: Pattern[str] = name_pattern
+        display_name = "/{}/".format(pattern.pattern[1:-1])
+
+        def name_matches(name: str) -> bool:
+            return pattern.match(name) is not None
+
+    else:
+        raise TypeError(name_pattern)
+
+    return CommandBinding(name_matches, display_name, fn,
+                          varargs, contextual, parseoutput)
 
 
 Bindings = List[CommandBinding]
@@ -168,22 +194,6 @@ class ApplyError(ScriptError):
         self.arguments = arguments
 
 
-def command_binding(command_name: CommandName,
-                    fn: Callable[..., str],
-                    varargs: bool = False,
-                    regex: bool = False,
-                    contextual: bool = False,
-                    parseoutput: bool = False,
-                    display_name: Optional[str] = None) -> CommandBinding:
-    if display_name is None:
-        if regex:
-            command_name_pattern = cast(Pattern[str], command_name)
-            new_display_name = f"/{command_name_pattern.pattern[1:-1]}/"
-        else:
-            new_display_name = cast(str, command_name)
-    return CommandBinding(command_name, fn, varargs, regex, contextual, parseoutput, new_display_name)
-
-
 def eval_call(bindings: Bindings, context: Context, call: Call) -> Result:
     evaled_words = []
     for word in call.words:
@@ -208,14 +218,8 @@ def eval_call(bindings: Bindings, context: Context, call: Call) -> Result:
 
 def lookup_command(bindings: Bindings, command_name: str) -> CommandBinding:
     for command in bindings:
-        if command.regex:
-            command_name_pattern = cast(Pattern[str], command.command_name)
-            if command_name_pattern.match(command_name):
-                return command
-        else:
-            command_name_string = cast(str, command.command_name)
-            if command_name_string == command_name:
-                return command
+        if command.name_matches(command_name):
+            return command
     raise EvalError(f"Unkown command name: {command_name}")
 
 

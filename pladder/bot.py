@@ -5,7 +5,6 @@ from importlib import import_module
 from inspect import Parameter, signature
 import os
 import random
-import re
 
 from pladder import LAST_COMMIT
 from pladder.log import PladderLogProxy
@@ -106,10 +105,8 @@ class PladderBot(ExitStack):
         command = lookup_command(self.bindings, command_name)
         return apply_call(context, command, command_name, arguments)
 
-    def register_command(self, name, fn, varargs=False, regex=False, contextual=False, parseoutput=False):
-        if regex:
-            name = re.compile("^" + name + "$")
-        self.bindings.append(command_binding(name, fn, varargs, regex, contextual, parseoutput))
+    def register_command(self, name, fn, varargs=False, contextual=False, parseoutput=False):
+        self.bindings.append(command_binding(name, fn, varargs, contextual, parseoutput))
 
     def command_usage(self, command):
         result = command.display_name

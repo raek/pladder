@@ -3,6 +3,8 @@ import os
 import sqlite3
 import random
 
+from pladder.script import EvalError, lookup_command
+
 
 @contextmanager
 def pladder_plugin(bot):
@@ -48,10 +50,11 @@ class AliasCommands:
                 "Use {} when adding PladderScript to database.")
 
     def binding_exists(self, name):
-        for binding in self.bot.bindings:
-            if name == binding.command_name:
-                return True
-        return False
+        try:
+            lookup_command(self.bot.bindings, name)
+            return True
+        except EvalError:
+            return False
 
     def exec_alias(self, context):
         name = context.get("command")
@@ -68,11 +71,12 @@ class AliasCommands:
         self.bot.register_command(name, self.exec_alias, contextual=True, parseoutput=True)
 
     def remove_binding(self, name):
-        for binding in self.bot.bindings:
-            if name == binding.command_name:
-                if self.bot.bindings.remove(binding):
-                    return True
-        return False
+        try:
+            binding = lookup_command(self.bot.bindings, name)
+            self.bot.bindings.remove(binding)
+            return True
+        except EvalError:
+            return False
 
     def add_alias(self, name, data):
         if self.binding_exists(name):

@@ -146,7 +146,7 @@ def test_eval_contextual_adds_command_name():
 
 def test_eval_regex_command():
     script = "grooooovy"
-    bindings = [command_binding(re.compile("^groo+vy$"), lambda: "foo", regex=True)]
+    bindings = [command_binding(re.compile("^groo+vy$"), lambda: "foo")]
     result, command = interpret(bindings, EMPTY_CONTEXT, script)
     assert result == "foo"
     assert command == "/groo+vy/"
@@ -154,8 +154,7 @@ def test_eval_regex_command():
 
 def test_eval_contextual_regex_command():
     script = "grooooovy"
-    bindings = [command_binding(re.compile("^groo+vy$"), lambda context: context["command"],
-                                regex=True, contextual=True)]
+    bindings = [command_binding(re.compile("^groo+vy$"), lambda context: context["command"], contextual=True)]
     result, command = interpret(bindings, EMPTY_CONTEXT, script)
     assert result == "grooooovy"
     assert command == "/groo+vy/"
