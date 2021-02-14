@@ -9,6 +9,7 @@ def pladder_plugin(bot):
     bot.register_command(re.compile("^vrå+lify$"), vraaaal, varargs=True, contextual=True)
     bot.register_command("time", time)
     bot.register_command("capify", capify, varargs=True)
+    bot.register_command("tutify", tutify, varargs=True)
     yield
 
 
@@ -33,6 +34,10 @@ def time():
 
 def capify(text):
     return text.title()
+
+
+def tutify(text):
+    return re.sub(r"([aeiouyåäö]+)", "\U0001f4e2", text)
 
 
 def check_spoofy(target):
