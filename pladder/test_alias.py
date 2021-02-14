@@ -4,10 +4,11 @@ from pladder.script import new_context
 
 
 class MockBot():
+    register_command = PladderBot.register_command
+
     def __init__(self):
         self.bindings = []
-
-    register_command = PladderBot.register_command
+        self.register_command("echo", lambda text="": text, varargs=True)
 
 
 mock_bot = MockBot()

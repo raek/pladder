@@ -3,7 +3,7 @@ import os
 import sqlite3
 import random
 
-from pladder.script import EvalError, lookup_command
+from pladder.script import EvalError, interpret, lookup_command
 
 
 @contextmanager
@@ -58,8 +58,10 @@ class AliasCommands:
 
     def exec_alias(self, context):
         data = self.alias_db.get_alias(context.command_name)
-        _, data = data.split(": ", 1)
-        return data
+        _, template = data.split(": ", 1)
+        script = "echo " + template
+        result, _ = interpret(context, script)
+        return result
 
     def register_db_bindings(self):
         names = self.alias_db.list_alias("_").split(" ")
@@ -67,7 +69,7 @@ class AliasCommands:
             self.register_binding(name)
 
     def register_binding(self, name):
-        self.bot.register_command(name, self.exec_alias, contextual=True, parseoutput=True)
+        self.bot.register_command(name, self.exec_alias, contextual=True)
 
     def remove_binding(self, name):
         try:
