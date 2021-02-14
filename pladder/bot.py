@@ -8,6 +8,7 @@ import random
 
 from pladder import LAST_COMMIT
 from pladder.log import PladderLogProxy
+from pladder.plugin import PluginLoadError
 from pladder.script import ScriptError, ApplyError, command_binding, interpret, lookup_command, apply_call
 
 
@@ -210,8 +211,11 @@ def load_standard_plugins(bot):
             plugin_ctxmgr = getattr(plugin_module, "pladder_plugin")
             bot.enter_context(plugin_ctxmgr(bot))
             print(f"Loaded '{module_name}'.")
-        except Exception as e:
-            print(f"Could not load '{module_name}'. Skipping. Error: {e}")
+        except PluginLoadError as e:
+            print(f"Could not load '{module_name}'. Skipping. Plugin reported error: {e}")
+        except Exception:
+            print(f"Could not load '{module_name}'. Fatal error")
+            raise
 
 
 if __name__ == "__main__":
