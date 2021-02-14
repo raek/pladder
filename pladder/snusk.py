@@ -11,15 +11,15 @@ def pladder_plugin(bot):
     with SnuskDb(snusk_db_path) as snusk_db:
         snusk_commands = SnuskCommands(snusk_db)
 
-        bot.register_command("snusk",       snusk_db.snusk,             parseoutput=True)
-        bot.register_command("snuska",      snusk_db.directed_snusk,    parseoutput=True, varargs=True)
-        bot.register_command("nickförslag", snusk_db.random_noun,       parseoutput=True)
-        bot.register_command("prefix",      snusk_db.random_prefix,     parseoutput=True)
-        bot.register_command("suffix",      snusk_db.random_suffix,     parseoutput=True)
-        bot.register_command("noun",        snusk_db.random_noun,       parseoutput=True)
-        bot.register_command("inbetweeny",  snusk_db.random_inbetweeny, parseoutput=True)
+        bot.register_command("snusk",       snusk_db.snusk)
+        bot.register_command("snuska",      snusk_db.directed_snusk, varargs=True)
+        bot.register_command("nickförslag", snusk_db.random_noun)
+        bot.register_command("prefix",      snusk_db.random_prefix)
+        bot.register_command("suffix",      snusk_db.random_suffix)
+        bot.register_command("noun",        snusk_db.random_noun)
+        bot.register_command("inbetweeny",  snusk_db.random_inbetweeny)
 
-        bot.register_command("smak",                snusk_commands.smak,                parseoutput=True)
+        bot.register_command("smak",                snusk_commands.smak)
         bot.register_command("add-snusk",           snusk_commands.add_noun)
         bot.register_command("add-noun",            snusk_commands.add_noun)
         bot.register_command("add-preposition",     snusk_commands.add_inbetweeny,      varargs=True)
