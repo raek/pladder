@@ -66,6 +66,7 @@ class PladderBot(ExitStack):
         self.register_command("/=", self.ne)
         self.register_command("bool", self.bool_command)
         self.register_command("if", self.if_command)
+        self.register_command("trace", self.trace, contextual=True)
 
     def comp(self, context, command1, *command2_words):
         command2_result = self.apply(context, list(command2_words))
@@ -201,6 +202,34 @@ class PladderBot(ExitStack):
             return False
         else:
             raise ScriptError(f'Expected "true" or "false", got "{string}"')
+
+    def trace(self, context, mode, script):
+        if mode not in ["-brief", "-full"]:
+            return "Mode must be one of: -brief, -full"
+        subcontext = new_context(context.bindings, context.metadata)
+        try:
+            interpret(subcontext, script)
+        except Exception:
+            pass
+        if mode == "-brief":
+            result = []
+            for entry in subcontext.trace:
+                result.append(entry.command_name)
+            return ", ".join(result)
+        elif mode == "-full":
+            def escape(word):
+                if " " in word or "{" in word:
+                    return "{" + word + "}"
+                else:
+                    return word
+
+            result = []
+            for entry in subcontext.trace:
+                words = [entry.command_name] + entry.arguments
+                call = " ".join(map(escape, words))
+                part = f"[{call}] => {entry.result}"
+                result.append(part)
+            return ",   ".join(result)
 
 
 def load_standard_plugins(bot):

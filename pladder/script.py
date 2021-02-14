@@ -68,14 +68,22 @@ Result = Tuple[str, str]
 Char = str
 
 
+class TraceEntry(NamedTuple):
+    command: CommandBinding
+    command_name: str
+    arguments: List[str]
+    result: Union[None, str, Exception]
+
+
 class Context(NamedTuple):
     bindings: Bindings
     metadata: Metadata
     command_name: str
+    trace: List[TraceEntry]
 
 
 def new_context(bindings: Bindings, metadata: Metadata = {}, command_name: str = "<TOP>") -> Context:
-    return Context(bindings, metadata, command_name)
+    return Context(bindings, metadata, command_name, [])
 
 
 def interpret(context: Context, script: str) -> Result:
@@ -230,7 +238,7 @@ def lookup_command(bindings: Bindings, command_name: str) -> CommandBinding:
 
 
 def apply_call(context: Context, command: CommandBinding, command_name: str, arguments: List[str]) -> str:
-    fn_arguments: List[Any] = arguments
+    fn_arguments: List[Any] = list(arguments)
     if command.contextual:
         fn_arguments.insert(0, context)
     if command.varargs:
@@ -244,7 +252,14 @@ def apply_call(context: Context, command: CommandBinding, command_name: str, arg
     if not _signature_accepts_arguments(command.fn, fn_arguments):
         raise ApplyError("Argument count does not match what command accepts",
                          command, command_name, fn_arguments)
-    result = command.fn(*fn_arguments)
+    try:
+        result = command.fn(*fn_arguments)
+        trace_entry = TraceEntry(command, command_name, arguments, result)
+        context.trace.append(trace_entry)
+    except Exception as e:
+        trace_entry = TraceEntry(command, command_name, arguments, e)
+        context.trace.append(trace_entry)
+        raise
     assert isinstance(result, str), "Commands must return strings"
     return result
 
