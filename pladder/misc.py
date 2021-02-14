@@ -13,14 +13,14 @@ def pladder_plugin(bot):
 
 
 def kloooofify(context, text):
-    command = context['command']
+    command = context.command_name
     for _ in range(command.count("o")-1):
         text = kloofify(text)
     return text
 
 
 def vraaaal(context, text):
-    i = context['command'].lower().count("å")-1
+    i = context.command_name.lower().count("å")-1
     text = vral(i, text)
     return text
 

@@ -66,14 +66,24 @@ def command_binding(name_pattern: NamePattern,
 
 
 Bindings = List[CommandBinding]
-Context = Dict[str, Any]
+Metadata = Dict[Any, str]
 Result = Tuple[str, str]
 Char = str
 
 
-def interpret(bindings: Bindings, context: Context, text: str) -> Result:
-    call = parse(text)
-    return eval_call(bindings, context, call)
+class Context(NamedTuple):
+    bindings: Bindings
+    metadata: Metadata
+    command_name: str
+
+
+def new_context(bindings: Bindings, metadata: Metadata = {}, command_name: str = "<TOP>") -> Context:
+    return Context(bindings, metadata, command_name)
+
+
+def interpret(context: Context, script: str) -> Result:
+    call = parse(script)
+    return eval_call(context, call)
 
 
 def parse(text: str) -> Call:
@@ -194,7 +204,7 @@ class ApplyError(ScriptError):
         self.arguments = arguments
 
 
-def eval_call(bindings: Bindings, context: Context, call: Call) -> Result:
+def eval_call(context: Context, call: Call) -> Result:
     evaled_words = []
     for word in call.words:
         evaled_fragments = []
@@ -202,17 +212,18 @@ def eval_call(bindings: Bindings, context: Context, call: Call) -> Result:
             if isinstance(fragment, Literal):
                 evaled_fragment = fragment.string
             elif isinstance(fragment, Call):
-                evaled_fragment, _display_name = eval_call(bindings, context, fragment)
+                evaled_fragment, _display_name = eval_call(context, fragment)
             evaled_fragments.append(evaled_fragment)
         evaled_word = "".join(evaled_fragments)
         evaled_words.append(evaled_word)
     if not evaled_words:
         return "", ""
     command_name, arguments = evaled_words[0], evaled_words[1:]
-    command = lookup_command(bindings, command_name)
-    result = apply_call(context, command, command_name, arguments)
+    command = lookup_command(context.bindings, command_name)
+    command_context = context._replace(command_name=command_name)
+    result = apply_call(command_context, command, command_name, arguments)
     if command.parseoutput and result.find("[") >= 0:
-        result, _display_name = interpret(bindings, context, "echo " + result)
+        result, _display_name = interpret(context, "echo " + result)
     return result, command.display_name
 
 
@@ -226,8 +237,6 @@ def lookup_command(bindings: Bindings, command_name: str) -> CommandBinding:
 def apply_call(context: Context, command: CommandBinding, command_name: str, arguments: List[str]) -> str:
     fn_arguments: List[Any] = arguments
     if command.contextual:
-        context = dict(context)
-        context['command'] = command_name
         fn_arguments.insert(0, context)
     if command.varargs:
         last_arg_index = _max_positional_arguments(command.fn) - 1

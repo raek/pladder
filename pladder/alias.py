@@ -57,8 +57,7 @@ class AliasCommands:
             return False
 
     def exec_alias(self, context):
-        name = context.get("command")
-        data = self.alias_db.get_alias(name)
+        data = self.alias_db.get_alias(context.command_name)
         _, data = data.split(": ", 1)
         return data
 

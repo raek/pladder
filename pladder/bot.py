@@ -9,7 +9,7 @@ import random
 from pladder import LAST_COMMIT
 from pladder.log import PladderLogProxy
 from pladder.plugin import PluginLoadError
-from pladder.script import ScriptError, ApplyError, command_binding, interpret, lookup_command, apply_call
+from pladder.script import ScriptError, ApplyError, new_context, command_binding, interpret, lookup_command, apply_call
 
 
 def main():
@@ -58,7 +58,7 @@ class PladderBot(ExitStack):
         self.register_command("give", self.give, varargs=True)
         self.register_command("echo", lambda text="": text, varargs=True)
         self.register_command("show-args", lambda *args: repr(args))
-        self.register_command("show-context", lambda context: repr(context), contextual=True)
+        self.register_command("show-context", self.show_context, contextual=True)
         self.register_command("pick", lambda *args: random.choice(args) if args else "")
         self.register_command("concat", lambda *args: " ".join(arg.strip() for arg in args))
         self.register_command("eval", self.eval_command, contextual=True)
@@ -75,13 +75,14 @@ class PladderBot(ExitStack):
         return f"{target}: {text}"
 
     def RunCommand(self, timestamp, network, channel, nick, text):
-        context = {'datetime': datetime.fromtimestamp(timestamp, tz=timezone.utc),
-                   'network': network,
-                   'channel': channel,
-                   'nick': nick,
-                   'text': text}
+        metadata = {'datetime': datetime.fromtimestamp(timestamp, tz=timezone.utc),
+                    'network': network,
+                    'channel': channel,
+                    'nick': nick,
+                    'text': text}
         try:
-            result, display_name = interpret(self.bindings, context, text)
+            context = new_context(self.bindings, metadata)
+            result, display_name = interpret(context, text)
             result = result[:10000]
             return {'text': result,
                     'command': display_name}
@@ -103,8 +104,9 @@ class PladderBot(ExitStack):
         if not words:
             return ""
         command_name, arguments = words[0], words[1:]
-        command = lookup_command(self.bindings, command_name)
-        return apply_call(context, command, command_name, arguments)
+        command = lookup_command(context.bindings, command_name)
+        command_context = context._replace(command_name=command_name)
+        return apply_call(command_context, command, command_name, arguments)
 
     def register_command(self, name, fn, varargs=False, contextual=False, parseoutput=False):
         self.bindings.append(command_binding(name, fn, varargs, contextual, parseoutput))
@@ -140,6 +142,7 @@ class PladderBot(ExitStack):
         return LAST_COMMIT
 
     def searchlog(self, context, needle, index=0):
+        metadata = context.metadata
         try:
             index = int(index)
         except ValueError:
@@ -148,7 +151,7 @@ class PladderBot(ExitStack):
         def format_log_line(index, date, nick, text):
             return '[{}: {} {}: {}]'.format(index, date.strftime('%H:%M'), nick, text)
 
-        lines = self.log.SearchLines(context['network'], context['channel'], needle, 3, index)
+        lines = self.log.SearchLines(metadata['network'], metadata['channel'], needle, 3, index)
         lines_by_day = defaultdict(list)
         for index, timestamp, nick, text in lines:
             date = datetime.fromtimestamp(timestamp, tz=timezone.utc).astimezone(tz=None)
@@ -162,8 +165,15 @@ class PladderBot(ExitStack):
         else:
             return "Found no matches for '{}'".format(needle)
 
+    def show_context(self, context):
+        return repr({
+            "bindings": "...",
+            "metadata": repr(context.metadata),
+            "command_name": context.command_name,
+        })
+
     def eval_command(self, context, script):
-        text, _display_name = interpret(self.bindings, context, script)
+        text, _display_name = interpret(context, script)
         return text
 
     def eq(self, value1, value2):

@@ -1,15 +1,6 @@
 from pladder.alias import AliasDb, AliasCommands
 from pladder.bot import PladderBot
-
-
-context = {
-    'datetime': "",
-    'network': "pytestnet",
-    'channel': "pytest",
-    'nick': "pytest",
-    'command': "testalias",
-    'text': "testalias"
-}
+from pladder.script import new_context
 
 
 class MockBot():
@@ -19,8 +10,9 @@ class MockBot():
     register_command = PladderBot.register_command
 
 
+mock_bot = MockBot()
 alias_db = AliasDb(":memory:")
-alias_cmds = AliasCommands(MockBot(), alias_db)
+alias_cmds = AliasCommands(mock_bot, alias_db)
 
 
 def test_help():
@@ -59,6 +51,7 @@ def test_binding_exists():
 
 
 def test_exec_alias():
+    context = new_context(mock_bot.bindings, command_name="testalias")
     result = alias_cmds.exec_alias(context)
     assert result == "testtest"
 
