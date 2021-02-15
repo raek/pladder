@@ -29,10 +29,7 @@ b = [
 ]
 
 
-lyrics = []
-for lines in [a, a, b, b, a, a, a, b, b, ['ba']]:
-    lyrics += lines
-
+stanzas = [' / '.join(lines) for lines in [a, a, b, b, a, a, a, b, b, ['ba']]]
 
 @contextmanager
 def pladder_plugin(bot):
@@ -44,4 +41,4 @@ def bah():
     """
     Returns the wisdom of dog
     """
-    return ' / '.join(lyrics)
+    return ' // '.join(stanzas)
