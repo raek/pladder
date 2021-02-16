@@ -218,7 +218,7 @@ class PladderBot(ExitStack):
             return ", ".join(result)
         elif mode == "-full":
             def escape(word):
-                if " " in word or "{" in word:
+                if word == "" or " " in word or "{" in word:
                     return "{" + word + "}"
                 else:
                     return word
