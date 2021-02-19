@@ -66,10 +66,13 @@ class AliasCommands:
     def register_db_bindings(self):
         names = self.alias_db.list_alias("_").split(" ")
         for name in names:
-            self.register_binding(name)
+            binding = self.alias_db.get_alias(name)
+            _, data = binding.split(": ", 1)
+            self.register_binding(name, data)
 
-    def register_binding(self, name):
-        self.bot.register_command(name, self.exec_alias, contextual=True)
+    def register_binding(self, name, data):
+        source = f"Alias {name}: {data}"
+        self.bot.register_command(name, self.exec_alias, contextual=True, source=source)
 
     def remove_binding(self, name):
         try:
@@ -83,7 +86,7 @@ class AliasCommands:
         if self.binding_exists(name):
             return "Hallå farfar, den finns ju redan."
         if result := self.alias_db.add_alias(name, data):
-            self.register_binding(name)
+            self.register_binding(name, data)
         return result
 
     def del_alias(self, name):

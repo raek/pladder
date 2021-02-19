@@ -68,6 +68,7 @@ class PladderBot(ExitStack):
         self.register_command("bool", self.bool_command)
         self.register_command("if", self.if_command)
         self.register_command("trace", self.trace, contextual=True)
+        self.register_command("source", self.source)
 
     def comp(self, context, command1, *command2_words):
         command2_result = self.apply(context, list(command2_words))
@@ -110,8 +111,8 @@ class PladderBot(ExitStack):
         command_context = context._replace(command_name=command_name)
         return apply_call(command_context, command, command_name, arguments)
 
-    def register_command(self, name, fn, varargs=False, contextual=False):
-        self.bindings.append(command_binding(name, fn, varargs, contextual))
+    def register_command(self, name, fn, varargs=False, contextual=False, source=None):
+        self.bindings.append(command_binding(name, fn, varargs, contextual, source))
 
     def command_usage(self, command):
         result = command.display_name
@@ -231,6 +232,10 @@ class PladderBot(ExitStack):
                 part = f"[{call}] => {entry.result}"
                 result.append(part)
             return ",   ".join(result)
+
+    def source(self, command_name):
+        command = lookup_command(self.bindings, command_name)
+        return command.source
 
 
 def wpick(*args):

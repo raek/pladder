@@ -1,6 +1,6 @@
 import re
-from typing import Any, Callable, Dict, List, NamedTuple, Pattern, Tuple, Union
-from inspect import signature, Parameter
+from typing import Any, Callable, Dict, List, NamedTuple, Optional, Pattern, Tuple, Union
+from inspect import getsource, signature, Parameter
 
 
 class ScriptError(Exception):
@@ -36,12 +36,14 @@ class CommandBinding(NamedTuple):
     fn: Callable[..., str]
     varargs: bool
     contextual: bool
+    source: str
 
 
 def command_binding(name_pattern: NamePattern,
                     fn: Callable[..., str],
                     varargs: bool = False,
-                    contextual: bool = False) -> CommandBinding:
+                    contextual: bool = False,
+                    source: Optional[str] = None) -> CommandBinding:
     if isinstance(name_pattern, str):
         name: str = name_pattern
         display_name = name
@@ -59,7 +61,12 @@ def command_binding(name_pattern: NamePattern,
     else:
         raise TypeError(name_pattern)
 
-    return CommandBinding(name_matches, display_name, fn, varargs, contextual)
+    if source is None:
+        source_str = "Python: " + getsource(fn).replace("\n", "")
+    else:
+        source_str = source
+
+    return CommandBinding(name_matches, display_name, fn, varargs, contextual, source_str)
 
 
 Bindings = List[CommandBinding]
