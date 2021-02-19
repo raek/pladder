@@ -60,6 +60,7 @@ class PladderBot(ExitStack):
         self.register_command("show-args", lambda *args: repr(args))
         self.register_command("show-context", self.show_context, contextual=True)
         self.register_command("pick", lambda *args: random.choice(args) if args else "")
+        self.register_command("wpick", wpick)
         self.register_command("concat", lambda *args: " ".join(arg.strip() for arg in args))
         self.register_command("eval", self.eval_command, contextual=True)
         self.register_command("=", self.eq)
@@ -230,6 +231,29 @@ class PladderBot(ExitStack):
                 part = f"[{call}] => {entry.result}"
                 result.append(part)
             return ",   ".join(result)
+
+
+def wpick(*args):
+    weights = []
+    values = []
+    for weight, value in pairs(args):
+        weights.append(int(weight))
+        values.append(value)
+    return random.choices(values, weights, k=1)[0]
+
+
+def pairs(iterable):
+    it = iter(iterable)
+    while True:
+        try:
+            x = next(it)
+        except StopIteration:
+            return
+        try:
+            y = next(it)
+        except StopIteration:
+            raise ValueError("Got an odd number of elements")
+        yield x, y
 
 
 def load_standard_plugins(bot):
