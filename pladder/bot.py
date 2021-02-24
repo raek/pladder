@@ -7,6 +7,7 @@ import os
 import random
 
 from pladder import LAST_COMMIT
+import pladder.irc.color as color
 from pladder.log import PladderLogProxy
 from pladder.plugin import PluginLoadError
 from pladder.script import ScriptError, ApplyError, new_context, command_binding, interpret, lookup_command, apply_call
@@ -219,41 +220,60 @@ class PladderBot(ExitStack):
             interpret(subcontext, script)
         except Exception:
             pass
+        color_pairs = [
+            (color.LIGHT_RED, color.DARK_RED),
+            (color.LIGHT_GREEN, color.DARK_GREEN),
+            (color.LIGHT_BLUE, color.DARK_BLUE),
+            (color.LIGHT_YELLOW, color.DARK_YELLOW),
+            (color.LIGHT_MAGENTA, color.DARK_MAGENTA),
+            (color.LIGHT_CYAN, color.DARK_CYAN),
+        ]
         if mode == "-brief":
-            return brief_trace(subcontext.trace)
+            return brief_trace(subcontext.trace, color_pairs)
         elif mode == "-full":
-            return full_trace(subcontext.trace)
+            return full_trace(subcontext.trace, color_pairs)
 
     def source(self, command_name):
         command = lookup_command(self.bindings, command_name)
         return command.source
 
 
-def brief_trace(trace):
+def brief_trace(trace, color_pairs):
+    print(color_pairs)
+    if color_pairs:
+        (light, dark), *color_pairs = color_pairs
+    else:
+        light = color.RESET
+        dark = color.RESET
     parts = []
     for entry in trace:
         if entry.subtrace:
-            sub = brief_trace(entry.subtrace)
-            part = f"{entry.command_name}({sub})"
+            sub = brief_trace(entry.subtrace, color_pairs)
+            part = f"{light}{entry.command_name}{dark}({sub}{dark})"
         else:
-            part = entry.command_name
+            part = f"{light}{entry.command_name}"
         parts.append(part)
-    return ", ".join(parts)
+    return f"{dark}, ".join(parts) + color.RESET
 
 
-def full_trace(trace):
+def full_trace(trace, color_pairs):
+    if color_pairs:
+        (light, dark), *color_pairs = color_pairs
+    else:
+        light = color.RESET
+        dark = color.RESET
     parts = []
     for entry in trace:
         words = [entry.command_name] + entry.arguments
         call = " ".join(map(escape, words))
         result = escape(entry.result)
         if entry.subtrace:
-            sub = full_trace(entry.subtrace)
-            part = f"[{call}] => ( {sub} ) => {result}"
+            sub = full_trace(entry.subtrace, color_pairs)
+            part = f"{light}[{call}] {dark}=> ( {sub} {dark}) => {light}{result}"
         else:
-            part = f"[{call}] => {result}"
+            part = f"{light}[{call}] {dark}=> {light}{result}"
         parts.append(part)
-    return ", ".join(parts)
+    return f"{dark}, ".join(parts) + color.RESET
 
 
 def escape(word):
