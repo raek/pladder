@@ -63,6 +63,7 @@ class PladderBot(ExitStack):
         self.register_command("wpick", wpick)
         self.register_command("concat", lambda *args: " ".join(arg.strip() for arg in args))
         self.register_command("eval", self.eval_command, contextual=True)
+        self.register_command("eval-pick", self.eval_pick, contextual=True)
         self.register_command("=", self.eq)
         self.register_command("/=", self.ne)
         self.register_command("bool", self.bool_command)
@@ -176,6 +177,11 @@ class PladderBot(ExitStack):
         })
 
     def eval_command(self, context, script):
+        text, _display_name = interpret(context, script)
+        return text
+
+    def eval_pick(self, context, *args):
+        script = random.choice(args) if args else ""
         text, _display_name = interpret(context, script)
         return text
 
