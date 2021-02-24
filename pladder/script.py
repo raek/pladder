@@ -79,6 +79,8 @@ class TraceEntry(NamedTuple):
     command: CommandBinding
     command_name: str
     arguments: List[str]
+    # Actually this should be List[TraceEntry], but mypy does not support recursive types.
+    subtrace: List[Any]
     result: Union[None, str, Exception]
 
 
@@ -232,8 +234,16 @@ def eval_call(context: Context, call: Call) -> Result:
         return "", ""
     command_name, arguments = evaled_words[0], evaled_words[1:]
     command = lookup_command(context.bindings, command_name)
-    command_context = context._replace(command_name=command_name)
-    result = apply_call(command_context, command, command_name, arguments)
+    subtrace: List[TraceEntry] = []
+    command_context = context._replace(command_name=command_name, trace=subtrace)
+    try:
+        result = apply_call(command_context, command, command_name, arguments)
+        trace_entry = TraceEntry(command, command_name, arguments, subtrace, result)
+        context.trace.append(trace_entry)
+    except Exception as e:
+        trace_entry = TraceEntry(command, command_name, arguments, subtrace, e)
+        context.trace.append(trace_entry)
+        raise
     return result, command.display_name
 
 
@@ -259,14 +269,7 @@ def apply_call(context: Context, command: CommandBinding, command_name: str, arg
     if not _signature_accepts_arguments(command.fn, fn_arguments):
         raise ApplyError("Argument count does not match what command accepts",
                          command, command_name, fn_arguments)
-    try:
-        result = command.fn(*fn_arguments)
-        trace_entry = TraceEntry(command, command_name, arguments, result)
-        context.trace.append(trace_entry)
-    except Exception as e:
-        trace_entry = TraceEntry(command, command_name, arguments, e)
-        context.trace.append(trace_entry)
-        raise
+    result = command.fn(*fn_arguments)
     assert isinstance(result, str), "Commands must return strings"
     return result
 

@@ -220,28 +220,47 @@ class PladderBot(ExitStack):
         except Exception:
             pass
         if mode == "-brief":
-            result = []
-            for entry in subcontext.trace:
-                result.append(entry.command_name)
-            return ", ".join(result)
+            return brief_trace(subcontext.trace)
         elif mode == "-full":
-            def escape(word):
-                if word == "" or " " in word or "{" in word:
-                    return "{" + word + "}"
-                else:
-                    return word
-
-            result = []
-            for entry in subcontext.trace:
-                words = [entry.command_name] + entry.arguments
-                call = " ".join(map(escape, words))
-                part = f"[{call}] => {entry.result}"
-                result.append(part)
-            return ",   ".join(result)
+            return full_trace(subcontext.trace)
 
     def source(self, command_name):
         command = lookup_command(self.bindings, command_name)
         return command.source
+
+
+def brief_trace(trace):
+    parts = []
+    for entry in trace:
+        if entry.subtrace:
+            sub = brief_trace(entry.subtrace)
+            part = f"{entry.command_name}({sub})"
+        else:
+            part = entry.command_name
+        parts.append(part)
+    return ", ".join(parts)
+
+
+def full_trace(trace):
+    parts = []
+    for entry in trace:
+        words = [entry.command_name] + entry.arguments
+        call = " ".join(map(escape, words))
+        result = escape(entry.result)
+        if entry.subtrace:
+            sub = full_trace(entry.subtrace)
+            part = f"[{call}] => ( {sub} ) => {result}"
+        else:
+            part = f"[{call}] => {result}"
+        parts.append(part)
+    return ", ".join(parts)
+
+
+def escape(word):
+    if word == "" or " " in word or "{" in word:
+        return "{" + word + "}"
+    else:
+        return word
 
 
 def wpick(*args):
