@@ -64,12 +64,15 @@ def set_up_systemd(hooks_base_class):
 
     class SystemdHooks(hooks_base_class):
         def on_ready(self):
+            super().on_ready()
             notify("READY=1")
 
         def on_ping(self):
+            super().on_ping()
             notify("WATCHDOG=1")
 
         def on_status(self, status):
+            super().on_status(status)
             notify("STATUS=" + status)
 
     return SystemdHooks
@@ -87,6 +90,7 @@ def set_up_dbus(hooks_base_class):
             self._log = PladderLogProxy(self._bus)
 
         def on_trigger(self, timestamp, network, channel, sender, text):
+            super().on_trigger(timestamp, network, channel, sender, text)
             retry = True
             while True:
                 try:
@@ -108,9 +112,11 @@ def set_up_dbus(hooks_base_class):
                         return "Internal error: " + str(e)
 
         def on_privmsg(self, timestamp, network, channel, sender, text):
+            super().on_privmsg(timestamp, network, channel, sender, text)
             self._log.AddLine(timestamp, network, channel, sender.nick, text)
 
         def on_send_privmsg(self, timestamp, network, channel, nick, text):
+            super().on_send_privmsg(timestamp, network, channel, nick, text)
             self._log.AddLine(timestamp, network, channel, nick, text)
 
     return DbusHooks
