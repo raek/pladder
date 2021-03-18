@@ -71,6 +71,10 @@ def set_up_systemd(hooks_base_class):
             super().on_ping()
             notify("WATCHDOG=1")
 
+        def on_privmsg(self, timestamp, network, channel, sender, text):
+            super().on_privmsg(timestamp, network, channel, sender, text)
+            notify("WATCHDOG=1")
+
         def on_status(self, status):
             super().on_status(status)
             notify("STATUS=" + status)
