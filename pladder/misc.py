@@ -6,7 +6,7 @@ import re
 @contextmanager
 def pladder_plugin(bot):
     bot.register_command(re.compile("^kloo+fify$"), kloooofify, varargs=True, contextual=True)
-    bot.register_command(re.compile("^vrå+lify$"), vraaaal, varargs=True, contextual=True)
+    bot.register_command(re.compile("^vrå*lify$"), vraaaal, varargs=True, contextual=True)
     bot.register_command("time", time)
     bot.register_command("capify", capify, varargs=True)
     bot.register_command("tutify", tutify, varargs=True)
@@ -21,8 +21,8 @@ def kloooofify(context, text):
 
 
 def vraaaal(context, text):
-    i = context.command_name.lower().count("å")-1
-    text = vral(i, text)
+    count = context.command_name.lower().count("å")
+    text = vral(count, text)
     return text
 
 
@@ -118,18 +118,25 @@ def kloofify(target):
     return new_str.rstrip()
 
 
-def dupe_vowel_pre_consonant(text):
-    pattern = re.compile('([aeiouyåäö=\U0001f4e2])([bcdfghjklmnpqrstvzx]|$)', re.IGNORECASE)
-    return pattern.sub(r"\1\1\2", text)
+def vral(count, text):
+    if len(text) < 8:
+        multiplier = 4
+    elif len(text) < 16:
+        multiplier = 2
+    else:
+        multiplier = 1
 
+    def replace(match):
+        vowel = match.group(1)
+        if count == 0:
+            return ""
+        else:
+            times = ((count - 1) * multiplier) + 1
+            return vowel * times
 
-def vral(i, text):
-    i = i*2 if len(text) < 16 else i
-    i = i*2 if len(text) < 8 else i
     # vrålify 'n' if there are no vowels
-    if not re.search(r'([aeiouyåäö=\U0001f4e2])', text, re.I):
-        for _ in range(i):
-            text = re.sub(r'(n)([bcdfghjklmpqrstvzx])', r'\1\1\2', text, 0, re.IGNORECASE)
-    for _ in range(i):
-        text = dupe_vowel_pre_consonant(text)
+    if not re.search(r'([aeiouyåäö=\U0001f4e2])', text, flags=re.IGNORECASE):
+        text = re.sub(r'(n)(?=[bcdfghjklmpqrstvzx])', replace, text, flags=re.IGNORECASE)
+    else:
+        text = re.sub(r'([aeiouyåäö=\U0001f4e2])(?=[bcdfghjklmnpqrstvzx]|$)', replace, text, flags=re.IGNORECASE)
     return text.upper()

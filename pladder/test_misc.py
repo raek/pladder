@@ -57,3 +57,7 @@ def test_two_aa_hng():
 
 def test_three_aa_hng():
     assert run("vrååålify", "hng") == "HNNNNNNNNNG"
+
+
+def test_zero_aa_long_word():
+    assert run("vrlify", "bananaramabandana") == "BNNRMBNDN"
