@@ -8,6 +8,7 @@ import random
 
 from pladder import LAST_COMMIT
 import pladder.irc.color as color
+from pladder.fuse import Fuse, FuseResult
 from pladder.log import PladderLogProxy
 from pladder.plugin import PluginLoadError
 from pladder.script import ScriptError, ApplyError, new_context, command_binding, interpret, lookup_command, apply_call
@@ -51,6 +52,7 @@ class PladderBot(ExitStack):
         self.state_dir = state_dir
         self.bus = bus
         self.log = PladderLogProxy(bus)
+        self.fuse = Fuse(state_dir)
         self.bindings = []
         self.register_command("help", self.help)
         self.register_command("version", self.version)
@@ -86,6 +88,13 @@ class PladderBot(ExitStack):
                     'nick': nick,
                     'text': text}
         try:
+            fuse_result = self.fuse.run(metadata['datetime'], network, channel)
+            if fuse_result == FuseResult.JUST_BLOWN:
+                return {'text': f'{color.LIGHT_YELLOW}*daily fuse blown*{color.LIGHT_YELLOW}',
+                        'command': 'error'}
+            elif fuse_result == FuseResult.BLOWN:
+                return {'text': '',
+                        'command': 'error'}
             context = new_context(self.bindings, metadata)
             result, display_name = interpret(context, text)
             result = result[:10000]
