@@ -3,7 +3,7 @@ import json
 import os
 
 
-ALLOWED_RUNS = 7
+ALLOWED_RUNS = 20
 
 
 class FuseResult(enum.Enum):
