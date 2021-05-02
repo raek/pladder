@@ -3,7 +3,7 @@ import json
 import os
 
 
-ALLOWED_RUNS = 20
+ALLOWED_RUNS = float("inf")
 
 
 class FuseResult(enum.Enum):
