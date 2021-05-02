@@ -33,7 +33,7 @@ class AliasCommands:
         bot.register_command("add-alias", self.add_alias, varargs=True)
         bot.register_command("get-alias", self.alias_db.get_alias)
         bot.register_command("del-alias", self.del_alias)
-        bot.register_command("list-alias", self.alias_db.list_alias)
+        bot.register_command("list-alias", self.list_alias)
         bot.register_command("random-alias", self.alias_db.random_alias)
         self.register_db_bindings()
 
@@ -100,6 +100,12 @@ class AliasCommands:
             return result
         else:
             return errorstr()
+    
+    def list_alias(self, name_pattern):
+        list = self.alias_db.list_alias(name_pattern)
+        if list:
+            return F"{len(list.split())} Found: {list}"
+        return "0 Found"
 
 
 class AliasDb(ExitStack):
