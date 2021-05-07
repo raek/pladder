@@ -3,8 +3,8 @@ import json
 import logging
 import os
 
+from pladder.dbus import RetryProxy
 from pladder.irc.client import AuthConfig, Config, Hooks, run_client
-from pladder.log import PladderLogProxy
 
 
 logger = logging.getLogger("pladder.irc")
@@ -89,44 +89,40 @@ def set_up_dbus(hooks_base_class):
     class DbusHooks(hooks_base_class):
         def __init__(self):
             super().__init__()
-            self._bus = SessionBus()
-            self._bot = None
-            self._log = PladderLogProxy(self._bus)
+            bus = SessionBus()
+            self._bot = RetryProxy(bus, "se.raek.PladderBot")
+            self._log = RetryProxy(bus, "se.raek.PladderLog")
 
         def on_trigger(self, timestamp, network, channel, sender, text):
             super().on_trigger(timestamp, network, channel, sender, text)
-            retry = True
-            while True:
-                try:
-                    if self._bot is None:
-                        self._bot = self._bus.get("se.raek.PladderBot")
-                    return self._bot.RunCommand(timestamp, network, channel, sender.nick, text)
-                except GLib.Error as e:
-                    if "org.freedesktop.DBus.Error.ServiceUnknown" in str(e):
-                        if retry:
-                            retry = False
-                            self._bot = None
-                            continue
-                        else:
-                            self._bot = None
-                            return {
-                                "text": "Internal error: could not reach pladder-bot. " + \
-                                    "Please check the log: \"journalctl --user-unit pladder-bot.service -e\"",
-                                "command": "error",
-                            }
-                    else:
-                        logger.error(str(e))
-                        return {
-                            "text": "Internal error: " + str(e),
-                            "command": "error",
-                        }
+            return self._bot.RunCommand(timestamp, network, channel, sender.nick, text,
+                                        on_error=self._handle_bot_error)
 
         def on_privmsg(self, timestamp, network, channel, sender, text):
             super().on_privmsg(timestamp, network, channel, sender, text)
-            self._log.AddLine(timestamp, network, channel, sender.nick, text)
+            self._log.AddLine(timestamp, network, channel, sender.nick, text,
+                              on_error=self._handle_log_error)
 
         def on_send_privmsg(self, timestamp, network, channel, nick, text):
             super().on_send_privmsg(timestamp, network, channel, nick, text)
-            self._log.AddLine(timestamp, network, channel, nick, text)
+            self._log.AddLine(timestamp, network, channel, nick, text,
+                              on_error=self._handle_log_error)
+
+        def _handle_bot_error(self, e):
+            if "org.freedesktop.DBus.Error.ServiceUnknown" in str(e):
+                return {
+                    "text": "Internal error: could not reach pladder-bot. " + \
+                        "Please check the log: \"journalctl --user-unit pladder-bot.service -e\"",
+                    "command": "error",
+                }
+            else:
+                logger.error(str(e))
+                return {
+                    "text": "Internal error: " + str(e),
+                    "command": "error",
+                }
+
+        def _handle_log_error(self, e):
+            return None
 
     return DbusHooks

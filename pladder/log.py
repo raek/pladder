@@ -33,37 +33,6 @@ def read_config(config_home):
         return Config(**{**defaults, **config_data})
 
 
-class DBusObjectProxy:
-    def __init__(self, bus, object_name, defaults):
-        self.bus = bus
-        self.object_name = object_name
-        self.defaults = defaults
-        self.obj = None
-
-    def __getattr__(self, name):
-        def wrapper(*args, **kwargs):
-            try:
-                if not self.obj:
-                    self.obj = self.bus.get(self.object_name)
-                return getattr(self.obj, name)(*args, **kwargs)
-            except Exception:
-                return self.defaults[name]
-        return wrapper
-
-
-class PladderLogProxy(DBusObjectProxy):
-    def __init__(self, bus):
-        super().__init__(
-            bus,
-            'se.raek.PladderLog',
-            {
-                'AddLine': None,
-                'GetLines': [],
-                'SearchLines': [],
-            }
-        )
-
-
 class PladderLog(ExitStack):
     """
     <node>

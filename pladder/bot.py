@@ -7,9 +7,9 @@ import os
 import random
 
 from pladder import LAST_COMMIT
-import pladder.irc.color as color
+from pladder.dbus import RetryProxy
 from pladder.fuse import Fuse, FuseResult
-from pladder.log import PladderLogProxy
+import pladder.irc.color as color
 from pladder.plugin import PluginLoadError
 from pladder.script import ScriptError, ApplyError, new_context, command_binding, interpret, lookup_command, apply_call
 
@@ -51,7 +51,7 @@ class PladderBot(ExitStack):
         os.makedirs(state_dir, exist_ok=True)
         self.state_dir = state_dir
         self.bus = bus
-        self.log = PladderLogProxy(bus)
+        self.log = RetryProxy(bus, "se.raek.PladderLog")
         self.fuse = Fuse(state_dir)
         self.bindings = []
         self.register_command("help", self.help)
@@ -165,7 +165,9 @@ class PladderBot(ExitStack):
         def format_log_line(index, date, nick, text):
             return '[{}: {} {}: {}]'.format(index, date.strftime('%H:%M'), nick, text)
 
-        lines = self.log.SearchLines(metadata['network'], metadata['channel'], needle, 3, index)
+        lines = self.log.SearchLines(metadata['network'], metadata['channel'], needle, 3, index, on_error=lambda e: None)
+        if lines is None:
+            return "Error: Could not reach pladder-log service!"
         lines_by_day = defaultdict(list)
         for index, timestamp, nick, text in lines:
             date = datetime.fromtimestamp(timestamp, tz=timezone.utc).astimezone(tz=None)
