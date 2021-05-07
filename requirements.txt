@@ -1,1 +1,1 @@
-pymumble==1.6
+pymumble==1.6.1
