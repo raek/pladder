@@ -37,13 +37,13 @@ class Hooks:
     def on_status(self, s):
         pass
 
-    def on_trigger(self, timestamp, network, channel, sender, text):
+    def on_trigger(self, timestamp, channel, sender, text):
         pass
 
-    def on_privmsg(self, timestamp, network, channel, sender, text):
+    def on_privmsg(self, timestamp, channel, sender, text):
         pass
 
-    def on_send_privmsg(self, timestamp, network, channel, sender, text):
+    def on_send_privmsg(self, timestamp, channel, sender, text):
         pass
 
 
@@ -72,7 +72,7 @@ def run_client(config, hooks):
                 logger.info("{} -> {} : {}".format(message.sender.nick, target, text))
                 timestamp = datetime.now(timezone.utc).timestamp()
                 text_without_prefix = text[len(config.trigger_prefix):]
-                reply = hooks.on_trigger(timestamp, config.network, reply_to, message.sender, text_without_prefix)
+                reply = hooks.on_trigger(timestamp, reply_to, message.sender, text_without_prefix)
             if reply and reply['text']:
                 commands[reply_to] = reply['command']
                 msgsplitter[reply_to] = message_generator("PRIVMSG",
@@ -93,12 +93,12 @@ def run_client(config, hooks):
             if msgpart:
                 logger.info("-> {} : {}".format(reply_to, msgpart[msgpart.find(":")+1:]))
                 if command != 'searchlog':
-                    hooks.on_privmsg(timestamp, config.network, reply_to, message.sender, text)
-                    hooks.on_send_privmsg(timestamp, config.network, reply_to,
+                    hooks.on_privmsg(timestamp, reply_to, message.sender, text)
+                    hooks.on_send_privmsg(timestamp, reply_to,
                                           config.nick, msgpart[msgpart.find(":")+1:])
                 conn.send(msgpart)
             else:
-                hooks.on_privmsg(timestamp, config.network, reply_to, message.sender, text)
+                hooks.on_privmsg(timestamp, reply_to, message.sender, text)
 
         def messages_with_default_handling():
             for message in conn.recv_messages():

@@ -13,14 +13,14 @@ logger = logging.getLogger("pladder.irc")
 def main():
     hooks_class = Hooks
     use_systemd, use_dbus, config_name = parse_arguments()
+    config = read_config(config_name)
     if use_systemd:
-        hooks_class = set_up_systemd(hooks_class)
+        hooks_class = set_up_systemd(config, hooks_class)
     else:
         logging.basicConfig(level=logging.DEBUG)
     if use_dbus:
-        hooks_class = set_up_dbus(hooks_class)
+        hooks_class = set_up_dbus(config, hooks_class)
     hooks = hooks_class()
-    config = read_config(config_name)
     run_client(config, hooks)
 
 
@@ -54,7 +54,7 @@ def parse_arguments():
     return args.systemd, args.dbus, args.config
 
 
-def set_up_systemd(hooks_base_class):
+def set_up_systemd(config, hooks_base_class):
     from systemd.journal import JournalHandler  # type: ignore
     from systemd.daemon import notify  # type: ignore
 
@@ -71,8 +71,8 @@ def set_up_systemd(hooks_base_class):
             super().on_ping()
             notify("WATCHDOG=1")
 
-        def on_privmsg(self, timestamp, network, channel, sender, text):
-            super().on_privmsg(timestamp, network, channel, sender, text)
+        def on_privmsg(self, timestamp, channel, sender, text):
+            super().on_privmsg(timestamp, channel, sender, text)
             notify("WATCHDOG=1")
 
         def on_status(self, status):
@@ -82,7 +82,7 @@ def set_up_systemd(hooks_base_class):
     return SystemdHooks
 
 
-def set_up_dbus(hooks_base_class):
+def set_up_dbus(config, hooks_base_class):
     from gi.repository import GLib  # type: ignore
     from pydbus import SessionBus  # type: ignore
 
@@ -93,19 +93,19 @@ def set_up_dbus(hooks_base_class):
             self._bot = RetryProxy(bus, "se.raek.PladderBot")
             self._log = RetryProxy(bus, "se.raek.PladderLog")
 
-        def on_trigger(self, timestamp, network, channel, sender, text):
-            super().on_trigger(timestamp, network, channel, sender, text)
-            return self._bot.RunCommand(timestamp, network, channel, sender.nick, text,
+        def on_trigger(self, timestamp, channel, sender, text):
+            super().on_trigger(timestamp, channel, sender, text)
+            return self._bot.RunCommand(timestamp, config.network, channel, sender.nick, text,
                                         on_error=self._handle_bot_error)
 
-        def on_privmsg(self, timestamp, network, channel, sender, text):
-            super().on_privmsg(timestamp, network, channel, sender, text)
-            self._log.AddLine(timestamp, network, channel, sender.nick, text,
+        def on_privmsg(self, timestamp, channel, sender, text):
+            super().on_privmsg(timestamp, channel, sender, text)
+            self._log.AddLine(timestamp, config.network, channel, sender.nick, text,
                               on_error=self._handle_log_error)
 
-        def on_send_privmsg(self, timestamp, network, channel, nick, text):
-            super().on_send_privmsg(timestamp, network, channel, nick, text)
-            self._log.AddLine(timestamp, network, channel, nick, text,
+        def on_send_privmsg(self, timestamp, channel, nick, text):
+            super().on_send_privmsg(timestamp, channel, nick, text)
+            self._log.AddLine(timestamp, config.network, channel, nick, text,
                               on_error=self._handle_log_error)
 
         def _handle_bot_error(self, e):
