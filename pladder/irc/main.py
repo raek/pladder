@@ -109,11 +109,17 @@ def set_up_dbus(hooks_base_class):
                             continue
                         else:
                             self._bot = None
-                            return "Internal error: could not reach pladder-bot. " + \
-                                "Please check the log: \"journalctl --user-unit pladder-bot.service -e\""
+                            return {
+                                "text": "Internal error: could not reach pladder-bot. " + \
+                                    "Please check the log: \"journalctl --user-unit pladder-bot.service -e\"",
+                                "command": "error",
+                            }
                     else:
                         logger.error(str(e))
-                        return "Internal error: " + str(e)
+                        return {
+                            "text": "Internal error: " + str(e),
+                            "command": "error",
+                        }
 
         def on_privmsg(self, timestamp, network, channel, sender, text):
             super().on_privmsg(timestamp, network, channel, sender, text)
