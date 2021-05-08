@@ -67,8 +67,8 @@ def set_up_systemd(config, hooks_base_class):
             super().on_ready()
             notify("READY=1")
 
-        def on_ping(self):
-            super().on_ping()
+        def on_message_received(self):
+            super().on_message_received()
             notify("WATCHDOG=1")
 
         def on_privmsg(self, timestamp, channel, sender, text):

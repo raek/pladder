@@ -27,7 +27,7 @@ class Hooks:
     def on_ready(self):
         pass
 
-    def on_ping(self):
+    def on_message_received(self):
         pass
 
     def on_status(self, s):
@@ -65,6 +65,7 @@ class Client:
 
     def _messages_with_default_handling(self):
         for message in self.conn.recv_messages():
+            self.hooks.on_message_received()
             if message.command == "PING":
                 self.handle_ping(message)
             elif message.command == "PRIVMSG":
@@ -76,7 +77,6 @@ class Client:
 
     def handle_ping(self, message):
         self.conn.send("PONG", *message.params)
-        self.hooks.on_ping()
 
     def handle_privmsg(self, message):
         target, text = message.params
