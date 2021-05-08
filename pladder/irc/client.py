@@ -62,6 +62,7 @@ class Client:
         self.messages = self._messages_with_default_handling()
         self.commands = {}
         self.msgsplitter = {}
+        self.headerlen = 0
 
     def _messages_with_default_handling(self):
         for message in self.conn.recv_messages():
@@ -99,7 +100,7 @@ class Client:
                                                            reply_to,
                                                            self.config.reply_prefix,
                                                            reply['text'],
-                                                           self.conn.headerlen)
+                                                           self.headerlen)
             command = reply['command']
             msgpart = next(self.msgsplitter[reply_to])
         if text == "more":
@@ -186,12 +187,12 @@ class Client:
         self.conn.send("WHOIS", self.config.nick)
         for message in self.messages:
             if message.command == "311":
-                self.conn.username = message.params[2]
-                self.conn.hostname = message.params[3]
-                self.conn.header = f":{self.config.nick}!{self.conn.username}@{self.conn.hostname} "
-                self.conn.headerlen = len(self.conn.header.encode("utf-8"))
-                logger.info(f"Whois {self.config.nick}: {self.conn.username}@{self.conn.hostname} " +
-                            f"- length {self.conn.headerlen}")
+                username = message.params[2]
+                hostname = message.params[3]
+                header = f":{self.config.nick}!{username}@{hostname} "
+                headerlen = len(header.encode("utf-8"))
+                self.headerlen = headerlen
+                logger.info(f"Whois {self.config.nick}: {username}@{hostname} - length {headerlen}")
                 break
 
     def run(self):
