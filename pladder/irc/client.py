@@ -80,7 +80,7 @@ class Client:
                 continue
             if sender is not None and message.sender != sender:
                 continue
-            if sender is not None and message.sender.nick != sender_nick:
+            if sender_nick is not None and message.sender.nick != sender_nick:
                 continue
             if params is not None and message.params != params:
                 continue
