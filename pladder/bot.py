@@ -165,7 +165,8 @@ class PladderBot(ExitStack):
         def format_log_line(index, date, nick, text):
             return '[{}: {} {}: {}]'.format(index, date.strftime('%H:%M'), nick, text)
 
-        lines = self.log.SearchLines(metadata['network'], metadata['channel'], needle, 3, index, on_error=lambda e: None)
+        lines = self.log.SearchLines(metadata['network'], metadata['channel'], needle, 3, index,
+                                     on_error=lambda e: None)
         if lines is None:
             return "Error: Could not reach pladder-log service!"
         lines_by_day = defaultdict(list)

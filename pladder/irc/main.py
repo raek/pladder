@@ -83,7 +83,6 @@ def set_up_systemd(config, hooks_base_class):
 
 
 def set_up_dbus(config, hooks_base_class):
-    from gi.repository import GLib  # type: ignore
     from pydbus import SessionBus  # type: ignore
 
     class DbusHooks(hooks_base_class):
@@ -111,8 +110,8 @@ def set_up_dbus(config, hooks_base_class):
         def _handle_bot_error(self, e):
             if "org.freedesktop.DBus.Error.ServiceUnknown" in str(e):
                 return {
-                    "text": "Internal error: could not reach pladder-bot. " + \
-                        "Please check the log: \"journalctl --user-unit pladder-bot.service -e\"",
+                    "text": "Internal error: could not reach pladder-bot. " +
+                            "Please check the log: \"journalctl --user-unit pladder-bot.service -e\"",
                     "command": "error",
                 }
             else:

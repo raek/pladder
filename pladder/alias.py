@@ -100,7 +100,7 @@ class AliasCommands:
             return result
         else:
             return errorstr()
-    
+
     def list_alias(self, name_pattern):
         list = self.alias_db.list_alias(name_pattern)
         if list:
