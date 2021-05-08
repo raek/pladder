@@ -23,7 +23,7 @@ Config = namedtuple("Config", [
 AuthConfig = namedtuple("AuthConfig", "system, username, password")
 
 
-class Hooks:
+class Hook:
     def on_ready(self):
         pass
 
@@ -46,7 +46,8 @@ class Hooks:
 def run_client(config, hooks):
     def update_status(s):
         logger.info(s)
-        hooks.on_status(s)
+        for hook in hooks:
+            hook.on_status(s)
     update_status(f"Connecting to {config.host}:{config.port}")
     with MessageConnection(config.host, config.port) as conn:
         client = Client(config, hooks, conn, update_status)
@@ -66,7 +67,8 @@ class Client:
 
     def _messages_with_default_handling(self):
         for message in self.conn.recv_messages():
-            self.hooks.on_message_received()
+            for hook in self.hooks:
+                hook.on_message_received()
             if message.command == "PING":
                 self.handle_ping(message)
             elif message.command == "PRIVMSG":
@@ -105,7 +107,8 @@ class Client:
             logger.info("{} -> {} : {}".format(message.sender.nick, target, text))
             timestamp = datetime.now(timezone.utc).timestamp()
             text_without_prefix = text[len(self.config.trigger_prefix):]
-            reply = self.hooks.on_trigger(timestamp, reply_to, message.sender, text_without_prefix)
+            for hook in self.hooks:
+                reply = hook.on_trigger(timestamp, reply_to, message.sender, text_without_prefix) or reply
         if reply and reply['text']:
             self.commands[reply_to] = reply['command']
             self.msgsplitter[reply_to] = message_generator("PRIVMSG",
@@ -129,12 +132,14 @@ class Client:
         if msgpart:
             logger.info("-> {} : {}".format(reply_to, msgpart[msgpart.find(":")+1:]))
             if command != 'searchlog':
-                self.hooks.on_privmsg(timestamp, reply_to, message.sender, text)
-                self.hooks.on_send_privmsg(timestamp, reply_to,
-                                           self.config.nick, msgpart[msgpart.find(":")+1:])
+                for hook in self.hooks:
+                    hook.on_privmsg(timestamp, reply_to, message.sender, text)
+                    hook.on_send_privmsg(timestamp, reply_to,
+                                         self.config.nick, msgpart[msgpart.find(":")+1:])
             self.conn.send(msgpart)
         else:
-            self.hooks.on_privmsg(timestamp, reply_to, message.sender, text)
+            for hook in self.hooks:
+                hook.on_privmsg(timestamp, reply_to, message.sender, text)
 
     # The "phases" of connecting: the active part of the client
 
@@ -200,6 +205,7 @@ class Client:
 
     def run(self):
         self.update_status("Joined all channels: {}".format(", ".join(self.config.channels)))
-        self.hooks.on_ready()
+        for hook in self.hooks:
+            hook.on_ready()
         while True:
             self.await_message()
