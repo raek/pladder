@@ -107,8 +107,11 @@ class Client:
             try:
                 command = self.commands[reply_to]
                 msgpart = next(self.msgsplitter[reply_to])
-            except StopIteration:
+            except KeyError:
                 pass
+            except StopIteration:
+                del self.commands[reply_to]
+                del self.msgsplitter[reply_to]
             else:
                 logger.info("{} -> {} : {}".format(message.sender.nick, target, text))
         if msgpart:
