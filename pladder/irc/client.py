@@ -74,7 +74,7 @@ class Client:
             else:
                 yield message
 
-    def _await_message(self, command=None, *, sender=None, sender_nick=None, params=None):
+    def await_message(self, command=None, *, sender=None, sender_nick=None, params=None):
         for message in self.messages:
             if command is not None and message.command != command:
                 continue
@@ -153,7 +153,7 @@ class Client:
         self.update_status(f'Using nick "{self.config.nick}" and realname "{self.config.realname}"')
         self.conn.send("NICK", self.config.nick)
         self.conn.send("USER", self.config.nick, "0", "*", self.config.realname)
-        self._await_message("001")
+        self.await_message("001")
 
     def authenticate(self):
         if self.config.auth.system == "Q":
@@ -161,7 +161,7 @@ class Client:
             self.conn.send("PRIVMSG", "Q@CServe.quakenet.org",
                            f"AUTH {self.config.auth.username} {self.config.auth.password}")
             q_bot = Sender("Q", "TheQBot", "CServe.quakenet.org")
-            message = self._await_message("NOTICE", sender=q_bot)
+            message = self.await_message("NOTICE", sender=q_bot)
             if message.params != [self.config.nick, f"You are now logged in as {self.config.auth.username}."]:
                 raise Exception("Authentication failed: " + message.params[1])
         else:
@@ -170,7 +170,7 @@ class Client:
     def set_user_mode(self):
         self.update_status(f"Setting user mode to {self.config.user_mode}")
         self.conn.send("MODE", self.config.nick, self.config.user_mode)
-        self._await_message("MODE", params=[self.config.nick, self.config.user_mode])
+        self.await_message("MODE", params=[self.config.nick, self.config.user_mode])
 
     def join_channels(self):
         self.update_status("Joining channels: {}".format(", ".join(self.config.channels)))
@@ -179,7 +179,7 @@ class Client:
         for channel in self.config.channels:
             self.conn.send("JOIN", channel)
         while joined_channels != channels_to_join:
-            message = self._await_message("JOIN", sender_nick=self.config.nick)
+            message = self.await_message("JOIN", sender_nick=self.config.nick)
             channel = message.params[0]
             logger.info(f"Joined channel: {channel}")
             if channel in channels_to_join:
@@ -190,7 +190,7 @@ class Client:
 
     def whois_self(self):
         self.conn.send("WHOIS", self.config.nick)
-        message = self._await_message("311")
+        message = self.await_message("311")
         username = message.params[2]
         hostname = message.params[3]
         header = f":{self.config.nick}!{username}@{hostname} "
@@ -202,4 +202,4 @@ class Client:
         self.update_status("Joined all channels: {}".format(", ".join(self.config.channels)))
         self.hooks.on_ready()
         while True:
-            self._await_message()
+            self.await_message()
