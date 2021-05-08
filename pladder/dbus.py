@@ -1,3 +1,19 @@
+PLADDER_BOT_XML = """
+<node>
+  <interface name="se.raek.PladderBot">
+    <method name="RunCommand">
+      <arg direction="in" name="timestamp" type="u" />
+      <arg direction="in" name="network" type="s" />
+      <arg direction="in" name="channel" type="s" />
+      <arg direction="in" name="nick" type="s" />
+      <arg direction="in" name="text" type="s" />
+      <arg direction="out" name="return" type="a{ss}" />
+    </method>
+  </interface>
+</node>
+"""
+
+
 class RetryProxy:
     def __init__(self, bus, object_name):
         self.bus = bus

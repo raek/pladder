@@ -7,7 +7,7 @@ import os
 import random
 
 from pladder import LAST_COMMIT
-from pladder.dbus import RetryProxy
+from pladder.dbus import PLADDER_BOT_XML, RetryProxy
 from pladder.fuse import Fuse, FuseResult
 import pladder.irc.color as color
 from pladder.plugin import PluginLoadError
@@ -31,20 +31,7 @@ def main():
 
 
 class PladderBot(ExitStack):
-    """
-    <node>
-      <interface name="se.raek.PladderBot">
-        <method name="RunCommand">
-          <arg direction="in" name="timestamp" type="u" />
-          <arg direction="in" name="network" type="s" />
-          <arg direction="in" name="channel" type="s" />
-          <arg direction="in" name="nick" type="s" />
-          <arg direction="in" name="text" type="s" />
-          <arg direction="out" name="return" type="a{ss}" />
-        </method>
-      </interface>
-    </node>
-    """
+    dbus = PLADDER_BOT_XML
 
     def __init__(self, state_dir, bus):
         super().__init__()
