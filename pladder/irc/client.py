@@ -152,11 +152,12 @@ class Client:
                            f"AUTH {self.config.auth.username} {self.config.auth.password}")
             q_bot = Sender("Q", "TheQBot", "CServe.quakenet.org")
             for message in self.messages:
-                if message.command == "NOTICE" and message.sender == q_bot:
-                    if message.params == [self.config.nick, f"You are now logged in as {self.config.auth.username}."]:
-                        break
-                    else:
-                        raise Exception("Authentication failed: " + message.params[1])
+                if not (message.command == "NOTICE" and message.sender == q_bot):
+                    continue
+                if message.params == [self.config.nick, f"You are now logged in as {self.config.auth.username}."]:
+                    break
+                else:
+                    raise Exception("Authentication failed: " + message.params[1])
         else:
             Exception("Unknown authentication system: " + self.config.auth.system)
 
@@ -174,29 +175,30 @@ class Client:
         for channel in self.config.channels:
             self.conn.send("JOIN", channel)
         for message in self.messages:
-            if message.command == "JOIN":
-                if message.sender.nick == self.config.nick:
-                    channel = message.params[0]
-                    logger.info(f"Joined channel: {channel}")
-                    if channel in channels_to_join:
-                        joined_channels.add(channel)
-                        self.update_status("Joined {} of {} channels: {}".format(len(joined_channels),
-                                                                                 len(channels_to_join),
-                                                                                 ", ".join(sorted(joined_channels))))
-                        if joined_channels == channels_to_join:
-                            break
+            if not (message.command == "JOIN" and message.sender.nick == self.config.nick):
+                continue
+            channel = message.params[0]
+            logger.info(f"Joined channel: {channel}")
+            if channel in channels_to_join:
+                joined_channels.add(channel)
+                self.update_status("Joined {} of {} channels: {}".format(len(joined_channels),
+                                                                         len(channels_to_join),
+                                                                         ", ".join(sorted(joined_channels))))
+            if joined_channels == channels_to_join:
+                break
 
     def whois_self(self):
         self.conn.send("WHOIS", self.config.nick)
         for message in self.messages:
-            if message.command == "311":
-                username = message.params[2]
-                hostname = message.params[3]
-                header = f":{self.config.nick}!{username}@{hostname} "
-                headerlen = len(header.encode("utf-8"))
-                self.headerlen = headerlen
-                logger.info(f"Whois {self.config.nick}: {username}@{hostname} - length {headerlen}")
-                break
+            if message.command != "311":
+                continue
+            username = message.params[2]
+            hostname = message.params[3]
+            header = f":{self.config.nick}!{username}@{hostname} "
+            headerlen = len(header.encode("utf-8"))
+            self.headerlen = headerlen
+            logger.info(f"Whois {self.config.nick}: {username}@{hostname} - length {headerlen}")
+            break
 
     def run(self):
         self.update_status("Joined all channels: {}".format(", ".join(self.config.channels)))
