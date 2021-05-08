@@ -106,7 +106,7 @@ class Client:
             try:
                 command = self.commands[reply_to]
                 msgpart = next(self.msgsplitter[reply_to])
-            except Exception:
+            except StopIteration:
                 pass
             else:
                 logger.info("{} -> {} : {}".format(message.sender.nick, target, text))
