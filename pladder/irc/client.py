@@ -23,10 +23,6 @@ Config = namedtuple("Config", [
 AuthConfig = namedtuple("AuthConfig", "system, username, password")
 
 
-msgsplitter = {}
-commands = {}
-
-
 class Hooks:
     def on_ready(self):
         pass
@@ -48,6 +44,8 @@ class Hooks:
 
 
 def run_client(config, hooks):
+    msgsplitter = {}
+    commands = {}
     def update_status(s):
         logger.info(s)
         hooks.on_status(s)
