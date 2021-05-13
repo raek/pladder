@@ -181,9 +181,12 @@ class PladderBot(ExitStack):
             return "Only sending to channels is allowed"
         text = "({network}/{channel}/{nick}) ".format(**context.metadata) + user_text
         connector = RetryProxy(self.bus, f"se.raek.PladderConnector.{network}")
-        connector.SendMessage(channel, text,
-                              on_error=lambda e: f"Network {network} not reachable.")
-        return "Message sent."
+        err = connector.SendMessage(channel, text,
+                                    on_error=lambda e: True)
+        if err:
+            return f"Not connected to network {network}."
+        else:
+            return "Message sent."
 
     def show_context(self, context):
         return repr({
