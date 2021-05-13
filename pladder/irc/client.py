@@ -1,3 +1,4 @@
+from contextlib import ExitStack
 from collections import namedtuple
 from datetime import datetime, timezone
 import logging
@@ -43,25 +44,26 @@ class Hook:
         pass
 
 
-def run_client(config, hooks):
-    s = f"Connecting to {config.host}:{config.port}"
-    logger.info(s)
-    for hook in hooks:
-        hook.on_status(s)
-    with MessageConnection(config.host, config.port) as conn:
-        client = Client(config, hooks, conn)
-        client.run_all()
-
-
-class Client:
-    def __init__(self, config, hooks, conn):
+class Client(ExitStack):
+    def __init__(self, config, hooks):
+        super().__init__()
         self._config = config
         self._hooks = hooks
-        self._conn = conn
+        self._conn = None
         self._messages = self._messages_with_default_handling()
         self._commands = {}
         self._msgsplitter = {}
         self._headerlen = 0
+
+    # Public API
+
+    def run(self):
+        assert self._conn is None
+        self._update_status(f"Connecting to {self._config.host}:{self._config.port}")
+        self._conn = self.enter_context(MessageConnection(self._config.host, self._config.port))
+        self._settle_in()
+
+    # Internal helper methods
 
     def _messages_with_default_handling(self):
         for message in self._conn.recv_messages():
@@ -146,7 +148,7 @@ class Client:
 
     # The "phases" of connecting: the active part of the client
 
-    def run_all(self):
+    def _settle_in(self):
         self._choose_nick()
         if self._config.auth:
             self._authenticate()
@@ -155,7 +157,7 @@ class Client:
         if self._config.channels:
             self._join_channels()
         self._whois_self()
-        self._run()
+        self._ready()
 
     def _choose_nick(self):
         self._update_status(f'Using nick "{self._config.nick}" and realname "{self._config.realname}"')
@@ -206,7 +208,7 @@ class Client:
         self._headerlen = headerlen
         logger.info(f"Whois {self._config.nick}: {username}@{hostname} - length {headerlen}")
 
-    def _run(self):
+    def _ready(self):
         self._update_status("Joined all channels: {}".format(", ".join(self._config.channels)))
         for hook in self._hooks:
             hook.on_ready()

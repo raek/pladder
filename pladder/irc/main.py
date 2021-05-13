@@ -3,7 +3,7 @@ import json
 import logging
 import os
 
-from pladder.irc.client import AuthConfig, Config, run_client
+from pladder.irc.client import AuthConfig, Config, Client
 
 
 CONFIG_DEFAULTS = {
@@ -31,7 +31,8 @@ def main():
     if use_dbus:
         from pladder.irc.dbus import DbusHook
         hooks.append(DbusHook(config))
-    run_client(config, hooks)
+    with Client(config, hooks) as client:
+        client.run()
 
 
 def parse_arguments():
