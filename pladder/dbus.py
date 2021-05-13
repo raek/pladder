@@ -14,6 +14,18 @@ PLADDER_BOT_XML = """
 """
 
 
+PLADDER_CONNECTOR_XML = """
+<node>
+  <interface name="se.raek.PladderConnector">
+    <method name="SendMessage">
+      <arg direction="in" name="channel" type="s" />
+      <arg direction="in" name="text" type="s" />
+    </method>
+  </interface>
+</node>
+"""
+
+
 class RetryProxy:
     def __init__(self, bus, object_name):
         self.bus = bus
