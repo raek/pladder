@@ -1,4 +1,4 @@
-from contextlib import ExitStack
+from contextlib import AbstractContextManager, ExitStack
 from collections import namedtuple
 from datetime import datetime, timezone
 import logging
@@ -24,7 +24,7 @@ Config = namedtuple("Config", [
 AuthConfig = namedtuple("AuthConfig", "system, username, password")
 
 
-class Hook:
+class Hook(AbstractContextManager):
     def on_ready(self):
         pass
 
@@ -45,10 +45,10 @@ class Hook:
 
 
 class Client(ExitStack):
-    def __init__(self, config, hooks):
+    def __init__(self, config):
         super().__init__()
         self._config = config
-        self._hooks = hooks
+        self._hooks = []
         self._conn = None
         self._messages = self._messages_with_default_handling()
         self._commands = {}
@@ -56,6 +56,10 @@ class Client(ExitStack):
         self._headerlen = 0
 
     # Public API
+
+    def install_hook(self, hook_ctor):
+        hook = self.enter_context(hook_ctor(self._config, self))
+        self._hooks.append(hook)
 
     def run(self):
         assert self._conn is None

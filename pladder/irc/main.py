@@ -22,16 +22,15 @@ logger = logging.getLogger("pladder.irc")
 def main():
     use_systemd, use_dbus, config_name = parse_arguments()
     config = read_config(config_name)
-    hooks = []
-    if use_systemd:
-        from pladder.irc.systemd import SystemdHook
-        hooks.append(SystemdHook())
-    else:
-        logging.basicConfig(level=logging.DEBUG)
-    if use_dbus:
-        from pladder.irc.dbus import DbusHook
-        hooks.append(DbusHook(config))
-    with Client(config, hooks) as client:
+    with Client(config) as client:
+        if use_systemd:
+            from pladder.irc.systemd import SystemdHook
+            client.install_hook(SystemdHook)
+        else:
+            logging.basicConfig(level=logging.DEBUG)
+        if use_dbus:
+            from pladder.irc.dbus import DbusHook
+            client.install_hook(DbusHook)
         client.run()
 
 

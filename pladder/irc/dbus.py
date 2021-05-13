@@ -10,11 +10,17 @@ logger = logging.getLogger("pladder.irc")
 
 
 class DbusHook(Hook):
-    def __init__(self, config):
+    def __init__(self, config, client):
         self.config = config
         bus = SessionBus()
         self.bot = RetryProxy(bus, "se.raek.PladderBot")
         self.log = RetryProxy(bus, "se.raek.PladderLog")
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        return None
 
     def on_trigger(self, timestamp, channel, sender, text):
         return self.bot.RunCommand(timestamp, self.config.network, channel, sender.nick, text,
