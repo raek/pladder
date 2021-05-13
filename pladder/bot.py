@@ -44,6 +44,7 @@ class PladderBot(ExitStack):
         self.register_command("help", self.help)
         self.register_command("version", self.version)
         self.register_command("searchlog", self.searchlog, contextual=True)
+        self.register_command("send", self.send, contextual=True, varargs=True)
         self.register_command("comp", self.comp, contextual=True)
         self.register_command("give", self.give, varargs=True)
         self.register_command("echo", lambda text="": text, varargs=True)
@@ -168,6 +169,21 @@ class PladderBot(ExitStack):
             return result
         else:
             return "Found no matches for '{}'".format(needle)
+
+    def send(self, context, target, user_text):
+        target_parts = target.split("/")
+        if len(target_parts) != 2:
+            return "Invalid target. Syntax: NetworkName/#channel"
+        network, channel = target_parts
+        if not network:
+            network = context.metadata["network"]
+        if not channel.startswith("#"):
+            return "Only sending to channels is allowed"
+        text = "({network}/{channel}/{nick}) ".format(**context.metadata) + user_text
+        connector = RetryProxy(self.bus, f"se.raek.PladderConnector.{network}")
+        connector.SendMessage(channel, text,
+                              on_error=lambda e: f"Network {network} not reachable.")
+        return "Message sent."
 
     def show_context(self, context):
         return repr({
