@@ -44,22 +44,20 @@ class Hook:
 
 
 def run_client(config, hooks):
-    def update_status(s):
-        logger.info(s)
-        for hook in hooks:
-            hook.on_status(s)
-    update_status(f"Connecting to {config.host}:{config.port}")
+    s = f"Connecting to {config.host}:{config.port}"
+    logger.info(s)
+    for hook in hooks:
+        hook.on_status(s)
     with MessageConnection(config.host, config.port) as conn:
-        client = Client(config, hooks, conn, update_status)
+        client = Client(config, hooks, conn)
         client.run_all()
 
 
 class Client:
-    def __init__(self, config, hooks, conn, update_status):
+    def __init__(self, config, hooks, conn):
         self.config = config
         self.hooks = hooks
         self.conn = conn
-        self.update_status = update_status
         self.messages = self._messages_with_default_handling()
         self.commands = {}
         self.msgsplitter = {}
@@ -87,6 +85,11 @@ class Client:
             if params is not None and message.params != params:
                 continue
             return message
+
+    def update_status(self, s):
+        logger.info(s)
+        for hook in self.hooks:
+            hook.on_status(s)
 
     # Messages that should always be handled: the reactive part of client
 
