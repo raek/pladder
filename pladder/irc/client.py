@@ -55,27 +55,27 @@ def run_client(config, hooks):
 
 class Client:
     def __init__(self, config, hooks, conn):
-        self.config = config
-        self.hooks = hooks
-        self.conn = conn
-        self.messages = self._messages_with_default_handling()
-        self.commands = {}
-        self.msgsplitter = {}
-        self.headerlen = 0
+        self._config = config
+        self._hooks = hooks
+        self._conn = conn
+        self._messages = self._messages_with_default_handling()
+        self._commands = {}
+        self._msgsplitter = {}
+        self._headerlen = 0
 
     def _messages_with_default_handling(self):
-        for message in self.conn.recv_messages():
-            for hook in self.hooks:
+        for message in self._conn.recv_messages():
+            for hook in self._hooks:
                 hook.on_message_received()
             if message.command == "PING":
-                self.handle_ping(message)
+                self._handle_ping(message)
             elif message.command == "PRIVMSG":
-                self.handle_privmsg(message)
+                self._handle_privmsg(message)
             else:
                 yield message
 
-    def await_message(self, command=None, *, sender=None, sender_nick=None, params=None):
-        for message in self.messages:
+    def _await_message(self, command=None, *, sender=None, sender_nick=None, params=None):
+        for message in self._messages:
             if command is not None and message.command != command:
                 continue
             if sender is not None and message.sender != sender:
@@ -86,17 +86,17 @@ class Client:
                 continue
             return message
 
-    def update_status(self, s):
+    def _update_status(self, s):
         logger.info(s)
-        for hook in self.hooks:
+        for hook in self._hooks:
             hook.on_status(s)
 
     # Messages that should always be handled: the reactive part of client
 
-    def handle_ping(self, message):
-        self.conn.send("PONG", *message.params)
+    def _handle_ping(self, message):
+        self._conn.send("PONG", *message.params)
 
-    def handle_privmsg(self, message):
+    def _handle_privmsg(self, message):
         target, text = message.params
         if target[0] in "&#+!":
             reply_to = target
@@ -106,109 +106,109 @@ class Client:
         reply = None
         command = None
         msgpart = None
-        if text.startswith(self.config.trigger_prefix):
+        if text.startswith(self._config.trigger_prefix):
             logger.info("{} -> {} : {}".format(message.sender.nick, target, text))
             timestamp = datetime.now(timezone.utc).timestamp()
-            text_without_prefix = text[len(self.config.trigger_prefix):]
-            for hook in self.hooks:
+            text_without_prefix = text[len(self._config.trigger_prefix):]
+            for hook in self._hooks:
                 reply = hook.on_trigger(timestamp, reply_to, message.sender, text_without_prefix) or reply
         if reply and reply['text']:
-            self.commands[reply_to] = reply['command']
-            self.msgsplitter[reply_to] = message_generator("PRIVMSG",
-                                                           reply_to,
-                                                           self.config.reply_prefix,
-                                                           reply['text'],
-                                                           self.headerlen)
+            self._commands[reply_to] = reply['command']
+            self._msgsplitter[reply_to] = message_generator("PRIVMSG",
+                                                            reply_to,
+                                                            self._config.reply_prefix,
+                                                            reply['text'],
+                                                            self._headerlen)
             command = reply['command']
-            msgpart = next(self.msgsplitter[reply_to])
+            msgpart = next(self._msgsplitter[reply_to])
         if text == "more":
             try:
-                command = self.commands[reply_to]
-                msgpart = next(self.msgsplitter[reply_to])
+                command = self._commands[reply_to]
+                msgpart = next(self._msgsplitter[reply_to])
             except KeyError:
                 pass
             except StopIteration:
-                del self.commands[reply_to]
-                del self.msgsplitter[reply_to]
+                del self._commands[reply_to]
+                del self._msgsplitter[reply_to]
             else:
                 logger.info("{} -> {} : {}".format(message.sender.nick, target, text))
         if msgpart:
             logger.info("-> {} : {}".format(reply_to, msgpart[msgpart.find(":")+1:]))
             if command != 'searchlog':
-                for hook in self.hooks:
+                for hook in self._hooks:
                     hook.on_privmsg(timestamp, reply_to, message.sender, text)
                     hook.on_send_privmsg(timestamp, reply_to,
-                                         self.config.nick, msgpart[msgpart.find(":")+1:])
-            self.conn.send(msgpart)
+                                         self._config.nick, msgpart[msgpart.find(":")+1:])
+            self._conn.send(msgpart)
         else:
-            for hook in self.hooks:
+            for hook in self._hooks:
                 hook.on_privmsg(timestamp, reply_to, message.sender, text)
 
     # The "phases" of connecting: the active part of the client
 
     def run_all(self):
-        self.choose_nick()
-        if self.config.auth:
-            self.authenticate()
-        if self.config.user_mode:
-            self.set_user_mode()
-        if self.config.channels:
-            self.join_channels()
-        self.whois_self()
-        self.run()
+        self._choose_nick()
+        if self._config.auth:
+            self._authenticate()
+        if self._config.user_mode:
+            self._set_user_mode()
+        if self._config.channels:
+            self._join_channels()
+        self._whois_self()
+        self._run()
 
-    def choose_nick(self):
-        self.update_status(f'Using nick "{self.config.nick}" and realname "{self.config.realname}"')
-        self.conn.send("NICK", self.config.nick)
-        self.conn.send("USER", self.config.nick, "0", "*", self.config.realname)
-        self.await_message("001")
+    def _choose_nick(self):
+        self._update_status(f'Using nick "{self._config.nick}" and realname "{self._config.realname}"')
+        self._conn.send("NICK", self._config.nick)
+        self._conn.send("USER", self._config.nick, "0", "*", self._config.realname)
+        self._await_message("001")
 
-    def authenticate(self):
-        if self.config.auth.system == "Q":
-            self.update_status(f"Authenticating with Q as {self.config.auth.username}")
-            self.conn.send("PRIVMSG", "Q@CServe.quakenet.org",
-                           f"AUTH {self.config.auth.username} {self.config.auth.password}")
+    def _authenticate(self):
+        if self._config.auth.system == "Q":
+            self._update_status(f"Authenticating with Q as {self._config.auth.username}")
+            self._conn.send("PRIVMSG", "Q@CServe.quakenet.org",
+                            f"AUTH {self._config.auth.username} {self._config.auth.password}")
             q_bot = Sender("Q", "TheQBot", "CServe.quakenet.org")
-            message = self.await_message("NOTICE", sender=q_bot)
-            if message.params != [self.config.nick, f"You are now logged in as {self.config.auth.username}."]:
+            message = self._await_message("NOTICE", sender=q_bot)
+            if message.params != [self._config.nick, f"You are now logged in as {self._config.auth.username}."]:
                 raise Exception("Authentication failed: " + message.params[1])
         else:
-            Exception("Unknown authentication system: " + self.config.auth.system)
+            Exception("Unknown authentication system: " + self._config.auth.system)
 
-    def set_user_mode(self):
-        self.update_status(f"Setting user mode to {self.config.user_mode}")
-        self.conn.send("MODE", self.config.nick, self.config.user_mode)
-        self.await_message("MODE", params=[self.config.nick, self.config.user_mode])
+    def _set_user_mode(self):
+        self._update_status(f"Setting user mode to {self._config.user_mode}")
+        self._conn.send("MODE", self._config.nick, self._config.user_mode)
+        self._await_message("MODE", params=[self._config.nick, self._config.user_mode])
 
-    def join_channels(self):
-        self.update_status("Joining channels: {}".format(", ".join(self.config.channels)))
-        channels_to_join = set(self.config.channels)
+    def _join_channels(self):
+        self._update_status("Joining channels: {}".format(", ".join(self._config.channels)))
+        channels_to_join = set(self._config.channels)
         joined_channels = set()
-        for channel in self.config.channels:
-            self.conn.send("JOIN", channel)
+        for channel in self._config.channels:
+            self._conn.send("JOIN", channel)
         while joined_channels != channels_to_join:
-            message = self.await_message("JOIN", sender_nick=self.config.nick)
+            message = self._await_message("JOIN", sender_nick=self._config.nick)
             channel = message.params[0]
             logger.info(f"Joined channel: {channel}")
             if channel in channels_to_join:
                 joined_channels.add(channel)
-                self.update_status("Joined {} of {} channels: {}".format(len(joined_channels),
-                                                                         len(channels_to_join),
-                                                                         ", ".join(sorted(joined_channels))))
+                self._update_status("Joined {} of {} channels: {}".format(len(joined_channels),
+                                                                          len(channels_to_join),
+                                                                          ", ".join(sorted(joined_channels))))
 
-    def whois_self(self):
-        self.conn.send("WHOIS", self.config.nick)
-        message = self.await_message("311")
+    def _whois_self(self):
+        self._conn.send("WHOIS", self._config.nick)
+        message = self._await_message("311")
         username = message.params[2]
         hostname = message.params[3]
-        header = f":{self.config.nick}!{username}@{hostname} "
+        header = f":{self._config.nick}!{username}@{hostname} "
         headerlen = len(header.encode("utf-8"))
-        self.headerlen = headerlen
-        logger.info(f"Whois {self.config.nick}: {username}@{hostname} - length {headerlen}")
+        self._headerlen = headerlen
+        logger.info(f"Whois {self._config.nick}: {username}@{hostname} - length {headerlen}")
 
-    def run(self):
-        self.update_status("Joined all channels: {}".format(", ".join(self.config.channels)))
-        for hook in self.hooks:
+    def _run(self):
+        self._update_status("Joined all channels: {}".format(", ".join(self._config.channels)))
+        for hook in self._hooks:
             hook.on_ready()
         while True:
-            self.await_message()
+            self._await_message()
