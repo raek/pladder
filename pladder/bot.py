@@ -171,6 +171,9 @@ class PladderBot(ExitStack):
             return "Found no matches for '{}'".format(needle)
 
     def send(self, context, target, user_text):
+        if "send_called" in context.metadata:
+            return "Only one send per script is allowed."
+        context.metadata["send_called"] = True
         target_parts = target.split("/")
         if len(target_parts) != 2:
             return "Invalid target. Syntax: NetworkName/#channel"
