@@ -3,6 +3,7 @@ from contextlib import suppress
 from collections import namedtuple
 import logging
 import socket
+from threading import Lock
 
 
 logger = logging.getLogger("pladder.irc")
@@ -138,6 +139,7 @@ class MessageConnection:
         self._recv_buffer = b""
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._socket.connect((host, port))
+        self._send_lock = Lock()
 
     def __enter__(self):
         return self
@@ -181,7 +183,8 @@ class MessageConnection:
         line_bytes = line.encode("utf-8")
         line_bytes = line_bytes[:MAX_LINE_BYTES - 2]
         line_bytes += b"\r\n"
-        self._socket.sendall(line_bytes)
+        with self._send_lock:
+            self._socket.sendall(line_bytes)
 
     def send(self, *args):
         self.send_message(make_message(*args))

@@ -67,6 +67,17 @@ class Client(ExitStack):
         self._conn = self.enter_context(MessageConnection(self._config.host, self._config.port))
         self._settle_in()
 
+    def send_message(self, target, text):
+        timestamp = datetime.now(timezone.utc).timestamp()
+        text = self._config.reply_prefix + text
+        logger.info(f"-> {target} : {text}")
+        for hook in self._hooks:
+            hook.on_send_privmsg(timestamp, target, self._config.nick, text)
+        try:
+            self._conn.send("PRIVMSG", target, text)
+        except Exception as e:
+            logger.error(e)
+
     # Internal helper methods
 
     def _messages_with_default_handling(self):
