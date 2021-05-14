@@ -87,7 +87,19 @@ class PladderConnector:
 
     def __init__(self, bus, config, client):
         self.client = client
+        self.config = config
         bus.publish(f"se.raek.PladderConnector.{config.network}", self)
+
+    def GetConfig(self):
+        return {
+            "network": self.config.network,
+            "host": self.config.host,
+            "port": str(self.config.port),
+            "nick": self.config.nick,
+            "realname": self.config.realname,
+            "trigger_prefix": self.config.trigger_prefix,
+            "reply_prefix": self.config.reply_prefix,
+        }
 
     def SendMessage(self, channel, text):
         self.client.send_message(channel, text)

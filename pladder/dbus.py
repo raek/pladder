@@ -17,6 +17,9 @@ PLADDER_BOT_XML = """
 PLADDER_CONNECTOR_XML = """
 <node>
   <interface name="se.raek.PladderConnector">
+    <method name="GetConfig">
+      <arg direction="out" name="return" type="a{ss}" />
+    </method>
     <method name="SendMessage">
       <arg direction="in" name="channel" type="s" />
       <arg direction="in" name="text" type="s" />
