@@ -1,0 +1,16 @@
+[Unit]
+Description=Pladder Bot Mumble Connector for %I
+Wants=pladder-bot.service
+
+[Service]
+Type=notify
+ExecStart=/usr/bin/python3 -u -m pladder.mumble --systemd --dbus --config=%I
+Restart=always
+RestartSec=5min
+StartLimitInterval=4h
+StartLimitBurst=48
+#WatchdogSec=30min
+SyslogIdentifier=pladder-mumble-%I
+
+[Install]
+WantedBy=default.target
