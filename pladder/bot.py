@@ -204,7 +204,9 @@ class PladderBot(ExitStack):
         if channels is None:
             return f"Not connected to network {network}."
         else:
-            return f"{network}: {', '.join(sorted(channels))}"
+            if any(map(lambda c: " " in c, channels)):
+                channels = ["{" + c + "}" for c in channels]
+            return f"{network}: {', '.join(channels)}"
 
     def users(self, context, network_and_channel=""):
         parts = network_and_channel.split("/")

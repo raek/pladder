@@ -4,7 +4,7 @@ import logging
 from gi.repository import GLib  # type: ignore
 from pydbus import SessionBus  # type: ignore
 
-from pladder.dbus import PLADDER_CONNECTOR_XML, RetryProxy
+from pladder.dbus import PLADDER_CONNECTOR_XML
 from pladder.irc.client import Hook
 
 
@@ -62,13 +62,21 @@ class PladderConnector:
     def GetConfig(self):
         return {
             "network": self.config.network,
+            "host": self.config.host,
+            "port": str(self.config.port),
+            "user": str(self.config.user),
+            "application": str(self.config.application),
         }
 
     def SendMessage(self, channel, text):
-        pass
+        if channel not in self.client.get_channels():
+            return f"No such channel: {channel}"
+        else:
+            self.client.send_message(channel, text)
+            return "Message sent."
 
     def GetChannels(self):
-        return []
+        return self.client.get_channels()
 
     def GetChannelUsers(self, channel):
-        return []
+        return self.client.get_channel_users(channel)

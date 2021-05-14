@@ -7,6 +7,8 @@ from pladder.mumble.client import Config, Client
 
 
 CONFIG_DEFAULTS = {
+    "port": 64738,
+    "application": "Pladder Bot",
 }
 
 
@@ -42,5 +44,7 @@ def read_config(config_name):
     config_path = os.path.join(config_home, "pladder-mumble", config_name + ".json")
     with open(config_path, "rt") as f:
         config_data = json.load(f)
-        config = Config(**{**CONFIG_DEFAULTS, **config_data})
-        return config
+    config_defaults = dict(CONFIG_DEFAULTS)
+    config_defaults["certfile"] = os.path.join(config_home, "pladder-mumble", config_name + ".pem")
+    config = Config(**{**config_defaults, **config_data})
+    return config
