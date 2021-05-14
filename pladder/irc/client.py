@@ -262,16 +262,16 @@ class Client(ExitStack):
     def _join_channels(self):
         self._update_status("Joining channels: {}".format(", ".join(self._config.channels)))
         channels_to_join = set(self._config.channels)
-        joined_channels = set()
         for channel in self._config.channels:
             self._conn.send("JOIN", channel)
         while channels_to_join - set(self._channels.keys()):
             message = self._await_message("JOIN", sender_nick=self._config.nick)
             channel = message.params[0]
             if channel in channels_to_join:
-                self._update_status("Joined {} of {} channels: {}".format(len(set(self._channels.keys()) & channels_to_join),
-                                                                          len(channels_to_join),
-                                                                          ", ".join(sorted(set(self._channels.keys()) & channels_to_join))))
+                n_joined = len(set(self._channels.keys()) & channels_to_join)
+                n_total = len(channels_to_join)
+                channel_list = ", ".join(sorted(set(self._channels.keys()) & channels_to_join))
+                self._update_status(f"Joined {n_joined} of {n_total} channels: {channel_list}")
 
     def _whois_self(self):
         self._conn.send("WHOIS", self._config.nick)
