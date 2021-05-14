@@ -88,8 +88,7 @@ class Client(ExitStack):
                 self._handle_ping(message)
             elif message.command == "PRIVMSG":
                 self._handle_privmsg(message)
-            else:
-                yield message
+            yield message
 
     def _await_message(self, command=None, *, sender=None, sender_nick=None, params=None):
         for message in self._messages:
