@@ -116,6 +116,8 @@ class Client(ExitStack):
                 self._handle_join(message)
             elif message.command == "PART":
                 self._handle_leave(message)
+            elif message.command == "INVITE":
+                self._handle_invite(message)
             elif message.command == "KICK":
                 self._handle_kick(message)
             yield message
@@ -184,6 +186,13 @@ class Client(ExitStack):
         if nick == self._config.nick:
             self._channels.remove(channel)
             logger.info(f"Left channel {channel}: {reason}")
+
+    def _handle_invite(self, message):
+        inviter = message.sender.nick
+        invited, channel = message.params
+        if invited == self._config.nick:
+            self._conn.send("JOIN", channel)
+            logger.info(f"Was invited to channel {channel} by {inviter}, joining")
 
     def _handle_kick(self, message):
         kicker = message.sender.nick
