@@ -231,9 +231,9 @@ class Client(ExitStack):
             self._authenticate()
         if self._config.user_mode:
             self._set_user_mode()
+        self._whois_self()
         if self._config.channels:
             self._join_channels()
-        self._whois_self()
         self._ready()
 
     def _choose_nick(self):
