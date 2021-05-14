@@ -45,6 +45,7 @@ class PladderBot(ExitStack):
         self.register_command("version", self.version)
         self.register_command("searchlog", self.searchlog, contextual=True)
         self.register_command("send", self.send, contextual=True, varargs=True)
+        self.register_command("channels", self.channels)
         self.register_command("comp", self.comp, contextual=True)
         self.register_command("give", self.give, varargs=True)
         self.register_command("echo", lambda text="": text, varargs=True)
@@ -194,6 +195,14 @@ class PladderBot(ExitStack):
             return f"Not connected to network {network}."
         else:
             return "Message sent."
+
+    def channels(self, network):
+        connector = RetryProxy(self.bus, f"se.raek.PladderConnector.{network}")
+        channels = connector.GetChannels(on_error=lambda e: None)
+        if channels is None:
+            return f"Not connected to network {network}."
+        else:
+            return ", ".join(sorted(channels))
 
     def show_context(self, context):
         return repr({

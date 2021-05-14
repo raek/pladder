@@ -21,6 +21,9 @@ PLADDER_CONNECTOR_XML = """
       <arg direction="in" name="channel" type="s" />
       <arg direction="in" name="text" type="s" />
     </method>
+    <method name="GetChannels">
+      <arg direction="out" name="channels" type="as" />
+    </method>
   </interface>
 </node>
 """

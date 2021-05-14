@@ -91,3 +91,6 @@ class PladderConnector:
 
     def SendMessage(self, channel, text):
         self.client.send_message(channel, text)
+
+    def GetChannels(self):
+        return self.client.channels

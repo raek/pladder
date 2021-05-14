@@ -54,6 +54,7 @@ class Client(ExitStack):
         self._commands = {}
         self._msgsplitter = {}
         self._headerlen = 0
+        self._channels = set()
 
     # Public API
 
@@ -78,17 +79,11 @@ class Client(ExitStack):
         except Exception as e:
             logger.error(e)
 
-    # Internal helper methods
+    @property
+    def channels(self):
+        return set(self._channels)
 
-    def _messages_with_default_handling(self):
-        for message in self._conn.recv_messages():
-            for hook in self._hooks:
-                hook.on_message_received()
-            if message.command == "PING":
-                self._handle_ping(message)
-            elif message.command == "PRIVMSG":
-                self._handle_privmsg(message)
-            yield message
+    # Internal helper methods
 
     def _await_message(self, command=None, *, sender=None, sender_nick=None, params=None):
         for message in self._messages:
@@ -108,6 +103,22 @@ class Client(ExitStack):
             hook.on_status(s)
 
     # Messages that should always be handled: the reactive part of client
+
+    def _messages_with_default_handling(self):
+        for message in self._conn.recv_messages():
+            for hook in self._hooks:
+                hook.on_message_received()
+            if message.command == "PING":
+                self._handle_ping(message)
+            elif message.command == "PRIVMSG":
+                self._handle_privmsg(message)
+            elif message.command == "JOIN":
+                self._handle_join(message)
+            elif message.command == "PART":
+                self._handle_leave(message)
+            elif message.command == "KICK":
+                self._handle_kick(message)
+            yield message
 
     def _handle_ping(self, message):
         self._conn.send("PONG", *message.params)
@@ -160,6 +171,27 @@ class Client(ExitStack):
             for hook in self._hooks:
                 hook.on_privmsg(timestamp, reply_to, message.sender, text)
 
+    def _handle_join(self, message):
+        nick = message.sender.nick
+        channel, = message.params
+        if nick == self._config.nick:
+            self._channels.add(channel)
+            logger.info(f"Joined channel {channel}")
+
+    def _handle_leave(self, message):
+        nick = message.sender.nick
+        channel, reason = message.params
+        if nick == self._config.nick:
+            self._channels.remove(channel)
+            logger.info(f"Left channel {channel}: {reason}")
+
+    def _handle_kick(self, message):
+        kicker = message.sender.nick
+        channel, kicked, reason = message.params
+        if kicked == self._config.nick:
+            self._channels.remove(channel)
+            logger.warning(f"Kicked from channel {channel} by {kicker}: {reason}")
+
     # The "phases" of connecting: the active part of the client
 
     def _settle_in(self):
@@ -202,15 +234,13 @@ class Client(ExitStack):
         joined_channels = set()
         for channel in self._config.channels:
             self._conn.send("JOIN", channel)
-        while joined_channels != channels_to_join:
+        while channels_to_join - self._channels:
             message = self._await_message("JOIN", sender_nick=self._config.nick)
             channel = message.params[0]
-            logger.info(f"Joined channel: {channel}")
             if channel in channels_to_join:
-                joined_channels.add(channel)
-                self._update_status("Joined {} of {} channels: {}".format(len(joined_channels),
+                self._update_status("Joined {} of {} channels: {}".format(len(self._channels & channels_to_join),
                                                                           len(channels_to_join),
-                                                                          ", ".join(sorted(joined_channels))))
+                                                                          ", ".join(sorted(self._channels & channels_to_join))))
 
     def _whois_self(self):
         self._conn.send("WHOIS", self._config.nick)
