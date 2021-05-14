@@ -46,6 +46,7 @@ class PladderBot(ExitStack):
         self.register_command("searchlog", self.searchlog, contextual=True)
         self.register_command("send", self.send, contextual=True, varargs=True)
         self.register_command("channels", self.channels, contextual=True)
+        self.register_command("users", self.users, contextual=True)
         self.register_command("comp", self.comp, contextual=True)
         self.register_command("give", self.give, varargs=True)
         self.register_command("echo", lambda text="": text, varargs=True)
@@ -205,6 +206,20 @@ class PladderBot(ExitStack):
             return f"Not connected to network {network}."
         else:
             return f"{network}: {', '.join(sorted(channels))}"
+
+    def users(self, context, network_and_channel=""):
+        parts = network_and_channel.split("/")
+        if len(parts) != 2:
+            return "Invalid argument. Syntax: NetworkName/#channel"
+        network, channel = parts
+        if not network:
+            network = context.metadata["network"]
+        connector = RetryProxy(self.bus, f"se.raek.PladderConnector.{network}")
+        users = connector.GetChannelUsers(channel, on_error=lambda e: None)
+        if users is None:
+            return f"Not connected to network {network}."
+        else:
+            return f"{network}/{channel}: {', '.join(sorted(users))}"
 
     def show_context(self, context):
         return repr({

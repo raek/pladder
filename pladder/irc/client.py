@@ -2,6 +2,7 @@ from contextlib import AbstractContextManager, ExitStack
 from collections import namedtuple
 from datetime import datetime, timezone
 import logging
+import re
 
 from pladder.irc.message import MessageConnection, Sender, message_generator
 
@@ -22,6 +23,7 @@ Config = namedtuple("Config", [
     "reply_prefix"
 ])
 AuthConfig = namedtuple("AuthConfig", "system, username, password")
+Channel = namedtuple("Channel", "users")
 
 
 class Hook(AbstractContextManager):
@@ -54,7 +56,7 @@ class Client(ExitStack):
         self._commands = {}
         self._msgsplitter = {}
         self._headerlen = 0
-        self._channels = set()
+        self._channels = {}
 
     # Public API
 
@@ -79,9 +81,14 @@ class Client(ExitStack):
         except Exception as e:
             logger.error(e)
 
-    @property
-    def channels(self):
-        return set(self._channels)
+    def get_channels(self):
+        return sorted(self._channels.keys())
+
+    def get_channel_users(self, channel):
+        try:
+            return sorted(self._channels[channel].users)
+        except KeyError:
+            return []
 
     # Internal helper methods
 
@@ -120,6 +127,8 @@ class Client(ExitStack):
                 self._handle_invite(message)
             elif message.command == "KICK":
                 self._handle_kick(message)
+            elif message.command == "353":
+                self._handle_names_reply(message)
             yield message
 
     def _handle_ping(self, message):
@@ -177,14 +186,14 @@ class Client(ExitStack):
         nick = message.sender.nick
         channel, = message.params
         if nick == self._config.nick:
-            self._channels.add(channel)
+            self._channels[channel] = Channel(set())
             logger.info(f"Joined channel {channel}")
 
     def _handle_leave(self, message):
         nick = message.sender.nick
         channel, reason = message.params
         if nick == self._config.nick:
-            self._channels.remove(channel)
+            del self._channels[channel]
             logger.info(f"Left channel {channel}: {reason}")
 
     def _handle_invite(self, message):
@@ -198,8 +207,21 @@ class Client(ExitStack):
         kicker = message.sender.nick
         channel, kicked, reason = message.params
         if kicked == self._config.nick:
-            self._channels.remove(channel)
+            del self._channels[channel]
             logger.warning(f"Kicked from channel {channel} by {kicker}: {reason}")
+
+    def _handle_names_reply(self, message):
+        _, _, channel, nicks_string = message.params
+        if channel not in self._channels:
+            return
+        for nick in nicks_string.split():
+            nick = self._strip_nick_prefix(nick)
+            self._channels[channel].users.add(nick)
+        logger.info(f"Channel {channel} users: " + ', '.join(sorted(self._channels[channel].users)))
+
+    def _strip_nick_prefix(self, nick):
+        """Remove non-alphanumeric character before nick (such as @)"""
+        return re.sub(r"^\W", "", nick)
 
     # The "phases" of connecting: the active part of the client
 
@@ -243,13 +265,13 @@ class Client(ExitStack):
         joined_channels = set()
         for channel in self._config.channels:
             self._conn.send("JOIN", channel)
-        while channels_to_join - self._channels:
+        while channels_to_join - set(self._channels.keys()):
             message = self._await_message("JOIN", sender_nick=self._config.nick)
             channel = message.params[0]
             if channel in channels_to_join:
-                self._update_status("Joined {} of {} channels: {}".format(len(self._channels & channels_to_join),
+                self._update_status("Joined {} of {} channels: {}".format(len(set(self._channels.keys()) & channels_to_join),
                                                                           len(channels_to_join),
-                                                                          ", ".join(sorted(self._channels & channels_to_join))))
+                                                                          ", ".join(sorted(set(self._channels.keys()) & channels_to_join))))
 
     def _whois_self(self):
         self._conn.send("WHOIS", self._config.nick)

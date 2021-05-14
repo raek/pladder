@@ -24,6 +24,10 @@ PLADDER_CONNECTOR_XML = """
     <method name="GetChannels">
       <arg direction="out" name="channels" type="as" />
     </method>
+    <method name="GetChannelUsers">
+      <arg direction="in" name="channel" type="s" />
+      <arg direction="out" name="channels" type="as" />
+    </method>
   </interface>
 </node>
 """
