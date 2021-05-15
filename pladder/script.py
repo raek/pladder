@@ -270,7 +270,7 @@ def apply_call(context: Context, command: CommandBinding, command_name: str, arg
         raise ApplyError("Argument count does not match what command accepts",
                          command, command_name, fn_arguments)
     result = command.fn(*fn_arguments)
-    assert isinstance(result, str), "Commands must return strings"
+    assert isinstance(result, str), f"Commands must return strings, got {type(result).__name__}"
     return result
 
 
