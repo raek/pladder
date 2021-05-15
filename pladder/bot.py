@@ -192,7 +192,7 @@ class PladderBot(ExitStack):
         result = connector.SendMessage(channel, text,
                                        on_error=lambda e: e)
         if isinstance(result, Exception):
-            raise result
+            return str(result)
         else:
             return result
 
