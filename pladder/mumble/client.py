@@ -1,9 +1,9 @@
 from contextlib import AbstractContextManager, ExitStack
 from collections import namedtuple
+from datetime import datetime, timezone
 import logging
 
 import pymumble_py3 as pymumble  # type: ignore
-from pymumble_py3.constants import PYMUMBLE_CLBK_CONNECTED
 
 
 PLADDER_CLBK_PING_RECEIVED = "ping_received"
@@ -20,6 +20,8 @@ Config = namedtuple("Config", [
     "user",
     "certfile",
     "application",
+    "trigger_prefix",
+    "reply_prefix",
 ])
 
 
@@ -31,6 +33,9 @@ class Hook(AbstractContextManager):
         pass
 
     def on_status(self, s):
+        pass
+
+    def on_trigger(self, timestamp, channel, sender, text):
         pass
 
 
@@ -67,7 +72,8 @@ class Client(ExitStack):
                                 certfile=self._config.certfile,
                                 reconnect=False)
         self._pymumble.set_application_string(self._config.application)
-        self._set_callback(PYMUMBLE_CLBK_CONNECTED, self._on_connected)
+        self._set_callback(pymumble.constants.PYMUMBLE_CLBK_CONNECTED, self._on_connected)
+        self._set_callback(pymumble.constants.PYMUMBLE_CLBK_TEXTMESSAGERECEIVED, self._on_message_received)
         self._set_callback(PLADDER_CLBK_PING_RECEIVED, self._on_ping_received)
         self._pymumble.run()
 
@@ -75,6 +81,25 @@ class Client(ExitStack):
         for hook in self._hooks:
             hook.on_ready()
         self._update_status(f"Connected to {self._config.network}")
+
+    def _on_message_received(self, mess):
+        for channel_id in mess.channel_id:
+            channel = self._pymumble.channels[channel_id]["name"]
+            sender = self._pymumble.users[mess.actor]["name"]
+            text = mess.message
+            if not text.startswith(self._config.trigger_prefix):
+                continue
+            logger.info(f"{sender} -> {channel}: {text}")
+            timestamp = datetime.now(timezone.utc).timestamp()
+            text_without_prefix = text[len(self._config.trigger_prefix):]
+            reply = None
+            for hook in self._hooks:
+                reply = hook.on_trigger(timestamp, channel, sender, text_without_prefix) or reply
+            if not reply or not reply["text"]:
+                continue
+            reply_text = self._config.reply_prefix + reply["text"]
+            logger.info(f"{self._config.user} -> {channel}: {reply_text}")
+            self.send_message(channel, reply_text)
 
     def _on_ping_received(self):
         for hook in self._hooks:

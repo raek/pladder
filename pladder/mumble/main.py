@@ -9,6 +9,8 @@ from pladder.mumble.client import Config, Client
 CONFIG_DEFAULTS = {
     "port": 64738,
     "application": "Pladder Bot",
+    "trigger_prefix": "~",
+    "reply_prefix": "> ",
 }
 
 

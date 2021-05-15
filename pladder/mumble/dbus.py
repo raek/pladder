@@ -4,7 +4,7 @@ import logging
 from gi.repository import GLib  # type: ignore
 from pydbus import SessionBus  # type: ignore
 
-from pladder.dbus import PLADDER_CONNECTOR_XML
+from pladder.dbus import PLADDER_CONNECTOR_XML, RetryProxy
 from pladder.mumble.client import Hook
 
 
@@ -16,6 +16,7 @@ class DbusHook(Hook):
         super().__init__()
         self.config = config
         bus = SessionBus()
+        self.bot = RetryProxy(bus, "se.raek.PladderBot")
         self.connector = PladderConnector(bus, config, client)
         self.running = False
         self.exe = None
@@ -46,6 +47,24 @@ class DbusHook(Hook):
         self.running = False
         logger.info("Dbus thread stopped")
         return None
+
+    def on_trigger(self, timestamp, channel, sender, text):
+        return self.bot.RunCommand(timestamp, self.config.network, channel, sender, text,
+                                   on_error=self._handle_bot_error)
+
+    def _handle_bot_error(self, e):
+        if "org.freedesktop.DBus.Error.ServiceUnknown" in str(e):
+            return {
+                "text": "Internal error: could not reach pladder-bot. " +
+                        "Please check the log: \"journalctl --user-unit pladder-bot.service -e\"",
+                "command": "error",
+            }
+        else:
+            logger.error(str(e))
+            return {
+                "text": "Internal error: " + str(e),
+                "command": "error",
+            }
 
 
 class PladderConnector:
