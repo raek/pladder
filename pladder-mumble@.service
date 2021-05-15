@@ -9,7 +9,7 @@ Restart=always
 RestartSec=5min
 StartLimitInterval=4h
 StartLimitBurst=48
-#WatchdogSec=30min
+WatchdogSec=5min
 SyslogIdentifier=pladder-mumble-%I
 
 [Install]

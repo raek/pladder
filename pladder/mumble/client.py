@@ -3,6 +3,10 @@ from collections import namedtuple
 import logging
 
 import pymumble_py3 as pymumble  # type: ignore
+from pymumble_py3.constants import PYMUMBLE_CLBK_CONNECTED
+
+
+PLADDER_CLBK_PING_RECEIVED = "ping_received"
 
 
 logger = logging.getLogger("pladder.mumble")
@@ -23,8 +27,21 @@ class Hook(AbstractContextManager):
     def on_ready(self):
         pass
 
+    def on_ping_received(self):
+        pass
+
     def on_status(self, s):
         pass
+
+
+class Mumble(pymumble.Mumble):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.callbacks[PLADDER_CLBK_PING_RECEIVED] = None
+
+    def ping_response(self, mess):
+        super().ping_response(mess)
+        self.callbacks(PLADDER_CLBK_PING_RECEIVED)
 
 
 class Client(ExitStack):
@@ -43,20 +60,25 @@ class Client(ExitStack):
     def run(self):
         assert self._pymumble is None
         self._update_status(f"Connecting to {self._config.host}:{self._config.port}")
-        self._pymumble = pymumble.Mumble(host=self._config.host,
-                                         port=self._config.port,
-                                         user=self._config.user,
-                                         password=self._config.password,
-                                         certfile=self._config.certfile,
-                                         reconnect=False)
+        self._pymumble = Mumble(host=self._config.host,
+                                port=self._config.port,
+                                user=self._config.user,
+                                password=self._config.password,
+                                certfile=self._config.certfile,
+                                reconnect=False)
         self._pymumble.set_application_string(self._config.application)
-        self._set_callback("CONNECTED", self._on_connected)
+        self._set_callback(PYMUMBLE_CLBK_CONNECTED, self._on_connected)
+        self._set_callback(PLADDER_CLBK_PING_RECEIVED, self._on_ping_received)
         self._pymumble.run()
 
     def _on_connected(self):
         for hook in self._hooks:
             hook.on_ready()
         self._update_status(f"Connected to {self._config.network}")
+
+    def _on_ping_received(self):
+        for hook in self._hooks:
+            hook.on_ping_received()
 
     def send_message(self, channel_name, text):
         try:
@@ -108,5 +130,4 @@ class Client(ExitStack):
             hook.on_status(s)
 
     def _set_callback(self, name, fn):
-        constant = getattr(pymumble.constants, f"PYMUMBLE_CLBK_{name}")
-        self._pymumble.callbacks.set_callback(constant, fn)
+        self._pymumble.callbacks.set_callback(name, fn)

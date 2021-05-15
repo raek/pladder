@@ -21,5 +21,8 @@ class SystemdHook(Hook):
     def on_ready(self):
         notify("READY=1")
 
+    def on_ping_received(self):
+        notify("WATCHDOG=1")
+
     def on_status(self, status):
         notify("STATUS=" + status)

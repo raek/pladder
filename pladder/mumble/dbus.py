@@ -5,7 +5,7 @@ from gi.repository import GLib  # type: ignore
 from pydbus import SessionBus  # type: ignore
 
 from pladder.dbus import PLADDER_CONNECTOR_XML
-from pladder.irc.client import Hook
+from pladder.mumble.client import Hook
 
 
 logger = logging.getLogger("pladder.mumble")
