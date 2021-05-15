@@ -102,7 +102,13 @@ class PladderConnector:
         }
 
     def SendMessage(self, channel, text):
-        self.client.send_message(channel, text)
+        if not channel.startswith("#"):
+            return f"Invalid channel name: {channel}"
+        elif channel not in self.client.get_channels():
+            return f"Not joined to channel: {channel}"
+        else:
+            self.client.send_message(channel, text)
+            return "Message sent."
 
     def GetChannels(self):
         return self.client.get_channels()

@@ -183,20 +183,18 @@ class PladderBot(ExitStack):
         network, channel = target_parts
         if not network:
             network = context.metadata["network"]
-        if not channel.startswith("#"):
-            return "Only sending to channels is allowed"
         if context.metadata["channel"] == context.metadata["nick"]:
             text = "({network}/{nick}) ".format(**context.metadata)
         else:
             text = "({network}/{channel}/{nick}) ".format(**context.metadata)
         text += user_text
         connector = RetryProxy(self.bus, f"se.raek.PladderConnector.{network}")
-        err = connector.SendMessage(channel, text,
-                                    on_error=lambda e: True)
-        if err:
+        result = connector.SendMessage(channel, text,
+                                       on_error=lambda e: None)
+        if result is None:
             return f"Not connected to network {network}."
         else:
-            return "Message sent."
+            return result
 
     def channels(self, context, network=None):
         if network is None:

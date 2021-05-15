@@ -23,6 +23,7 @@ PLADDER_CONNECTOR_XML = """
     <method name="SendMessage">
       <arg direction="in" name="channel" type="s" />
       <arg direction="in" name="text" type="s" />
+      <arg direction="out" name="return" type="s" />
     </method>
     <method name="GetChannels">
       <arg direction="out" name="channels" type="as" />
