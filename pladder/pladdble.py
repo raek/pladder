@@ -46,5 +46,6 @@ class Pladdble:
             f'Bot name: {config["user"]}',
             f'Server address: {config["host"]}',
             f'Port: {config["port"]}',
+            f'Network: {config["network"]}',
         ]
         return '   '.join(info_string)
