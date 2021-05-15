@@ -1,19 +1,14 @@
 from contextlib import contextmanager
-import json
-import os
 
-from pladder.plugin import PluginLoadError
+from pladder.dbus import RetryProxy
 
 
-try:
-    import pymumble_py3 as mumble  # type: ignore
-except Exception:
-    raise PluginLoadError("'pymumble' or its dependencies are not installed correctly")
+NETWORK = 'VirsuNet'
 
 
 @contextmanager
 def pladder_plugin(bot):
-    pladdble = Pladdble(bot.state_dir)
+    pladdble = Pladdble(bot, NETWORK)
     bot.register_command('mömb', pladdble.connected_users)
     bot.register_command('mömb-users', pladdble.list_users)
     bot.register_command('mömb-info', pladdble.get_info)
@@ -23,63 +18,33 @@ def pladder_plugin(bot):
 class Pladdble:
     ''' Pladdble is class that helps pladder to interface with a mumble server. '''
 
-    def __init__(self, config_dir):
-        config_defaults = {
-            'certfile': os.path.join(config_dir, 'pladdble.pem'),
-            'port': 64738,
-            'reconnect': True,
-        }
-
-        try:
-            config_path = os.path.join(config_dir, 'pladdble.json')
-            with open(config_path, 'rt') as f:
-                config = json.load(f)
-                config = {**config_defaults, **config}
-                self.connect(**config)
-        except FileNotFoundError:
-            raise PluginLoadError("Could not open Pladdble config file.")
-        except json.JSONDecodeError:
-            raise PluginLoadError('Could not parse Pladdble config file.')
-
-    def connect(self, host, user, password, certfile, port, reconnect):
-
-        self.user_name = user
-        self.host = host
-        self.port = port
-
-        self.mumble = mumble.Mumble(self.host, self.user_name, port=self.port,
-                                    password=password, certfile=certfile, reconnect=reconnect)
-
-        self.mumble.set_application_string('StrutOS')
-
-        # Set callbacks
-        self.mumble.callbacks.set_callback(mumble.constants.PYMUMBLE_CLBK_CONNECTED, self.connected)
-        self.mumble.callbacks.set_callback(mumble.constants.PYMUMBLE_CLBK_DISCONNECTED, self.disconnected)
-
-        self.mumble.start()
-
-    # Callback functions
-
-    def connected(self):
-        print('Pladdble connected sucessfully')
-
-    def disconnected(self):
-        print('Pladdble disconnected from server')
+    def __init__(self, bot, network):
+        self.connector = RetryProxy(bot.bus, f'se.raek.PladderConnector.{network}')
 
     def connected_users(self) -> str:
-        if self.mumble.connected:
-            return f'Antalet anslutna nötter är: {self.mumble.users.count() - 1}'  # Exclude the bot itself
-        else:
+        users = self.connector.GetChannelUsers('Root', on_error=lambda e: e)
+        if users is None:
             return 'Icke ansluten till servern'
+        return f'Antalet anslutna nötter är: {len(users) - 1}'  # Exclude the bot itself
 
     def list_users(self) -> str:
-        users = []
-        for id in self.mumble.users:
-            users.append(self.mumble.users[id]['name'])
-
-        users.remove(self.user_name)  # Remove the bot itself from the list
+        config = self.connector.GetConfig(on_error=lambda e: None)
+        if self is None:
+            return 'Icke ansluten till servern'
+        self_nick = config['user']
+        users = self.connector.GetChannelUsers('Root', on_error=lambda e: None)
+        if users is None:
+            return 'Icke ansluten till servern'
+        users.remove(self_nick)  # Remove the bot itself from the list
         return ", ".join(users)
 
     def get_info(self) -> str:
-        info_string = [f'Bot name: {self.user_name}', f'Server address: {self.host}', f'Port: {self.port}']
+        config = self.connector.GetConfig(on_error=lambda e: None)
+        if self is None:
+            return 'Icke ansluten till servern'
+        info_string = [
+            f'Bot name: {config["user"]}',
+            f'Server address: {config["host"]}',
+            f'Port: {config["port"]}',
+        ]
         return '   '.join(info_string)
