@@ -191,6 +191,7 @@ class PladderBot(ExitStack):
         connector = RetryProxy(self.bus, f"se.raek.PladderConnector.{network}")
         result = connector.SendMessage(channel, text,
                                        on_error=lambda e: e)
+        print(repr(result))
         if isinstance(result, Exception):
             return str(result)
         else:
