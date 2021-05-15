@@ -190,9 +190,9 @@ class PladderBot(ExitStack):
         text += user_text
         connector = RetryProxy(self.bus, f"se.raek.PladderConnector.{network}")
         result = connector.SendMessage(channel, text,
-                                       on_error=lambda e: None)
-        if result is None:
-            return f"Not connected to network {network}."
+                                       on_error=lambda e: e)
+        if isinstance(result, Exception):
+            raise result
         else:
             return result
 
