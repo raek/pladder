@@ -2,6 +2,7 @@ from contextlib import AbstractContextManager, ExitStack
 from collections import namedtuple
 from datetime import datetime, timezone
 import logging
+from threading import Lock
 
 import pymumble_py3 as pymumble  # type: ignore
 
@@ -55,6 +56,7 @@ class Client(ExitStack):
         self._config = config
         self._hooks = []
         self._pymumble = None
+        self._send_lock = Lock()
 
     # Public API
 
@@ -108,7 +110,8 @@ class Client(ExitStack):
     def send_message(self, channel_name, text):
         try:
             channel = self._pymumble.channels.find_by_name(channel_name)
-            channel.send_text_message(text)
+            with self._send_lock:
+                channel.send_text_message(text)
         except Exception as e:
             logger.error(e)
 
