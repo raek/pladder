@@ -1,12 +1,8 @@
 from contextlib import AbstractContextManager, ExitStack
 from collections import namedtuple
 import logging
-from threading import Event
 
 import pymumble_py3 as pymumble  # type: ignore
-
-
-CONNECT_TIMEOUT = 60
 
 
 logger = logging.getLogger("pladder.mumble")
@@ -46,8 +42,6 @@ class Client(ExitStack):
 
     def run(self):
         assert self._pymumble is None
-        connected = Event()
-        disconnected = Event()
         self._update_status(f"Connecting to {self._config.host}:{self._config.port}")
         self._pymumble = pymumble.Mumble(host=self._config.host,
                                          port=self._config.port,
@@ -56,16 +50,13 @@ class Client(ExitStack):
                                          certfile=self._config.certfile,
                                          reconnect=False)
         self._pymumble.set_application_string(self._config.application)
-        self._set_callback("CONNECTED", connected.set)
-        self._set_callback("DISCONNECTED", disconnected.set)
-        self._pymumble.start()
-        if not connected.wait(timeout=CONNECT_TIMEOUT):
-            raise Exception(f"Giving up connecting (waited {CONNECT_TIMEOUT} seconds)")
+        self._set_callback("CONNECTED", self._on_connected)
+        self._pymumble.run()
+
+    def _on_connected(self):
         for hook in self._hooks:
             hook.on_ready()
         self._update_status(f"Connected to {self._config.network}")
-        disconnected.wait()
-        self._update_status(f"Disconneced from {self._config.network}")
 
     def send_message(self, channel_name, text):
         try:
