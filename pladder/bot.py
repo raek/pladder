@@ -195,7 +195,7 @@ class PladderBot(ExitStack):
         if isinstance(result, Exception):
             return str(result)
         else:
-            return result
+            return f"{result}   {user_text}"
 
     def channels(self, context, network=None):
         if network is None:
