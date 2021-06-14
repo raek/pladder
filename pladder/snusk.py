@@ -258,7 +258,8 @@ class SnuskDb(ExitStack):
             c.execute("""
                 SELECT prefix, suffix, score
                 FROM nouns
-                WHERE prefix LIKE ? OR suffix LIKE ?;
+                WHERE prefix LIKE ? COLLATE NOCASE
+                OR suffix LIKE ? COLLATE NOCASE;
             """, (searchstr, searchstr))
             return c.fetchall()
 
