@@ -3,7 +3,7 @@ from contextlib import contextmanager
 from pladder.dbus import RetryProxy
 
 
-NETWORK = 'VirsuNet'
+NETWORK = 'KrillNet'
 
 
 @contextmanager
