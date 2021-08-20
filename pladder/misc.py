@@ -1,6 +1,9 @@
 from contextlib import contextmanager
 from datetime import datetime
 import re
+import unicodedata
+
+from pladder.script import ScriptError
 
 
 @contextmanager
@@ -10,6 +13,7 @@ def pladder_plugin(bot):
     bot.register_command("time", time)
     bot.register_command("capify", capify, varargs=True)
     bot.register_command("tutify", tutify, varargs=True)
+    bot.register_command("unicode", unicode, varargs=True)
     yield
 
 
@@ -140,3 +144,10 @@ def vral(count, text):
     else:
         text = re.sub(r'([aeiouyåäö=\U0001f4e2])(?=[bcdfghjklmnpqrstvzx]|$)', replace, text, flags=re.IGNORECASE)
     return text.upper()
+
+
+def unicode(char_name):
+    try:
+        return unicodedata.lookup(char_name)
+    except KeyError:
+        raise ScriptError("Uknown Unicode character name: " + char_name)
