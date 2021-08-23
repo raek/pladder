@@ -165,7 +165,7 @@ class PladderBot(ExitStack):
             date = datetime.fromtimestamp(timestamp, tz=timezone.utc).astimezone(tz=None)
             line = format_log_line(index, date, nick, text)
             lines_by_day[(date.year, date.month, date.day)].append(line)
-        formatted = ['{}-{}-{}: {}'.format(*day, ', '.join(lines))
+        formatted = ['{}-{:02}-{:02}: {}'.format(*day, ', '.join(lines))
                      for (day, lines) in lines_by_day.items()]
         result = '; '.join(formatted)
         if result:
