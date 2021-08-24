@@ -14,6 +14,7 @@ def pladder_plugin(bot):
     bot.register_command("capify", capify, varargs=True)
     bot.register_command("tutify", tutify, varargs=True)
     bot.register_command("unicode", unicode, varargs=True)
+    bot.register_command("unicode-name", unicode_name, varargs=True)
     yield
 
 
@@ -151,3 +152,6 @@ def unicode(char_name):
         return unicodedata.lookup(char_name)
     except KeyError:
         raise ScriptError("Uknown Unicode character name: " + char_name)
+
+def unicode_name(chars):
+    return ", ".join(unicodedata.name(char, "(unknown)").lower() for char in chars)
