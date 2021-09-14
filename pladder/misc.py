@@ -12,6 +12,7 @@ def pladder_plugin(bot):
     bot.register_command(re.compile("^vrå*lify$"), vraaaal, varargs=True, contextual=True)
     bot.register_command("time", time)
     bot.register_command("capify", capify, varargs=True)
+    bot.register_command("suspektify", suspektify, varargs=True)
     bot.register_command("tutify", tutify, varargs=True)
     bot.register_command("unicode", unicode, varargs=True)
     bot.register_command("unicode-name", unicode_name, varargs=True)
@@ -39,6 +40,20 @@ def time():
 
 def capify(text):
     return text.title()
+
+
+def suspektify(text):
+    import random
+    words = text.split(" ")
+    # suspektify between 1 word and 1/8 of all words, +-1
+    max_word_count = len(words)//8 + 1
+    suspekt_word_count = random.randint(1, max_word_count)
+    # pick out indices for the words to suspektify
+    suspekt_word_indices = random.sample(range(len(words)), suspekt_word_count)
+    # perform suspektification
+    for i in suspekt_word_indices:
+        words[i] = '"%s"' % words[i]
+    return " ".join(words)
 
 
 def tutify(text):
