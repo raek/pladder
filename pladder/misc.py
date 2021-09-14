@@ -15,6 +15,7 @@ def pladder_plugin(bot):
     bot.register_command("tutify", tutify, varargs=True)
     bot.register_command("unicode", unicode, varargs=True)
     bot.register_command("unicode-name", unicode_name, varargs=True)
+    bot.register_command("tijd", tijd)
     yield
 
 
@@ -153,5 +154,37 @@ def unicode(char_name):
     except KeyError:
         raise ScriptError("Uknown Unicode character name: " + char_name)
 
+
 def unicode_name(chars):
     return ", ".join(unicodedata.name(char, "(unknown)").lower() for char in chars)
+
+
+def tijd():
+    hours = ["twaalf", "één", "twee", "drie", "vier", "vijf", "zes", "zeven",
+             "acht", "negen", "tien", "elf"]
+    minutes = ["één", "twee", "drie", "vier", "vijf", "zes", "zeven", "acht",
+               "negen", "tien", "elf", "twaalf", "dertien", "veertien",
+               "kwaart", "zestien", "zeventien", "achttien", "negentien",
+               "twintig"]
+
+    now = datetime.now()
+    this_hour = hours[now.hour % 12]
+    next_hour = hours[(now.hour + 1) % 12]
+    if now.minute == 0:
+        return f"{this_hour} uur"
+    elif now.minute <= 20:
+        minute = minutes[now.minute - 1]
+        return f"{minute} over {this_hour}"
+    elif now.minute <= 29:
+        minute = minutes[30 - now.minute - 1]
+        return f"{minute} voor half{next_hour}"
+    elif now.minute == 30:
+        return f"half{next_hour}"
+    elif now.minute <= 39:
+        minute = minutes[now.minute - 30 - 1]
+        return f"{minute} over half{next_hour}"
+    elif now.minute <= 59:
+        minute = minutes[60 - now.minute - 1]
+        return f"{minute} voor {next_hour}"
+    else:
+        return "geen idee"
