@@ -251,7 +251,7 @@ def lookup_command(bindings: Bindings, command_name: str) -> CommandBinding:
     for command in bindings:
         if command.name_matches(command_name):
             return command
-    raise EvalError(f"Unkown command name: {command_name}")
+    raise EvalError(f"Unkmown command name: {command_name}")
 
 
 def apply_call(context: Context, command: CommandBinding, command_name: str, arguments: List[str]) -> str:
