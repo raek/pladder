@@ -1,1 +1,2 @@
 pymumble==1.6.1
+requests==2.26.0

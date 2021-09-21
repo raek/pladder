@@ -383,6 +383,7 @@ def load_standard_plugins(bot):
         "pladder.pladdble",
         "pladder.name",
         "pladder.bah",
+        "pladder.azure",
     ]
     for module_name in plugins:
         try:
