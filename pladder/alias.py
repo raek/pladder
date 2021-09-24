@@ -51,7 +51,7 @@ class AliasCommands:
 
     def binding_exists(self, name):
         try:
-            lookup_command(self.bot.bindings, name)
+            lookup_command(self.bot.commands, name)
             return True
         except EvalError:
             return False
@@ -76,8 +76,8 @@ class AliasCommands:
 
     def remove_binding(self, name):
         try:
-            binding = lookup_command(self.bot.bindings, name)
-            self.bot.bindings.remove(binding)
+            binding = lookup_command(self.bot.commands, name)
+            self.bot.commands.remove(binding)
             return True
         except EvalError:
             return False

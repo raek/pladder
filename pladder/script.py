@@ -73,7 +73,7 @@ def command_binding(name_pattern: NamePattern,
     return CommandBinding(name_matches, display_name, fn, varargs, contextual, source_str)
 
 
-Bindings = List[CommandBinding]
+CommandBindings = List[CommandBinding]
 Metadata = Dict[Any, str]
 Result = Tuple[str, str]
 Char = str
@@ -89,14 +89,14 @@ class TraceEntry(NamedTuple):
 
 
 class Context(NamedTuple):
-    bindings: Bindings
+    commands: CommandBindings
     metadata: Metadata
     command_name: str
     trace: List[TraceEntry]
 
 
-def new_context(bindings: Bindings, metadata: Metadata = {}, command_name: str = "<TOP>") -> Context:
-    return Context(bindings, metadata, command_name, [])
+def new_context(commands: CommandBindings, metadata: Metadata = {}, command_name: str = "<TOP>") -> Context:
+    return Context(commands, metadata, command_name, [])
 
 
 def interpret(context: Context, script: str) -> Result:
@@ -249,7 +249,7 @@ def eval_call(context: Context, call: Call) -> Result:
     if not evaled_words:
         return "", ""
     command_name, arguments = evaled_words[0], evaled_words[1:]
-    command = lookup_command(context.bindings, command_name)
+    command = lookup_command(context.commands, command_name)
     subtrace: List[TraceEntry] = []
     command_context = context._replace(command_name=command_name, trace=subtrace)
     try:
@@ -263,8 +263,8 @@ def eval_call(context: Context, call: Call) -> Result:
     return result, command.display_name
 
 
-def lookup_command(bindings: Bindings, command_name: str) -> CommandBinding:
-    for command in bindings:
+def lookup_command(commands: CommandBindings, command_name: str) -> CommandBinding:
+    for command in commands:
         if command.name_matches(command_name):
             return command
     raise EvalError(f"Unknown command name: {command_name}")

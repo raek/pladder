@@ -7,7 +7,7 @@ class MockBot():
     register_command = PladderBot.register_command
 
     def __init__(self):
-        self.bindings = []
+        self.commands = []
         self.register_command("echo", lambda text="": text, varargs=True)
 
 
@@ -52,7 +52,7 @@ def test_binding_exists():
 
 
 def test_exec_alias():
-    context = new_context(mock_bot.bindings, command_name="testalias")
+    context = new_context(mock_bot.commands, command_name="testalias")
     result = alias_cmds.exec_alias(context)
     assert result == "testtest"
 
