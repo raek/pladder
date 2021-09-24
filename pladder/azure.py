@@ -90,10 +90,11 @@ class AzureCommands:
         request = requests.post(self.config.endpoint, params=self.params, headers=self.headers, json=body)
         response = request.json()
         # urgh tvååå~~: nu jäkla blir det smuts. Alltså python och dess listtyper - jag älskar dig ändå men wtf :|
-        # 
-        # if string can be transliterated to latin then it will be, if not (ie. latin -> latin) the non-transliterated string is returned.
+        #
+        # if string can be transliterated to latin then it will be,
+        # if not (ie. latin -> latin) the non-transliterated string is returned.
         try:
             message = response[0].get("translations")[0].get("transliteration")["text"]
-        except:
+        except Exception:
             message = response[0].get("translations")[0].get("text")
         return message
