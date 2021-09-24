@@ -157,3 +157,11 @@ def test_variable_between_quotes():
                               word(literal("aa"),
                                    variable("var"),
                                    literal("bb")))
+
+
+def test_adjacient_variables():
+    text = "cmd $foo$bar"
+    invocation = parse(text)
+    assert invocation == call(word(literal("cmd")),
+                              word(variable("foo"),
+                                   variable("bar")))
