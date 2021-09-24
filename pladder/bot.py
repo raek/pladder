@@ -390,12 +390,13 @@ def load_standard_plugins(bot):
             plugin_module = import_module(module_name)
             plugin_ctxmgr = getattr(plugin_module, "pladder_plugin")
             bot.enter_context(plugin_ctxmgr(bot))
-            print(f"Loaded '{module_name}'.")
+            print(f"Loaded {module_name}")
         except PluginLoadError as e:
-            print(f"Could not load '{module_name}'. Skipping. Plugin reported error: {e}")
+            print(f"Skipped {module_name}: {e}")
         except Exception:
             print(f"Could not load '{module_name}'. Fatal error")
             raise
+    print("")
 
 
 if __name__ == "__main__":
