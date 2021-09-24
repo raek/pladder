@@ -20,7 +20,11 @@ class Literal(NamedTuple):
     string: str
 
 
-Fragment = Union[Call, Literal]
+class Variable(NamedTuple):
+    name: str
+
+
+Fragment = Union[Call, Literal, Variable]
 
 
 class Word(NamedTuple):
@@ -69,7 +73,7 @@ def command_binding(name_pattern: NamePattern,
     return CommandBinding(name_matches, display_name, fn, varargs, contextual, source_str)
 
 
-Bindings = List[CommandBinding]
+CommandBindings = List[CommandBinding]
 Metadata = Dict[Any, str]
 Result = Tuple[str, str]
 Char = str
@@ -85,14 +89,14 @@ class TraceEntry(NamedTuple):
 
 
 class Context(NamedTuple):
-    bindings: Bindings
+    commands: CommandBindings
     metadata: Metadata
     command_name: str
     trace: List[TraceEntry]
 
 
-def new_context(bindings: Bindings, metadata: Metadata = {}, command_name: str = "<TOP>") -> Context:
-    return Context(bindings, metadata, command_name, [])
+def new_context(commands: CommandBindings, metadata: Metadata = {}, command_name: str = "<TOP>") -> Context:
+    return Context(commands, metadata, command_name, [])
 
 
 def interpret(context: Context, script: str) -> Result:
@@ -159,17 +163,18 @@ class _Parser:
     def parse_word(self) -> Word:
         fragments: List[Fragment] = []
         fragment_start = self.pos
+        fragment_type: Callable[[str], Fragment] = Literal
         while True:
             if self.at_end() or self.try_peek("]") or self.try_peek(" "):
                 fragment_end = self.pos
                 if fragment_start != fragment_end:
-                    fragment = Literal(self.text[fragment_start:fragment_end])
+                    fragment = fragment_type(self.text[fragment_start:fragment_end])
                     fragments.append(fragment)
                 break
             elif self.try_pop("["):
                 fragment_end = self.pos - 1
                 if fragment_start != fragment_end:
-                    fragment = Literal(self.text[fragment_start:fragment_end])
+                    fragment = fragment_type(self.text[fragment_start:fragment_end])
                     fragments.append(fragment)
                 call = self.parse_call()
                 if self.at_end():
@@ -178,6 +183,7 @@ class _Parser:
                     assert self.pop() == "]"  # Should always be true
                 fragments.append(call)
                 fragment_start = self.pos
+                fragment_type = Literal
             elif self.try_pop("{"):
                 fragment_end = self.pos - 1
                 if fragment_start != fragment_end:
@@ -199,8 +205,16 @@ class _Parser:
                 fragment = Literal(self.text[fragment_start:fragment_end])
                 fragments.append(fragment)
                 fragment_start = self.pos
+                fragment_type = Literal
             elif self.try_pop("}"):
                 raise ParseError("Excessive closing brace")
+            elif self.try_pop("$"):
+                fragment_end = self.pos - 1
+                if fragment_start != fragment_end:
+                    fragment = fragment_type(self.text[fragment_start:fragment_end])
+                    fragments.append(fragment)
+                fragment_start = self.pos
+                fragment_type = Variable
             else:
                 self.pop()
         return Word(fragments)
@@ -227,13 +241,15 @@ def eval_call(context: Context, call: Call) -> Result:
                 evaled_fragment = fragment.string
             elif isinstance(fragment, Call):
                 evaled_fragment, _display_name = eval_call(context, fragment)
+            else:
+                raise ScriptError(f"Unsupported fragment: {fragment}")
             evaled_fragments.append(evaled_fragment)
         evaled_word = "".join(evaled_fragments)
         evaled_words.append(evaled_word)
     if not evaled_words:
         return "", ""
     command_name, arguments = evaled_words[0], evaled_words[1:]
-    command = lookup_command(context.bindings, command_name)
+    command = lookup_command(context.commands, command_name)
     subtrace: List[TraceEntry] = []
     command_context = context._replace(command_name=command_name, trace=subtrace)
     try:
@@ -247,8 +263,8 @@ def eval_call(context: Context, call: Call) -> Result:
     return result, command.display_name
 
 
-def lookup_command(bindings: Bindings, command_name: str) -> CommandBinding:
-    for command in bindings:
+def lookup_command(commands: CommandBindings, command_name: str) -> CommandBinding:
+    for command in commands:
         if command.name_matches(command_name):
             return command
     raise EvalError(f"Unknown command name: {command_name}")

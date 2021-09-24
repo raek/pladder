@@ -1,6 +1,6 @@
 import pytest
 
-from pladder.script import ParseError, Call, Word, Literal, parse
+from pladder.script import ParseError, Call, Word, Literal, Variable, parse
 
 
 def call(*words):
@@ -13,6 +13,10 @@ def word(*fragments):
 
 def literal(string):
     return Literal(string)
+
+
+def variable(name):
+    return Variable(name)
 
 
 def test_parse_no_args():
@@ -120,3 +124,36 @@ def test_excessive_closing_brace():
     text = "cmd1}"
     with pytest.raises(ParseError, match="Excessive closing brace"):
         parse(text)
+
+
+def test_variable():
+    text = "cmd $var"
+    invocation = parse(text)
+    assert invocation == call(word(literal("cmd")),
+                              word(variable("var")))
+
+
+def test_variable_after_literal():
+    text = "cmd aa$var"
+    invocation = parse(text)
+    assert invocation == call(word(literal("cmd")),
+                              word(literal("aa"),
+                                   variable("var")))
+
+
+def test_variable_between_calls():
+    text = "cmd [aa]$var[bb]"
+    invocation = parse(text)
+    assert invocation == call(word(literal("cmd")),
+                              word(call(word(literal("aa"))),
+                                   variable("var"),
+                                   call(word(literal("bb")))))
+
+
+def test_variable_between_quotes():
+    text = "cmd {aa}$var{bb}"
+    invocation = parse(text)
+    assert invocation == call(word(literal("cmd")),
+                              word(literal("aa"),
+                                   variable("var"),
+                                   literal("bb")))
