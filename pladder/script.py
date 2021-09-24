@@ -20,7 +20,11 @@ class Literal(NamedTuple):
     string: str
 
 
-Fragment = Union[Call, Literal]
+class Variable(NamedTuple):
+    name: str
+
+
+Fragment = Union[Call, Literal, Variable]
 
 
 class Word(NamedTuple):
@@ -159,17 +163,18 @@ class _Parser:
     def parse_word(self) -> Word:
         fragments: List[Fragment] = []
         fragment_start = self.pos
+        fragment_type: Callable[[str], Fragment] = Literal
         while True:
             if self.at_end() or self.try_peek("]") or self.try_peek(" "):
                 fragment_end = self.pos
                 if fragment_start != fragment_end:
-                    fragment = Literal(self.text[fragment_start:fragment_end])
+                    fragment = fragment_type(self.text[fragment_start:fragment_end])
                     fragments.append(fragment)
                 break
             elif self.try_pop("["):
                 fragment_end = self.pos - 1
                 if fragment_start != fragment_end:
-                    fragment = Literal(self.text[fragment_start:fragment_end])
+                    fragment = fragment_type(self.text[fragment_start:fragment_end])
                     fragments.append(fragment)
                 call = self.parse_call()
                 if self.at_end():
@@ -178,6 +183,7 @@ class _Parser:
                     assert self.pop() == "]"  # Should always be true
                 fragments.append(call)
                 fragment_start = self.pos
+                fragment_type = Literal
             elif self.try_pop("{"):
                 fragment_end = self.pos - 1
                 if fragment_start != fragment_end:
@@ -199,8 +205,16 @@ class _Parser:
                 fragment = Literal(self.text[fragment_start:fragment_end])
                 fragments.append(fragment)
                 fragment_start = self.pos
+                fragment_type = Literal
             elif self.try_pop("}"):
                 raise ParseError("Excessive closing brace")
+            elif self.try_pop("$"):
+                fragment_end = self.pos - 1
+                if fragment_start != fragment_end:
+                    fragment = fragment_type(self.text[fragment_start:fragment_end])
+                    fragments.append(fragment)
+                fragment_start = self.pos
+                fragment_type = Variable
             else:
                 self.pop()
         return Word(fragments)
@@ -227,6 +241,8 @@ def eval_call(context: Context, call: Call) -> Result:
                 evaled_fragment = fragment.string
             elif isinstance(fragment, Call):
                 evaled_fragment, _display_name = eval_call(context, fragment)
+            else:
+                raise ScriptError(f"Unsupported fragment: {fragment}")
             evaled_fragments.append(evaled_fragment)
         evaled_word = "".join(evaled_fragments)
         evaled_words.append(evaled_word)
