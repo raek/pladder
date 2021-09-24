@@ -2,7 +2,7 @@ from contextlib import contextmanager
 from collections import namedtuple
 from pladder.plugin import PluginError, PluginLoadError
 import os
-import requests
+import requests  # type: ignore
 import uuid
 import json
 
@@ -25,7 +25,7 @@ def read_config(config_path):
     try:
         f = open(config_path, "rt")
         config_data = json.load(f)
-    except:
+    except Exception:
         raise PluginLoadError("Unable to load " + config_path)
     if config_data.get("api_key"):
         config = Config(**{**CONFIG_DEFAULTS, **config_data})
