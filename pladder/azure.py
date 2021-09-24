@@ -56,7 +56,9 @@ class AzureCommands:
 
         self.params = {
             'api-version': '3.0',
-            'to': ""
+            'to': "",
+            'suggestedFrom': "sv",
+            'toScript': "Latn"
         }
 
         bot.register_command("translatify-list", self.print_language_list)
@@ -64,14 +66,14 @@ class AzureCommands:
 
     def print_language_list(self):
         """
-        Returns a readable list if languages supported by Azure for translation.
+        Returns a readable list of languages supported by Azure for translation.
         """
+        message = ""
         req = requests.get(self.config.language_list_url)
         text = req.json()
-        message = ""
         for key, entry in text.get("translation").items():
             message += f"{key} - {entry.get('name')} | "
-
+        # Format string
         message = message.rstrip(" | ")
         return message
 
@@ -79,13 +81,19 @@ class AzureCommands:
         """
         Takes a target language and string, returns translated string from Azure
         """
-        if len(language) > 10 or len(text) > 1000:
+        if len(language) > 20 or len(text) > 2000:
             raise PluginError("Translation sanity check failed")
+        # Generate new uuid for each request
         self.headers['X-ClientTraceId'] = str(uuid.uuid4())
         self.params['to'] = language
         body = [{'text': text}]
         request = requests.post(self.config.endpoint, params=self.params, headers=self.headers, json=body)
         response = request.json()
-        # urgh
-        message = response[0].get("translations")[0].get("text")
+        # urgh tvååå~~: nu jäkla blir det smuts. Alltså python och dess listtyper - jag älskar dig ändå men wtf :|
+        # 
+        # if string can be transliterated to latin then it will be, if not (ie. latin -> latin) the non-transliterated string is returned.
+        try:
+            message = response[0].get("translations")[0].get("transliteration")["text"]
+        except:
+            message = response[0].get("translations")[0].get("text")
         return message
