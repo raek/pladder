@@ -142,7 +142,12 @@ class PladderBot(ExitStack):
             name = type
             type = "-command"
         if (not type and not name) or (type not in ["-group", "-command"]):
-            return "Usage: help (-group|-command) [name]   List groups: help -group   list commands in group: help -group <name>   show usage of command: help [-command] <name>"
+            return "   ".join([
+                "Usage: help (-group|-command) [name]",
+                "List groups: help -group",
+                "List commands in group: help -group <name>",
+                "Show usage of command: help [-command] <name>",
+            ])
         elif type == "-group":
             if not name:
                 groups = sorted(self.commands.list_groups())
