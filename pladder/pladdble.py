@@ -8,7 +8,8 @@ NETWORK = 'VirsuNet'
 
 @contextmanager
 def pladder_plugin(bot):
-    pladdble = Pladdble(bot, NETWORK)
+    connector = RetryProxy(bot.bus, f'se.raek.PladderConnector.{NETWORK}')
+    pladdble = Pladdble(connector)
     cmds = bot.new_command_group("pladdble")
     cmds.register_command('mömb', pladdble.connected_users)
     cmds.register_command('mömb-users', pladdble.list_users)
@@ -19,8 +20,8 @@ def pladder_plugin(bot):
 class Pladdble:
     ''' Pladdble is class that helps pladder to interface with a mumble server. '''
 
-    def __init__(self, bot, network):
-        self.connector = RetryProxy(bot.bus, f'se.raek.PladderConnector.{network}')
+    def __init__(self, connector):
+        self.connector = connector
 
     def connected_users(self) -> str:
         users = self.connector.GetChannelUsers('Root', on_error=lambda e: e)
