@@ -3,7 +3,7 @@ import os
 import sqlite3
 import random
 
-from pladder.script import EvalError, interpret, lookup_command
+from pladder.script import EvalError, interpret
 
 
 @contextmanager
@@ -53,7 +53,7 @@ class AliasCommands:
 
     def binding_exists(self, name):
         try:
-            lookup_command(self.bot.commands, name)
+            self.bot.commands.lookup_command(name)
             return True
         except EvalError:
             return False
@@ -78,8 +78,7 @@ class AliasCommands:
 
     def remove_binding(self, name):
         try:
-            binding = lookup_command(self.bot.commands, name)
-            self.bot.commands.remove(binding)
+            self.bot.commands.remove_command(name)
             return True
         except EvalError:
             return False

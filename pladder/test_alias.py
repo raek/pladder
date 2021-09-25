@@ -1,15 +1,14 @@
 from pladder.alias import AliasDb, AliasCommands
 from pladder.bot import PladderBot
-from pladder.script import new_context
+from pladder.script import CommandRegistry, new_context
 
 
 class MockBot():
     new_command_group = PladderBot.new_command_group
-    register_command = PladderBot.register_command
 
     def __init__(self):
-        self.commands = []
-        self.register_command("echo", lambda text="": text, varargs=True)
+        self.commands = CommandRegistry()
+        self.commands.register_command("echo", lambda text="": text, varargs=True)
 
 
 mock_bot = MockBot()

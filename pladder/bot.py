@@ -11,7 +11,7 @@ from pladder.dbus import PLADDER_BOT_XML, RetryProxy
 from pladder.fuse import Fuse, FuseResult
 import pladder.irc.color as color
 from pladder.plugin import PluginLoadError
-from pladder.script import ScriptError, ApplyError, new_context, command_binding, interpret, lookup_command, apply_call
+from pladder.script import ScriptError, ApplyError, CommandRegistry, new_context, interpret, apply_call
 
 
 def main():
@@ -40,14 +40,11 @@ class PladderBot(ExitStack):
         self.bus = bus
         self.log = RetryProxy(bus, "se.raek.PladderLog")
         self.fuse = Fuse(state_dir)
-        self.commands = []
+        self.commands = CommandRegistry()
         self.register_builtins()
 
     def new_command_group(self, name):
-        return self
-
-    def register_command(self, name, fn, varargs=False, contextual=False, source=None):
-        self.commands.append(command_binding(name, fn, varargs, contextual, source))
+        return self.commands
 
     def RunCommand(self, timestamp, network, channel, nick, text):
         metadata = {'datetime': datetime.fromtimestamp(timestamp, tz=timezone.utc),
@@ -112,7 +109,7 @@ class PladderBot(ExitStack):
         if not words:
             return ""
         command_name, arguments = words[0], words[1:]
-        command = lookup_command(context.commands, command_name)
+        command = context.commands.lookup_command(command_name)
         command_context = context._replace(command_name=command_name)
         return apply_call(command_context, command, command_name, arguments)
 
@@ -141,10 +138,10 @@ class PladderBot(ExitStack):
     def help(self, command_name=None):
         if not command_name:
             result = "Available commands: "
-            result += ", ".join(command.display_name for command in self.commands)
+            result += ", ".join(command.display_name for command in self.commands.list_commands())
             return result
         else:
-            command = lookup_command(self.commands, command_name)
+            command = self.commands.lookup_command(command_name)
             if command:
                 return "Usage: {}".format(self.command_usage(command))
             else:
@@ -307,7 +304,7 @@ class PladderBot(ExitStack):
             return full_trace(subcontext.trace, color_pairs)
 
     def source(self, command_name):
-        command = lookup_command(self.commands, command_name)
+        command = self.commands.lookup_command(command_name)
         return command.source
 
 

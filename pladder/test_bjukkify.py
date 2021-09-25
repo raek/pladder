@@ -1,7 +1,6 @@
 from unittest.mock import Mock
 import pytest
 
-from pladder.bot import PladderBot
 from pladder.bjukkify import pladder_plugin, bjukkify
 
 
@@ -9,11 +8,13 @@ def test_registers_command():
     """
     Should register command bjukkify that calls the bjukkifier
     """
-    mockbot = Mock()
-    mockbot.new_command_group = lambda name: PladderBot.new_command_group(mockbot, name)
-    with pladder_plugin(mockbot):
+    bot = Mock()
+    cmds = Mock()
+    bot.new_command_group.return_value = cmds
+    with pladder_plugin(bot):
         pass
-    mockbot.register_command.assert_called_with("bjukkify", bjukkify, varargs=True)
+    bot.new_command_group.assert_called_with("bjukkify")
+    cmds.register_command.assert_called_with("bjukkify", bjukkify, varargs=True)
 
 
 examples = {

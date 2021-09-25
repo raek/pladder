@@ -73,7 +73,30 @@ def command_binding(name_pattern: NamePattern,
     return CommandBinding(name_matches, display_name, fn, varargs, contextual, source_str)
 
 
-CommandBindings = List[CommandBinding]
+class CommandRegistry:
+    def __init__(self, initial: List[CommandBinding] = []) -> None:
+        self._commands: List[CommandBinding] = list(initial)
+
+    def register_command(self, name: str, fn: Callable[..., str],
+                         varargs: bool = False,
+                         contextual: bool = False,
+                         source: Optional[str] = None) -> None:
+        self._commands.append(command_binding(name, fn, varargs, contextual, source))
+
+    def lookup_command(self, command_name: str) -> CommandBinding:
+        for command in self._commands:
+            if command.name_matches(command_name):
+                return command
+        raise EvalError(f"Unknown command name: {command_name}")
+
+    def list_commands(self) -> List[CommandBinding]:
+        return list(self._commands)
+
+    def remove_command(self, command_name: str) -> None:
+        binding = self.lookup_command(command_name)
+        self._commands.remove(binding)
+
+
 Metadata = Dict[Any, str]
 Result = Tuple[str, str]
 Char = str
@@ -89,13 +112,13 @@ class TraceEntry(NamedTuple):
 
 
 class Context(NamedTuple):
-    commands: CommandBindings
+    commands: CommandRegistry
     metadata: Metadata
     command_name: str
     trace: List[TraceEntry]
 
 
-def new_context(commands: CommandBindings, metadata: Metadata = {}, command_name: str = "<TOP>") -> Context:
+def new_context(commands: CommandRegistry, metadata: Metadata = {}, command_name: str = "<TOP>") -> Context:
     return Context(commands, metadata, command_name, [])
 
 
@@ -249,7 +272,7 @@ def eval_call(context: Context, call: Call) -> Result:
     if not evaled_words:
         return "", ""
     command_name, arguments = evaled_words[0], evaled_words[1:]
-    command = lookup_command(context.commands, command_name)
+    command = context.commands.lookup_command(command_name)
     subtrace: List[TraceEntry] = []
     command_context = context._replace(command_name=command_name, trace=subtrace)
     try:
@@ -261,13 +284,6 @@ def eval_call(context: Context, call: Call) -> Result:
         context.trace.append(trace_entry)
         raise
     return result, command.display_name
-
-
-def lookup_command(commands: CommandBindings, command_name: str) -> CommandBinding:
-    for command in commands:
-        if command.name_matches(command_name):
-            return command
-    raise EvalError(f"Unknown command name: {command_name}")
 
 
 def apply_call(context: Context, command: CommandBinding, command_name: str, arguments: List[str]) -> str:
