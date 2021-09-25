@@ -4,6 +4,7 @@ from collections import namedtuple
 import logging
 import socket
 from threading import Lock
+from time import sleep
 
 
 logger = logging.getLogger("pladder.irc")
@@ -13,6 +14,7 @@ Message = namedtuple("Message", "sender, command, params")
 Sender = namedtuple("Sender", "nick, user, host")
 NO_SENDER = Sender(None, None, None)
 MAX_LINE_BYTES = 512
+OUTGOING_RATE_LIMIT = 2  # seconds between each outgoing message
 
 
 def make_message(command, *params):
@@ -185,6 +187,7 @@ class MessageConnection:
         line_bytes += b"\r\n"
         with self._send_lock:
             self._socket.sendall(line_bytes)
+            sleep(OUTGOING_RATE_LIMIT)
 
     def send(self, *args):
         self.send_message(make_message(*args))
