@@ -78,7 +78,7 @@ class AliasCommands:
 
     def remove_binding(self, name):
         try:
-            self.bot.commands.remove_command(name)
+            self.user_cmds.remove_command(name)
             return True
         except EvalError:
             return False

@@ -44,7 +44,7 @@ class PladderBot(ExitStack):
         self.register_builtins()
 
     def new_command_group(self, name):
-        return self.commands
+        return self.commands.new_command_group(name)
 
     def RunCommand(self, timestamp, network, channel, nick, text):
         metadata = {'datetime': datetime.fromtimestamp(timestamp, tz=timezone.utc),

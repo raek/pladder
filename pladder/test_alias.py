@@ -8,7 +8,8 @@ class MockBot():
 
     def __init__(self):
         self.commands = CommandRegistry()
-        self.commands.register_command("echo", lambda text="": text, varargs=True)
+        builtin = self.commands.new_command_group("builtin")
+        builtin.register_command("echo", lambda text="": text, varargs=True)
 
 
 mock_bot = MockBot()

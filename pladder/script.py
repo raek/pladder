@@ -73,28 +73,56 @@ def command_binding(name_pattern: NamePattern,
     return CommandBinding(name_matches, display_name, fn, varargs, contextual, source_str)
 
 
-class CommandRegistry:
-    def __init__(self, initial: List[CommandBinding] = []) -> None:
+class CommandGroup:
+    def __init__(self, name: str, initial: List[CommandBinding] = []) -> None:
+        self._name: str = name
         self._commands: List[CommandBinding] = list(initial)
 
-    def register_command(self, name: str, fn: Callable[..., str],
+    @property
+    def name(self) -> str:
+        return self._name
+
+    def register_command(self, command_name: str, fn: Callable[..., str],
                          varargs: bool = False,
                          contextual: bool = False,
                          source: Optional[str] = None) -> None:
-        self._commands.append(command_binding(name, fn, varargs, contextual, source))
+        self._commands.append(command_binding(command_name, fn, varargs, contextual, source))
 
-    def lookup_command(self, command_name: str) -> CommandBinding:
+    def lookup_command(self, command_name: str) -> Optional[CommandBinding]:
         for command in self._commands:
             if command.name_matches(command_name):
                 return command
-        raise EvalError(f"Unknown command name: {command_name}")
+        return None
 
     def list_commands(self) -> List[CommandBinding]:
         return list(self._commands)
 
     def remove_command(self, command_name: str) -> None:
         binding = self.lookup_command(command_name)
-        self._commands.remove(binding)
+        if binding is None:
+            raise EvalError(f"Unknown command name: {command_name}")
+        else:
+            self._commands.remove(binding)
+
+
+class CommandRegistry:
+    def __init__(self, initial: List[CommandGroup] = []) -> None:
+        self._groups: List[CommandGroup] = list(initial)
+
+    def new_command_group(self, group_name: str) -> CommandGroup:
+        group = CommandGroup(group_name)
+        self._groups.append(group)
+        return group
+
+    def lookup_command(self, command_name: str) -> CommandBinding:
+        for group in self._groups:
+            command = group.lookup_command(command_name)
+            if command is not None:
+                return command
+        raise EvalError(f"Unknown command name: {command_name}")
+
+    def list_commands(self) -> List[CommandBinding]:
+        return [command for group in self._groups for command in group.list_commands()]
 
 
 Metadata = Dict[Any, str]
