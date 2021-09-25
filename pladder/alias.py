@@ -52,11 +52,7 @@ class AliasCommands:
                 "Use {} when adding PladderScript to database.")
 
     def binding_exists(self, name):
-        try:
-            self.bot.commands.lookup_command(name)
-            return True
-        except EvalError:
-            return False
+        return self.bot.commands.lookup_command(name) is not None
 
     def exec_alias(self, context):
         data = self.alias_db.get_alias(context.command_name)
