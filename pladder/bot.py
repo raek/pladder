@@ -145,16 +145,18 @@ class PladderBot(ExitStack):
             return "Usage: help (-group|-command) [name]   List groups: help -group   list commands in group: help -group <name>   show usage of command: help [-command] <name>"
         elif type == "-group":
             if not name:
-                result = "Command groups: "
-                result += ", ".join(sorted(self.commands.list_groups()))
+                groups = sorted(self.commands.list_groups())
+                result = f"Command groups ({len(groups)}): "
+                result += ", ".join(groups)
                 return result
             else:
                 group = self.commands.lookup_group(name)
                 if group is None:
                     return f"Unknown group: {name}"
                 else:
-                    result = f"Commands in {name} group: "
-                    result += ", ".join(sorted(command.display_name for command in group.list_commands()))
+                    command_names = sorted(command.display_name for command in group.list_commands())
+                    result = f"Commands in {name} group ({len(command_names)}): "
+                    result += ", ".join(command_names)
                     return result
         elif type == "-command":
             command = self.commands.lookup_command(name)
