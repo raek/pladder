@@ -110,6 +110,8 @@ class PladderBot(ExitStack):
             return ""
         command_name, arguments = words[0], words[1:]
         command = context.commands.lookup_command(command_name)
+        if command is None:
+            raise ScriptError(f"Unknown command name: {command_name}")
         command_context = context._replace(command_name=command_name)
         return apply_call(command_context, command, command_name, arguments)
 
@@ -135,17 +137,33 @@ class PladderBot(ExitStack):
                 result += f" <{parameter.name}>"
         return result
 
-    def help(self, command_name=None):
-        if not command_name:
-            result = "Available commands: "
-            result += ", ".join(command.display_name for command in self.commands.list_commands())
-            return result
-        else:
-            command = self.commands.lookup_command(command_name)
-            if command:
-                return "Usage: {}".format(self.command_usage(command))
+    def help(self, type=None, name=None):
+        if type and not type.startswith("-"):
+            name = type
+            type = "-command"
+        if (not type and not name) or (type not in ["-group", "-command"]):
+            return "Usage: help (-group|-command) [name]   List groups: help -group   list commands in group: help -group <name>   show usage of command: help [-command] <name>"
+        elif type == "-group":
+            if not name:
+                result = "Command groups: "
+                result += ", ".join(sorted(self.commands.list_groups()))
+                return result
             else:
-                return f"Unknown command: {command_name}"
+                group = self.commands.lookup_group(name)
+                if group is None:
+                    return f"Unknown group: {name}"
+                else:
+                    result = f"Commands in {name} group: "
+                    result += ", ".join(sorted(command.display_name for command in group.list_commands()))
+                    return result
+        elif type == "-command":
+            command = self.commands.lookup_command(name)
+            if command is None:
+                return f"Unknown command: {name}"
+            else:
+                return f"Usage: {self.command_usage(command)}"
+        else:
+            raise Exception("Unreachable")
 
     def version(self):
         return LAST_COMMIT
@@ -305,6 +323,8 @@ class PladderBot(ExitStack):
 
     def source(self, command_name):
         command = self.commands.lookup_command(command_name)
+        if command is None:
+            return f"Unknown command name: {command_name}"
         return command.source
 
 

@@ -100,7 +100,7 @@ class CommandGroup:
     def remove_command(self, command_name: str) -> None:
         binding = self.lookup_command(command_name)
         if binding is None:
-            raise EvalError(f"Unknown command name: {command_name}")
+            raise ScriptError(f"Unknown command name: {command_name}")
         else:
             self._commands.remove(binding)
 
@@ -114,15 +114,24 @@ class CommandRegistry:
         self._groups.append(group)
         return group
 
-    def lookup_command(self, command_name: str) -> CommandBinding:
+    def lookup_command(self, command_name: str) -> Optional[CommandBinding]:
         for group in self._groups:
             command = group.lookup_command(command_name)
             if command is not None:
                 return command
-        raise EvalError(f"Unknown command name: {command_name}")
+        return None
+
+    def lookup_group(self, group_name: str) -> Optional[CommandGroup]:
+        for group in self._groups:
+            if group.name == group_name:
+                return group
+        return None
 
     def list_commands(self) -> List[CommandBinding]:
         return [command for group in self._groups for command in group.list_commands()]
+
+    def list_groups(self) -> List[str]:
+        return [group.name for group in self._groups]
 
 
 Metadata = Dict[Any, str]
@@ -301,6 +310,8 @@ def eval_call(context: Context, call: Call) -> Result:
         return "", ""
     command_name, arguments = evaled_words[0], evaled_words[1:]
     command = context.commands.lookup_command(command_name)
+    if command is None:
+        raise EvalError(f"Unknown command name: {command_name}")
     subtrace: List[TraceEntry] = []
     command_context = context._replace(command_name=command_name, trace=subtrace)
     try:
