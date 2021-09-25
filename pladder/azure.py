@@ -62,7 +62,8 @@ class AzureCommands:
         }
 
         bot.register_command("translatify-list", self.print_language_list)
-        bot.register_command("translatify", self.translate)
+        bot.register_command("translatify", self.translatify)
+        bot.register_command("translatify-native", self.translatify_native)
 
     def print_language_list(self):
         """
@@ -77,9 +78,10 @@ class AzureCommands:
         message = message.rstrip(" | ")
         return message
 
-    def translate(self, language, text):
+    def get_translation_from_azure(self, language, text):
         """
-        Takes a target language and string, returns translated string from Azure
+        Takes a target language and string,
+        returns list containing translated text and a transliterated version if applicable
         """
         if len(language) > 20 or len(text) > 2000:
             raise PluginError("Translation sanity check failed")
@@ -89,12 +91,26 @@ class AzureCommands:
         body = [{'text': text}]
         request = requests.post(self.config.endpoint, params=self.params, headers=self.headers, json=body)
         response = request.json()
-        # urgh tvååå~~: nu jäkla blir det smuts. Alltså python och dess listtyper - jag älskar dig ändå men wtf :|
-        #
-        # if string can be transliterated to latin then it will be,
-        # if not (ie. latin -> latin) the non-transliterated string is returned.
+        if "error" in response:
+            raise PluginError(response.get("error").get("message"))
+        response = response[0].get("translations")[0]
+        return response
+
+    def translatify(self, language, text):
+        """
+        Translate text with transliteration to latin if possible.
+        """
+        response = self.get_translation_from_azure(language, text)
         try:
-            message = response[0].get("translations")[0].get("transliteration")["text"]
+            message = response.get("transliteration")["text"]
         except Exception:
-            message = response[0].get("translations")[0].get("text")
+            message = response.get("text")
+        return message
+
+    def translatify_native(self, language, text):
+        """
+        Translate text, do not transliterate
+        """
+        response = self.get_translation_from_azure(language, text)
+        message = response.get("text")
         return message
