@@ -41,36 +41,13 @@ class PladderBot(ExitStack):
         self.log = RetryProxy(bus, "se.raek.PladderLog")
         self.fuse = Fuse(state_dir)
         self.commands = []
-        self.register_command("help", self.help)
-        self.register_command("version", self.version)
-        self.register_command("searchlog", self.searchlog, contextual=True)
-        self.register_command("send", self.send, contextual=True, varargs=True)
-        self.register_command("channels", self.channels, contextual=True)
-        self.register_command("users", self.users, contextual=True)
-        self.register_command("connector-config", self.connector_config, contextual=True)
-        self.register_command("comp", self.comp, contextual=True)
-        self.register_command("give", self.give, varargs=True)
-        self.register_command("echo", lambda text="": text, varargs=True)
-        self.register_command("show-args", lambda *args: repr(args))
-        self.register_command("show-context", self.show_context, contextual=True)
-        self.register_command("pick", lambda *args: random.choice(args) if args else "")
-        self.register_command("wpick", wpick)
-        self.register_command("concat", lambda *args: " ".join(arg.strip() for arg in args))
-        self.register_command("eval", self.eval_command, contextual=True)
-        self.register_command("eval-pick", self.eval_pick, contextual=True)
-        self.register_command("=", self.eq)
-        self.register_command("/=", self.ne)
-        self.register_command("bool", self.bool_command)
-        self.register_command("if", self.if_command)
-        self.register_command("trace", self.trace, contextual=True)
-        self.register_command("source", self.source)
+        self.register_builtins()
 
-    def comp(self, context, command1, *command2_words):
-        command2_result = self.apply(context, list(command2_words))
-        return self.apply(context, [command1, command2_result])
+    def new_command_group(self, name):
+        return self
 
-    def give(self, target, text):
-        return f"{target}: {text}"
+    def register_command(self, name, fn, varargs=False, contextual=False, source=None):
+        self.commands.append(command_binding(name, fn, varargs, contextual, source))
 
     def RunCommand(self, timestamp, network, channel, nick, text):
         metadata = {'datetime': datetime.fromtimestamp(timestamp, tz=timezone.utc),
@@ -105,6 +82,32 @@ class PladderBot(ExitStack):
             return {'text': "Internal error: " + str(e),
                     'command': 'error'}
 
+    def register_builtins(self):
+        cmds = self.new_command_group("builtin")
+        cmds.register_command("help", self.help)
+        cmds.register_command("version", self.version)
+        cmds.register_command("searchlog", self.searchlog, contextual=True)
+        cmds.register_command("send", self.send, contextual=True, varargs=True)
+        cmds.register_command("channels", self.channels, contextual=True)
+        cmds.register_command("users", self.users, contextual=True)
+        cmds.register_command("connector-config", self.connector_config, contextual=True)
+        cmds.register_command("comp", self.comp, contextual=True)
+        cmds.register_command("give", self.give, varargs=True)
+        cmds.register_command("echo", lambda text="": text, varargs=True)
+        cmds.register_command("show-args", lambda *args: repr(args))
+        cmds.register_command("show-context", self.show_context, contextual=True)
+        cmds.register_command("pick", lambda *args: random.choice(args) if args else "")
+        cmds.register_command("wpick", wpick)
+        cmds.register_command("concat", lambda *args: " ".join(arg.strip() for arg in args))
+        cmds.register_command("eval", self.eval_command, contextual=True)
+        cmds.register_command("eval-pick", self.eval_pick, contextual=True)
+        cmds.register_command("=", self.eq)
+        cmds.register_command("/=", self.ne)
+        cmds.register_command("bool", self.bool_command)
+        cmds.register_command("if", self.if_command)
+        cmds.register_command("trace", self.trace, contextual=True)
+        cmds.register_command("source", self.source)
+
     def apply(self, context, words):
         if not words:
             return ""
@@ -113,8 +116,12 @@ class PladderBot(ExitStack):
         command_context = context._replace(command_name=command_name)
         return apply_call(command_context, command, command_name, arguments)
 
-    def register_command(self, name, fn, varargs=False, contextual=False, source=None):
-        self.commands.append(command_binding(name, fn, varargs, contextual, source))
+    def comp(self, context, command1, *command2_words):
+        command2_result = self.apply(context, list(command2_words))
+        return self.apply(context, [command1, command2_result])
+
+    def give(self, target, text):
+        return f"{target}: {text}"
 
     def command_usage(self, command):
         result = command.display_name

@@ -38,13 +38,13 @@ def read_config(config_path):
 def pladder_plugin(bot):
     config_path = os.path.join(bot.state_dir, "azure.json")
     config = read_config(config_path)
-    AzureCommands(bot, config)
+    cmds = bot.new_command_group("azure")
+    AzureCommands(cmds, config)
     yield
 
 
 class AzureCommands:
-    def __init__(self, bot, config):
-        self.bot = bot
+    def __init__(self, cmds, config):
         self.config = config
 
         self.headers = {
@@ -61,9 +61,9 @@ class AzureCommands:
             'toScript': "Latn"
         }
 
-        bot.register_command("translatify-list", self.print_language_list)
-        bot.register_command("translatify", self.translatify)
-        bot.register_command("translatify-native", self.translatify_native)
+        cmds.register_command("translatify-list", self.print_language_list)
+        cmds.register_command("translatify", self.translatify)
+        cmds.register_command("translatify-native", self.translatify_native)
 
     def print_language_list(self):
         """

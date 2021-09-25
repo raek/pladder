@@ -3,7 +3,8 @@ from contextlib import contextmanager
 
 @contextmanager
 def pladder_plugin(bot):
-    bot.register_command("bjukkify", bjukkify, varargs=True)
+    cmds = bot.new_command_group("bjukkify")
+    cmds.register_command("bjukkify", bjukkify, varargs=True)
     yield
 
 

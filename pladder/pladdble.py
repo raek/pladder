@@ -9,9 +9,10 @@ NETWORK = 'VirsuNet'
 @contextmanager
 def pladder_plugin(bot):
     pladdble = Pladdble(bot, NETWORK)
-    bot.register_command('mömb', pladdble.connected_users)
-    bot.register_command('mömb-users', pladdble.list_users)
-    bot.register_command('mömb-info', pladdble.get_info)
+    cmds = bot.new_command_group("pladdble")
+    cmds.register_command('mömb', pladdble.connected_users)
+    cmds.register_command('mömb-users', pladdble.list_users)
+    cmds.register_command('mömb-info', pladdble.get_info)
     yield
 
 

@@ -29,12 +29,14 @@ class AliasCommands:
     def __init__(self, bot, alias_db):
         self.bot = bot
         self.alias_db = alias_db
-        bot.register_command("alias", self.help)
-        bot.register_command("add-alias", self.add_alias, varargs=True)
-        bot.register_command("get-alias", self.alias_db.get_alias)
-        bot.register_command("del-alias", self.del_alias)
-        bot.register_command("list-alias", self.list_alias)
-        bot.register_command("random-alias", self.alias_db.random_alias)
+        self.admin_cmds = bot.new_command_group("alias")
+        self.admin_cmds.register_command("alias", self.help)
+        self.admin_cmds.register_command("add-alias", self.add_alias, varargs=True)
+        self.admin_cmds.register_command("get-alias", self.alias_db.get_alias)
+        self.admin_cmds.register_command("del-alias", self.del_alias)
+        self.admin_cmds.register_command("list-alias", self.list_alias)
+        self.admin_cmds.register_command("random-alias", self.alias_db.random_alias)
+        self.user_cmds = bot.new_command_group("aliases")
         self.register_db_bindings()
 
     def help(self):
@@ -72,7 +74,7 @@ class AliasCommands:
 
     def register_binding(self, name, data):
         source = f"Alias {name}: {data}"
-        self.bot.register_command(name, self.exec_alias, contextual=True, source=source)
+        self.user_cmds.register_command(name, self.exec_alias, contextual=True, source=source)
 
     def remove_binding(self, name):
         try:

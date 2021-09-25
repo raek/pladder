@@ -34,7 +34,8 @@ stanzas = [' / '.join(lines) for lines in [a, a, b, b, a, a, a, b, b, ['ba']]]
 
 @contextmanager
 def pladder_plugin(bot):
-    bot.register_command('bah', bah)
+    cmds = bot.new_command_group('bah')
+    cmds.register_command('bah', bah)
     yield
 
 

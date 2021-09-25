@@ -9,7 +9,8 @@ def pladder_plugin(bot):
     def jb(trigger):
         return datorbas.get(trigger, "Trigger not found.")
 
-    bot.register_command("jb", jb)
+    cmds = bot.new_command_group("bjbot")
+    cmds.register_command("jb", jb)
     yield
 
 

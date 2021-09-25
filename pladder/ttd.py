@@ -7,7 +7,8 @@ import random
 
 @contextmanager
 def pladder_plugin(bot):
-    bot.register_command("ttd", gentown)
+    cmds = bot.new_command_group("ttd")
+    cmds.register_command("ttd", gentown)
     yield
 
 

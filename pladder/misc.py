@@ -8,15 +8,16 @@ from pladder.script import ScriptError
 
 @contextmanager
 def pladder_plugin(bot):
-    bot.register_command(re.compile("^kloo+fify$"), kloooofify, varargs=True, contextual=True)
-    bot.register_command(re.compile("^vrå*lify$"), vraaaal, varargs=True, contextual=True)
-    bot.register_command("time", time)
-    bot.register_command("capify", capify, varargs=True)
-    bot.register_command("suspektify", suspektify, varargs=True)
-    bot.register_command("tutify", tutify, varargs=True)
-    bot.register_command("unicode", unicode, varargs=True)
-    bot.register_command("unicode-name", unicode_name, varargs=True)
-    bot.register_command("tijd", tijd)
+    cmds = bot.new_command_group("misc")
+    cmds.register_command(re.compile("^kloo+fify$"), kloooofify, varargs=True, contextual=True)
+    cmds.register_command(re.compile("^vrå*lify$"), vraaaal, varargs=True, contextual=True)
+    cmds.register_command("time", time)
+    cmds.register_command("capify", capify, varargs=True)
+    cmds.register_command("suspektify", suspektify, varargs=True)
+    cmds.register_command("tutify", tutify, varargs=True)
+    cmds.register_command("unicode", unicode, varargs=True)
+    cmds.register_command("unicode-name", unicode_name, varargs=True)
+    cmds.register_command("tijd", tijd)
     yield
 
 

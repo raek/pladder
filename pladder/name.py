@@ -17,8 +17,9 @@ def pladder_plugin(bot):
     def enamn():
         return _random_entry(enamn_db)
 
-    bot.register_command("förnamn", fnamn)
-    bot.register_command("efternamn", enamn)
+    cmds = bot.new_command_group("name")
+    cmds.register_command("förnamn", fnamn)
+    cmds.register_command("efternamn", enamn)
     yield
 
 

@@ -4,6 +4,7 @@ from pladder.script import new_context
 
 
 class MockBot():
+    new_command_group = PladderBot.new_command_group
     register_command = PladderBot.register_command
 
     def __init__(self):
