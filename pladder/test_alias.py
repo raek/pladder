@@ -1,20 +1,14 @@
 from pladder.alias import AliasDb, AliasCommands
-from pladder.bot import PladderBot
 from pladder.script import CommandRegistry, new_context
 
 
-class MockBot():
-    new_command_group = PladderBot.new_command_group
-
-    def __init__(self):
-        self.commands = CommandRegistry()
-        builtin = self.commands.new_command_group("builtin")
-        builtin.register_command("echo", lambda text="": text, varargs=True)
-
-
-mock_bot = MockBot()
+commands = CommandRegistry()
+builtin = commands.new_command_group("builtin")
+builtin.register_command("echo", lambda text="": text, varargs=True)
+admin_cmds = commands.new_command_group("alias")
+user_cmds = commands.new_command_group("aliases")
 alias_db = AliasDb(":memory:")
-alias_cmds = AliasCommands(mock_bot, alias_db)
+alias_cmds = AliasCommands(admin_cmds, user_cmds, alias_db)
 
 
 def test_help():
@@ -53,7 +47,7 @@ def test_binding_exists():
 
 
 def test_exec_alias():
-    context = new_context(mock_bot.commands, command_name="testalias")
+    context = new_context(commands, command_name="testalias")
     result = alias_cmds.exec_alias(context)
     assert result == "testtest"
 
