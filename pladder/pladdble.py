@@ -31,7 +31,7 @@ class Pladdble:
 
     def list_users(self) -> str:
         config = self.connector.GetConfig(on_error=lambda e: None)
-        if self is None:
+        if config is None:
             return 'Icke ansluten till servern'
         self_nick = config['user']
         users = self.connector.GetChannelUsers('Root', on_error=lambda e: None)
@@ -42,7 +42,7 @@ class Pladdble:
 
     def get_info(self) -> str:
         config = self.connector.GetConfig(on_error=lambda e: None)
-        if self is None:
+        if config is None:
             return 'Icke ansluten till servern'
         info_string = [
             f'Bot name: {config["user"]}',
