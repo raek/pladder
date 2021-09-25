@@ -3,11 +3,12 @@ import os
 import sqlite3
 import random
 
-from pladder.script import EvalError, interpret
+from pladder.plugin import BotPluginInterface, Plugin
+from pladder.script import EvalError, CommandGroup, Context, interpret
 
 
 @contextmanager
-def pladder_plugin(bot):
+def pladder_plugin(bot: BotPluginInterface) -> Plugin:
     alias_db_path = os.path.join(bot.state_dir, "alias.db")
     admin_cmds = bot.new_command_group("alias")
     user_cmds = bot.new_command_group("aliases")
@@ -16,7 +17,7 @@ def pladder_plugin(bot):
         yield
 
 
-def errorstr():
+def errorstr() -> str:
     if random.random() > 0.95:
         return "https://i.imgur.com/6cpffM4.jpeg"
     else:
@@ -28,7 +29,7 @@ class DBError(Exception):
 
 
 class AliasCommands:
-    def __init__(self, admin_cmds, user_cmds, alias_db):
+    def __init__(self, admin_cmds: CommandGroup, user_cmds: CommandGroup, alias_db: "AliasDb") -> None:
         self.alias_db = alias_db
         self.admin_cmds = admin_cmds
         self.admin_cmds.register_command("alias", self.help)
@@ -40,7 +41,7 @@ class AliasCommands:
         self.user_cmds = user_cmds
         self.register_db_bindings()
 
-    def help(self):
+    def help(self) -> str:
         functions = [
             "get-alias [name]",
             "del-alias [name]",
@@ -52,43 +53,43 @@ class AliasCommands:
                 "Wildcards are % and _. " +
                 "Use {} when adding PladderScript to database.")
 
-    def binding_exists(self, name):
+    def binding_exists(self, name: str) -> bool:
         return ((self.admin_cmds.lookup_command(name) is not None) or
                 (self.user_cmds.lookup_command(name) is not None))
 
-    def exec_alias(self, context):
+    def exec_alias(self, context: Context) -> str:
         data = self.alias_db.get_alias(context.command_name)
         _, template = data.split(": ", 1)
         script = "echo " + template
         result, _ = interpret(context, script)
         return result
 
-    def register_db_bindings(self):
+    def register_db_bindings(self) -> None:
         names = self.alias_db.list_alias("_").split(" ")
         for name in names:
             binding = self.alias_db.get_alias(name)
             _, data = binding.split(": ", 1)
             self.register_binding(name, data)
 
-    def register_binding(self, name, data):
+    def register_binding(self, name: str, data: str) -> None:
         source = f"Alias {name}: {data}"
         self.user_cmds.register_command(name, self.exec_alias, contextual=True, source=source)
 
-    def remove_binding(self, name):
+    def remove_binding(self, name: str) -> bool:
         try:
             self.user_cmds.remove_command(name)
             return True
         except EvalError:
             return False
 
-    def add_alias(self, name, data):
+    def add_alias(self, name: str, data: str) -> str:
         if self.binding_exists(name):
             return "Hallå farfar, den finns ju redan."
         if result := self.alias_db.add_alias(name, data):
             self.register_binding(name, data)
         return result
 
-    def del_alias(self, name):
+    def del_alias(self, name: str) -> str:
         if self.binding_exists(name):
             try:
                 result = self.alias_db.del_alias(name)
@@ -100,7 +101,7 @@ class AliasCommands:
         else:
             return errorstr()
 
-    def list_alias(self, name_pattern):
+    def list_alias(self, name_pattern: str) -> str:
         list = self.alias_db.list_alias(name_pattern)
         if list:
             return F"{len(list.split())} Found: {list}"
@@ -108,7 +109,7 @@ class AliasCommands:
 
 
 class AliasDb(ExitStack):
-    def __init__(self, db_file_path):
+    def __init__(self, db_file_path: str) -> None:
         super().__init__()
         self._db = sqlite3.connect(db_file_path)
         self.callback(self._db.close)
@@ -116,14 +117,14 @@ class AliasDb(ExitStack):
         if not self._check_db_exists(c):
             self._initdb(c)
 
-    def _check_db_exists(self, c):
+    def _check_db_exists(self, c: sqlite3.dbapi2.Cursor) -> bool:
         try:
             c.execute("SELECT value FROM config WHERE id=1")
             return True
         except Exception:
             return False
 
-    def _initdb(self, c):
+    def _initdb(self, c: sqlite3.dbapi2.Cursor) -> None:
         c.executescript("""
                 BEGIN TRANSACTION;
                 CREATE TABLE config (
@@ -145,7 +146,7 @@ class AliasDb(ExitStack):
 
         self._db.commit()
 
-    def _alias_exists(self, name):
+    def _alias_exists(self, name: str) -> bool:
         c = self._db.cursor()
         c.execute("SELECT * FROM alias WHERE name=?", [name])
         if c.fetchone():
@@ -153,7 +154,7 @@ class AliasDb(ExitStack):
         else:
             return False
 
-    def _insert_alias(self, name, data):
+    def _insert_alias(self, name: str, data: str) -> str:
         c = self._db.cursor()
         c.execute("BEGIN TRANSACTION")
         try:
@@ -165,12 +166,12 @@ class AliasDb(ExitStack):
             self._db.commit()
             return f"\"{name}\" added. value is: \"{data}\""
 
-    def add_alias(self, name, data):
+    def add_alias(self, name: str, data: str) -> str:
         if self._alias_exists(name):
             raise DBError("Om du ser det här har kodaren som inte vill bli highlightad fuckat upp")
         return self._insert_alias(name, data)
 
-    def get_alias(self, name):
+    def get_alias(self, name: str) -> str:
         if self._alias_exists(name):
             c = self._db.cursor()
             try:
@@ -183,7 +184,7 @@ class AliasDb(ExitStack):
         else:
             return errorstr()
 
-    def del_alias(self, name):
+    def del_alias(self, name: str) -> str:
         if self._alias_exists(name):
             c = self._db.cursor()
             c.execute("BEGIN TRANSACTION")
@@ -198,7 +199,7 @@ class AliasDb(ExitStack):
         else:
             raise DBError("poop")
 
-    def list_alias(self, name_pattern):
+    def list_alias(self, name_pattern: str) -> str:
         c = self._db.cursor()
         searchstr = "%"+name_pattern+"%"
         try:
@@ -213,6 +214,6 @@ class AliasDb(ExitStack):
             result = result.strip()
             return result
 
-    def random_alias(self, name_pattern):
+    def random_alias(self, name_pattern: str) -> str:
         list = self.list_alias(name_pattern)
         return random.choice(list.split())

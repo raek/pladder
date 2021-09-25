@@ -10,7 +10,7 @@ from pladder import LAST_COMMIT
 from pladder.dbus import PLADDER_BOT_XML, RetryProxy
 from pladder.fuse import Fuse, FuseResult
 import pladder.irc.color as color
-from pladder.plugin import PluginLoadError
+from pladder.plugin import BotPluginInterface, PluginLoadError
 from pladder.script import ScriptError, ApplyError, CommandRegistry, new_context, interpret, apply_call
 
 
@@ -30,7 +30,7 @@ def main():
         loop.run()
 
 
-class PladderBot(ExitStack):
+class PladderBot(ExitStack, BotPluginInterface):
     dbus = PLADDER_BOT_XML
 
     def __init__(self, state_dir, bus):
