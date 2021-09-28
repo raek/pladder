@@ -104,6 +104,7 @@ class LogDb(ExitStack):
         self._db = sqlite3.connect(db_file_path)
         self.callback(self._db.close)
         self._setup()
+        self._mimics = dict()
 
     def _setup(self):
         with self._db:
@@ -152,12 +153,15 @@ class LogDb(ExitStack):
             c = self._db.cursor()
             c.execute("INSERT INTO lines (timestamp, channel, nick, text) VALUES (?, ?, ?, ?);",
                       (timestamp, channel, nick, text))
+        self._update_mimic_stats(channel, nick, text)
 
     def mimic(self, channel, nick):
-        stats = self._generate_mimic_stats(channel, nick)
-        return self._generate_mimic_line(stats)
+        if (channel, nick) not in self._mimics:
+            self._generate_mimic_stats(channel, nick)
+        return self._generate_mimic_line(channel, nick)
 
     def _generate_mimic_stats(self, channel, nick):
+        self._mimics[(channel, nick)] = Mimic()
         with self._db:
             c = self._db.cursor()
             c.execute("""
@@ -166,23 +170,36 @@ class LogDb(ExitStack):
                 WHERE channel = :channel AND nick = :nick
             """, {'channel': channel,
                   'nick': nick})
-            stats = defaultdict(lambda: defaultdict(int))
             for (line,) in c.fetchall():
-                prev = ''
-                for word in line.split():
-                    stats[prev][word] += 1
-                    prev = word
-                if prev != '':
-                    stats[prev][''] += 1
-            return stats
+                self._update_mimic_stats(channel, nick, line)
 
-    def _generate_mimic_line(self, stats):
+    def _update_mimic_stats(self, channel, nick, line):
+        self._mimics[(channel, nick)].feed(line)
+
+    def _generate_mimic_line(self, channel, nick):
+        return self._mimics[(channel, nick)].generate()
+
+
+class Mimic:
+    def __init__(self):
+        self._stats = defaultdict(lambda: defaultdict(int))
+
+    def feed(self, line):
+        prev = ''
+        for word in line.split():
+            self._stats[prev][word] += 1
+            prev = word
+        if prev != '':
+            self._stats[prev][''] += 1
+
+    def generate(self):
         words = []
         prev = ''
         while True:
-            if not stats[prev]:
+            if not self._stats[prev]:
                 break
-            word = random.choices(list(stats[prev].keys()), weights=stats[prev].values())[0]
+            word = random.choices(list(self._stats[prev].keys()),
+                                  weights=self._stats[prev].values())[0]
             if word == '':
                 break
             words.append(word)
