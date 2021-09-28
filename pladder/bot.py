@@ -104,6 +104,7 @@ class PladderBot(ExitStack):
         cmds.register_command("if", self.if_command)
         cmds.register_command("trace", self.trace, contextual=True)
         cmds.register_command("source", self.source)
+        cmds.register_command("mimic", self.mimic, contextual=True)
 
     def apply(self, context, words):
         if not words:
@@ -333,6 +334,14 @@ class PladderBot(ExitStack):
         if command is None:
             return f"Unknown command name: {command_name}"
         return command.source
+
+    def mimic(self, context, nick):
+        metadata = context.metadata
+        line = self.log.Mimic(metadata['network'], metadata['channel'], nick,
+                              on_error=lambda e: None)
+        if line is None:
+            return "Error: Could not reach pladder-log service!"
+        return line
 
 
 def brief_trace(trace, color_pairs):

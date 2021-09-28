@@ -1,7 +1,8 @@
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 from contextlib import ExitStack
 import json
 import os
+import random
 import sqlite3
 
 
@@ -58,6 +59,12 @@ class PladderLog(ExitStack):
           <arg direction="in" name="index" type="d" />
           <arg direction="out" name="return" type="a(iuss)" />
         </method>
+        <method name="Mimic">
+          <arg direction="in" name="network" type="s" />
+          <arg direction="in" name="channel" type="s" />
+          <arg direction="in" name="nick" type="s" />
+          <arg direction="out" name="return" type="s" />
+        </method>
       </interface>
     </node>
     """
@@ -83,6 +90,12 @@ class PladderLog(ExitStack):
             return self.logdbs[network].search_lines(channel, '%{}%'.format(substring), max_count, index)
         else:
             return []
+
+    def Mimic(self, network, channel, nick):
+        if network in self.logdbs:
+            return self.logdbs[network].mimic(channel, nick)
+        else:
+            return ''
 
 
 class LogDb(ExitStack):
@@ -139,6 +152,42 @@ class LogDb(ExitStack):
             c = self._db.cursor()
             c.execute("INSERT INTO lines (timestamp, channel, nick, text) VALUES (?, ?, ?, ?);",
                       (timestamp, channel, nick, text))
+
+    def mimic(self, channel, nick):
+        stats = self._generate_mimic_stats(channel, nick)
+        return self._generate_mimic_line(stats)
+
+    def _generate_mimic_stats(self, channel, nick):
+        with self._db:
+            c = self._db.cursor()
+            c.execute("""
+                SELECT text
+                FROM lines
+                WHERE channel = :channel AND nick = :nick
+            """, {'channel': channel,
+                  'nick': nick})
+            stats = defaultdict(lambda: defaultdict(int))
+            for (line,) in c.fetchall():
+                prev = ''
+                for word in line.split():
+                    stats[prev][word] += 1
+                    prev = word
+                if prev != '':
+                    stats[prev][''] += 1
+            return stats
+
+    def _generate_mimic_line(self, stats):
+        words = []
+        prev = ''
+        while True:
+            if not stats[prev]:
+                break
+            word = random.choices(list(stats[prev].keys()), weights=stats[prev].values())[0]
+            if word == '':
+                break
+            words.append(word)
+            prev = word
+        return ' '.join(words)
 
 
 if __name__ == '__main__':
