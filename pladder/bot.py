@@ -102,7 +102,6 @@ class PladderBot(ExitStack):
         cmds.register_command("if", self.if_command)
         cmds.register_command("trace", self.trace, contextual=True)
         cmds.register_command("source", self.source)
-        cmds.register_command("mimic", self.mimic, contextual=True)
 
     def apply(self, context, words):
         if not words:
