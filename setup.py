@@ -20,7 +20,6 @@ setuptools.setup(
             "pladder-cli = pladder.cli:main",
             "pladder-irc = pladder.irc.main:main",
             "pladder-mumble = pladder.mumble.main:main",
-            "pladder-log = pladder.log:main",
         ],
     },
 )

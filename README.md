@@ -38,7 +38,7 @@ effective immediately.
 
 # Overview
 
-The pladder package installs four console commands:
+The pladder package installs three console commands:
 
 * a bot service (`pladder-bot`) that contains the features of the bot
 (the "business logic", for some value of "business"),
@@ -46,8 +46,6 @@ The pladder package installs four console commands:
   server and reacts to commands from users,
 * a command line tool (`pladder-cli`) that provides a simple way to
   run bot commands during development, and
-* an optional log service (`pladder-log`) that can store and recall lines seen
-  on a configurable list of IRC networks.
 
 The bot service can serve multiple IRC client. In other words, the bot
 can be present on multiple IRC networks simultaneously.
@@ -129,24 +127,6 @@ Support for Q authentication on QuakeNet is available. Add an "auth" section lik
     }
 
 
-## Configuring the log service
-
-Configure the log service by creating a configuration file:
-
-    mkdir -p ~/.config/pladder-log/
-    editor ~/.config/pladder-log/config.json
-
-Set up the configuration file like this:
-
-    {
-        "networks": ["RaekNet"],
-        "logdir": "/path/to/log/dir"
-    }
-
-Make sure the network names match those given in you pladder-irc configuration
-files. The logs are stored as sqlite databases (one file per network) in the given logdir, or in the `logs` directory next to the config file if one is not specified.
-
-
 # Running automatically using systemd
 
 Systemd is used to manage long-running background services. Services
@@ -211,12 +191,6 @@ You can watch the log in "follow mode" to see how lines appear:
 Note that the bot service and the IRC client can be started and
 stopped independently of each other. The DBus connection between them
 will reconnect automatically.
-
-
-## Installing the log service
-
-Follow the same procedure as for the bot service, using the
-`pladder-log.service` file.
 
 
 # Uninstalling everything

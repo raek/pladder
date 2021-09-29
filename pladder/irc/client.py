@@ -172,11 +172,10 @@ class Client(ExitStack):
                 logger.info("{} -> {} : {}".format(message.sender.nick, target, text))
         if msgpart:
             logger.info("-> {} : {}".format(reply_to, msgpart[msgpart.find(":")+1:]))
-            if command != 'searchlog':
-                for hook in self._hooks:
-                    hook.on_privmsg(timestamp, reply_to, message.sender, text)
-                    hook.on_send_privmsg(timestamp, reply_to,
-                                         self._config.nick, msgpart[msgpart.find(":")+1:])
+            for hook in self._hooks:
+                hook.on_privmsg(timestamp, reply_to, message.sender, text)
+                hook.on_send_privmsg(timestamp, reply_to,
+                                        self._config.nick, msgpart[msgpart.find(":")+1:])
             self._conn.send(msgpart)
         else:
             for hook in self._hooks:

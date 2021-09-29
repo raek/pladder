@@ -38,7 +38,6 @@ class PladderBot(ExitStack):
         os.makedirs(state_dir, exist_ok=True)
         self.state_dir = state_dir
         self.bus = bus
-        self.log = RetryProxy(bus, "se.raek.PladderLog")
         self.fuse = Fuse(state_dir)
         self.commands = CommandRegistry()
         self.register_builtins()
@@ -83,7 +82,6 @@ class PladderBot(ExitStack):
         cmds = self.new_command_group("builtin")
         cmds.register_command("help", self.help)
         cmds.register_command("version", self.version)
-        cmds.register_command("searchlog", self.searchlog, contextual=True)
         cmds.register_command("send", self.send, contextual=True, varargs=True)
         cmds.register_command("channels", self.channels, contextual=True)
         cmds.register_command("users", self.users, contextual=True)
@@ -175,33 +173,6 @@ class PladderBot(ExitStack):
 
     def version(self):
         return LAST_COMMIT
-
-    def searchlog(self, context, needle, index=0):
-        metadata = context.metadata
-        try:
-            index = int(index)
-        except ValueError:
-            return "'index' needs to be a number!"
-
-        def format_log_line(index, date, nick, text):
-            return '[{}: {} {}: {}]'.format(index, date.strftime('%H:%M'), nick, text)
-
-        lines = self.log.SearchLines(metadata['network'], metadata['channel'], needle, 3, index,
-                                     on_error=lambda e: None)
-        if lines is None:
-            return "Error: Could not reach pladder-log service!"
-        lines_by_day = defaultdict(list)
-        for index, timestamp, nick, text in lines:
-            date = datetime.fromtimestamp(timestamp, tz=timezone.utc).astimezone(tz=None)
-            line = format_log_line(index, date, nick, text)
-            lines_by_day[(date.year, date.month, date.day)].append(line)
-        formatted = ['{}-{:02}-{:02}: {}'.format(*day, ', '.join(lines))
-                     for (day, lines) in lines_by_day.items()]
-        result = '; '.join(formatted)
-        if result:
-            return result
-        else:
-            return "Found no matches for '{}'".format(needle)
 
     def send(self, context, target, user_text):
         if "send_called" in context.metadata:
@@ -334,14 +305,6 @@ class PladderBot(ExitStack):
         if command is None:
             return f"Unknown command name: {command_name}"
         return command.source
-
-    def mimic(self, context, nick):
-        metadata = context.metadata
-        line = self.log.Mimic(metadata['network'], metadata['channel'], nick,
-                              on_error=lambda e: None)
-        if line is None:
-            return "Error: Could not reach pladder-log service!"
-        return line
 
 
 def brief_trace(trace, color_pairs):
