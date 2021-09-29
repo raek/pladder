@@ -6,7 +6,7 @@ import random
 import sqlite3
 
 
-Config = namedtuple("Config", "networks, logdir")
+Config = namedtuple("Config", "networks, logdir, no_log_nicks")
 
 
 def main():
@@ -30,6 +30,7 @@ def read_config(config_home):
         defaults = {
             'networks': [],
             'logdir': os.path.join(config_home, "pladder-log", "logs"),
+            'no_log_nicks': [],
         }
         return Config(**{**defaults, **config_data})
 
@@ -72,10 +73,13 @@ class PladderLog(ExitStack):
     def __init__(self, config):
         super().__init__()
         os.makedirs(config.logdir, exist_ok=True)
-        self.logdbs = {network: self.enter_context(LogDb(os.path.join(config.logdir, network + '.db')))
+        self.logdbs = {network: self.enter_context(LogDb(os.path.join(config.logdir, network + '.db'), config.no_log_nicks))
                        for network in config.networks}
+        self.no_log_nicks = set(config.no_log_nicks)
 
     def AddLine(self, timestamp, network, channel, nick, text):
+        if nick in self.no_log_nicks:
+            return
         if network in self.logdbs:
             self.logdbs[network].add_line(timestamp, channel, nick, text)
 
@@ -99,14 +103,14 @@ class PladderLog(ExitStack):
 
 
 class LogDb(ExitStack):
-    def __init__(self, db_file_path):
+    def __init__(self, db_file_path, no_log_nicks):
         super().__init__()
         self._db = sqlite3.connect(db_file_path)
         self.callback(self._db.close)
-        self._setup()
+        self._setup(no_log_nicks)
         self._mimics = dict()
 
-    def _setup(self):
+    def _setup(self, no_log_nicks):
         with self._db:
             c = self._db.cursor()
             c.execute("""
@@ -117,6 +121,8 @@ class LogDb(ExitStack):
                     text      TEXT
                 );
             """)
+            for nick in no_log_nicks:
+                c.execute("DELETE FROM lines WHERE nick = :nick;", {"nick": nick})
 
     def get_lines(self, channel, line_count):
         return self.search_lines(channel, '%', line_count, 0)
