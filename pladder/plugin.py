@@ -1,11 +1,12 @@
 from typing import Generator
 
-from pladder.script import CommandGroup
+from pladder.script import CommandGroup, CommandRegistry
 
 
 class BotPluginInterface:
     def __init__(self):
-        self.state_dir = None
+        self.state_dir: str
+        self.commands: CommandRegistry
 
     def new_command_group(self, name: str) -> CommandGroup:
         raise NotImplementedError()

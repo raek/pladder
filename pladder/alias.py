@@ -4,16 +4,17 @@ import sqlite3
 import random
 
 from pladder.plugin import BotPluginInterface, Plugin
-from pladder.script import EvalError, CommandGroup, Context, interpret
+from pladder.script import EvalError, CommandGroup, CommandRegistry, Context, interpret
 
 
 @contextmanager
 def pladder_plugin(bot: BotPluginInterface) -> Plugin:
     alias_db_path = os.path.join(bot.state_dir, "alias.db")
+    all_cmds = bot.commands
     admin_cmds = bot.new_command_group("alias")
     user_cmds = bot.new_command_group("aliases")
     with AliasDb(alias_db_path) as alias_db:
-        AliasCommands(admin_cmds, user_cmds, alias_db)
+        AliasCommands(all_cmds, admin_cmds, user_cmds, alias_db)
         yield
 
 
@@ -29,8 +30,13 @@ class DBError(Exception):
 
 
 class AliasCommands:
-    def __init__(self, admin_cmds: CommandGroup, user_cmds: CommandGroup, alias_db: "AliasDb") -> None:
+    def __init__(self,
+                 all_cmds: CommandRegistry,
+                 admin_cmds: CommandGroup,
+                 user_cmds: CommandGroup,
+                 alias_db: "AliasDb") -> None:
         self.alias_db = alias_db
+        self.all_cmds = all_cmds
         self.admin_cmds = admin_cmds
         self.admin_cmds.register_command("alias", self.help)
         self.admin_cmds.register_command("add-alias", self.add_alias, varargs=True)
@@ -54,8 +60,7 @@ class AliasCommands:
                 "Use {} when adding PladderScript to database.")
 
     def binding_exists(self, name: str) -> bool:
-        return ((self.admin_cmds.lookup_command(name) is not None) or
-                (self.user_cmds.lookup_command(name) is not None))
+        return self.all_cmds.lookup_command(name) is not None
 
     def exec_alias(self, context: Context) -> str:
         data = self.alias_db.get_alias(context.command_name)

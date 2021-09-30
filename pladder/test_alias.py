@@ -8,7 +8,7 @@ builtin.register_command("echo", lambda text="": text, varargs=True)
 admin_cmds = commands.new_command_group("alias")
 user_cmds = commands.new_command_group("aliases")
 alias_db = AliasDb(":memory:")
-alias_cmds = AliasCommands(admin_cmds, user_cmds, alias_db)
+alias_cmds = AliasCommands(commands, admin_cmds, user_cmds, alias_db)
 
 
 def test_help():
@@ -85,4 +85,9 @@ def test_invalid_delete():
 
 def test_invalid_add():
     result = alias_cmds.add_alias("get-alias", "hehu jag är smart")
+    assert result == "Hallå farfar, den finns ju redan."
+
+
+def test_invalid_add_other_group():
+    result = alias_cmds.add_alias("echo", "hehu jag är smart")
     assert result == "Hallå farfar, den finns ju redan."
