@@ -40,6 +40,7 @@ class PladderBot(ExitStack, BotPluginInterface):
         self.fuse = Fuse(state_dir)
         self.commands = CommandRegistry()
         self.register_builtins()
+        self.last_contexts = {}
 
     def new_command_group(self, name):
         return self.commands.new_command_group(name)
@@ -51,31 +52,34 @@ class PladderBot(ExitStack, BotPluginInterface):
                     'nick': nick,
                     'text': text}
         try:
+            context = new_context(self.commands, metadata)
             fuse_result = self.fuse.run(metadata['datetime'], network, channel)
             if fuse_result == FuseResult.JUST_BLOWN:
-                return {'text': f'{color.LIGHT_YELLOW}*daily fuse blown*{color.LIGHT_YELLOW}',
-                        'command': 'error'}
+                result = {'text': f'{color.LIGHT_YELLOW}*daily fuse blown*{color.LIGHT_YELLOW}',
+                          'command': 'error'}
             elif fuse_result == FuseResult.BLOWN:
-                return {'text': '',
-                        'command': 'error'}
-            context = new_context(self.commands, metadata)
-            result, display_name = interpret(context, text)
-            result = result[:10000]
-            return {'text': result,
-                    'command': display_name}
+                result = {'text': '',
+                          'command': 'error'}
+            else:
+                result_text, display_name = interpret(context, text)
+                result_text = result_text[:10000]
+                result = {'text': result_text,
+                          'command': display_name}
         except ApplyError as e:
-            return {'text': "Usage: {}".format(self.command_usage(e.command)),
-                    'command': e.command.display_name}
+            result = {'text': "Usage: {}".format(self.command_usage(e.command)),
+                      'command': e.command.display_name}
         except ScriptError as e:
-            return {'text': str(e),
-                    'command': 'error'}
+            result = {'text': str(e),
+                      'command': 'error'}
         except RecursionError:
-            return {'text': "RecursionError: Maximum recursion depth exceeded",
-                    'command': 'error'}
+            result = {'text': "RecursionError: Maximum recursion depth exceeded",
+                      'command': 'error'}
         except Exception as e:
             print(str(e))
-            return {'text': "Internal error: " + str(e),
-                    'command': 'error'}
+            result = {'text': "Internal error: " + str(e),
+                      'command': 'error'}
+        self.last_contexts[(network, channel)] = context
+        return result
 
     def register_builtins(self):
         cmds = self.new_command_group("builtin")
@@ -100,6 +104,7 @@ class PladderBot(ExitStack, BotPluginInterface):
         cmds.register_command("bool", self.bool_command)
         cmds.register_command("if", self.if_command)
         cmds.register_command("trace", self.trace, contextual=True)
+        cmds.register_command("trace-last", self.trace_last, contextual=True)
         cmds.register_command("source", self.source)
 
     def apply(self, context, words):
@@ -278,31 +283,41 @@ class PladderBot(ExitStack, BotPluginInterface):
             raise ScriptError(f'Expected "true" or "false", got "{string}"')
 
     def trace(self, context, mode, script):
-        if mode not in ["-brief", "-full"]:
-            return "Mode must be one of: -brief, -full"
         subcontext = new_context(context.commands, context.metadata)
         try:
             interpret(subcontext, script)
-        except Exception:
+        except Exception as e:
             pass
-        color_pairs = [
-            (color.LIGHT_RED, color.DARK_RED),
-            (color.LIGHT_GREEN, color.DARK_GREEN),
-            (color.LIGHT_BLUE, color.DARK_BLUE),
-            (color.LIGHT_YELLOW, color.DARK_YELLOW),
-            (color.LIGHT_MAGENTA, color.DARK_MAGENTA),
-            (color.LIGHT_CYAN, color.DARK_CYAN),
-        ]
-        if mode == "-brief":
-            return brief_trace(subcontext.trace, color_pairs)
-        elif mode == "-full":
-            return full_trace(subcontext.trace, color_pairs)
+        return render_trace(subcontext.trace, mode)
+
+    def trace_last(self, context, mode):
+        last_context = self.last_contexts.get((context.metadata["network"], context.metadata["channel"]), None)
+        if not last_context.trace:
+            return "No last trace stored"
+        return render_trace(last_context.trace, mode)
 
     def source(self, command_name):
         command = self.commands.lookup_command(command_name)
         if command is None:
             return f"Unknown command name: {command_name}"
         return command.source
+
+
+def render_trace(trace, mode):
+    if mode not in ["-brief", "-full"]:
+        return "Mode must be one of: -brief, -full"
+    color_pairs = [
+        (color.LIGHT_RED, color.DARK_RED),
+        (color.LIGHT_GREEN, color.DARK_GREEN),
+        (color.LIGHT_BLUE, color.DARK_BLUE),
+        (color.LIGHT_YELLOW, color.DARK_YELLOW),
+        (color.LIGHT_MAGENTA, color.DARK_MAGENTA),
+        (color.LIGHT_CYAN, color.DARK_CYAN),
+    ]
+    if mode == "-brief":
+        return brief_trace(trace, color_pairs)
+    elif mode == "-full":
+        return full_trace(trace, color_pairs)
 
 
 def brief_trace(trace, color_pairs):
