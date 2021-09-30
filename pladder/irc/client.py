@@ -142,7 +142,6 @@ class Client(ExitStack):
             reply_to = message.sender.nick
         timestamp = datetime.now(timezone.utc).timestamp()
         reply = None
-        command = None
         msgpart = None
         if text.startswith(self._config.trigger_prefix):
             logger.info("{} -> {} : {}".format(message.sender.nick, target, text))
@@ -157,11 +156,9 @@ class Client(ExitStack):
                                                             self._config.reply_prefix,
                                                             reply['text'],
                                                             self._headerlen)
-            command = reply['command']
             msgpart = next(self._msgsplitter[reply_to])
         if text == "more":
             try:
-                command = self._commands[reply_to]
                 msgpart = next(self._msgsplitter[reply_to])
             except KeyError:
                 pass
@@ -175,7 +172,7 @@ class Client(ExitStack):
             for hook in self._hooks:
                 hook.on_privmsg(timestamp, reply_to, message.sender, text)
                 hook.on_send_privmsg(timestamp, reply_to,
-                                        self._config.nick, msgpart[msgpart.find(":")+1:])
+                                     self._config.nick, msgpart[msgpart.find(":")+1:])
             self._conn.send(msgpart)
         else:
             for hook in self._hooks:

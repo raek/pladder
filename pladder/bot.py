@@ -1,4 +1,3 @@
-from collections import defaultdict
 from contextlib import ExitStack
 from datetime import datetime, timezone
 from importlib import import_module
