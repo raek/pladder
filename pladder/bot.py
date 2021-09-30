@@ -304,8 +304,6 @@ class PladderBot(ExitStack, BotPluginInterface):
 
 
 def render_trace(trace, mode):
-    if mode not in ["-brief", "-full"]:
-        return "Mode must be one of: -brief, -full"
     color_pairs = [
         (color.LIGHT_RED, color.DARK_RED),
         (color.LIGHT_GREEN, color.DARK_GREEN),
@@ -316,8 +314,12 @@ def render_trace(trace, mode):
     ]
     if mode == "-brief":
         return brief_trace(trace, color_pairs)
+    elif mode == "-results":
+        return results_trace(trace, color_pairs)
     elif mode == "-full":
         return full_trace(trace, color_pairs)
+    else:
+        return "Mode must be one of: -brief, -results, -full"
 
 
 def brief_trace(trace, color_pairs):
@@ -334,6 +336,25 @@ def brief_trace(trace, color_pairs):
             part = f"{light}{entry.command_name}{dark}({sub}{dark})"
         else:
             part = f"{light}{entry.command_name}"
+        parts.append(part)
+    return f"{dark}, ".join(parts) + color.RESET
+
+
+def results_trace(trace, color_pairs):
+    if color_pairs:
+        (light, dark), *color_pairs = color_pairs
+    else:
+        light = color.RESET
+        dark = color.RESET
+    parts = []
+    for entry in trace:
+        command = escape(entry.command_name)
+        result = escape(entry.result)
+        if entry.subtrace:
+            sub = results_trace(entry.subtrace, color_pairs)
+            part = f"{light}{command} {dark}=> ( {sub} {dark}) => {light}{result}"
+        else:
+            part = f"{light}{command} {dark}=> {light}{result}"
         parts.append(part)
     return f"{dark}, ".join(parts) + color.RESET
 
