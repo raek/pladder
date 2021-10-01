@@ -94,6 +94,7 @@ class PladderBot(ExitStack, BotPluginInterface):
         cmds.register_command("echo", lambda text="": text, varargs=True)
         cmds.register_command("show-args", lambda *args: repr(args))
         cmds.register_command("show-context", self.show_context, contextual=True)
+        cmds.register_command("get-meta", self.get_meta, contextual=True)
         cmds.register_command("pick", lambda *args: random.choice(args) if args else "")
         cmds.register_command("wpick", wpick)
         cmds.register_command("concat", lambda *args: " ".join(arg.strip() for arg in args))
@@ -246,6 +247,12 @@ class PladderBot(ExitStack, BotPluginInterface):
             "metadata": repr(context.metadata),
             "command_name": context.command_name,
         })
+
+    def get_meta(self, context, key):
+        if key in context.metadata:
+            return str(context.metadata[key])
+        else:
+            return f"Error: no such metadata key: {key}"
 
     def eval_command(self, context, script):
         text, _display_name = interpret(context, script)
