@@ -293,7 +293,7 @@ class PladderBot(ExitStack, BotPluginInterface):
         subcontext = new_context(context.commands, context.metadata)
         try:
             interpret(subcontext, script)
-        except Exception as e:
+        except Exception:
             pass
         return render_trace(subcontext.trace, mode)
 
