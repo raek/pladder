@@ -90,7 +90,7 @@ def test_db_listalias(populated_alias_db):
 
 def test_db_randomalias(populated_alias_db):
     result = populated_alias_db.random_alias("%")
-    assert result == "hello" or "testdb"
+    assert result in ["hello", "testdb", "testalias"]
 
 
 def test_db_delalias(populated_alias_db):
