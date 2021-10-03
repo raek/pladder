@@ -1,7 +1,7 @@
 from pytest import fixture
 
 from pladder.alias import AliasDb, AliasCommands
-from pladder.script import CommandRegistry, new_context
+from pladder.script import CommandRegistry, interpret, new_context
 
 
 @fixture(scope="function")
@@ -71,7 +71,8 @@ def test_binding_exists(populated_alias_cmds):
 
 def test_exec_alias(commands, populated_alias_cmds):
     context = new_context(commands, command_name="testalias")
-    result = populated_alias_cmds.exec_alias(context)
+    script = "testalias"
+    result, _ = interpret(context, script)
     assert result == "testtest"
 
 

@@ -5,7 +5,8 @@ import random
 from typing import List, Optional, Tuple
 
 from pladder.plugin import BotPluginInterface, Plugin
-from pladder.script import EvalError, CommandRegistry, Context, interpret
+from pladder.script import CommandBinding, CommandGroup, CommandRegistry, Context, \
+    command_binding, interpret
 
 
 @contextmanager
@@ -27,7 +28,7 @@ class DBError(Exception):
     pass
 
 
-class AliasCommands:
+class AliasCommands(CommandGroup):
     def __init__(self,
                  alias_db: "AliasDb",
                  all_cmds: CommandRegistry) -> None:
@@ -40,8 +41,29 @@ class AliasCommands:
         admin_cmds.register_command("del-alias", self.del_alias)
         admin_cmds.register_command("list-alias", self.list_alias)
         admin_cmds.register_command("random-alias", self.random_alias)
-        self.user_cmds = all_cmds.new_command_group("aliases")
-        self.register_db_bindings()
+        all_cmds.add_command_group("aliases", self)
+
+    # CommandGroup methods
+
+    def lookup_command(self, command_name: str) -> Optional[CommandBinding]:
+        row = self.alias_db.get_alias(command_name)
+        if not row:
+            return None
+        _name, template = row
+        source = f"Alias {command_name}: {template}"
+
+        def exec_command(context: Context) -> str:
+            script = "echo " + template
+            result, _display_name = interpret(context, script)
+            return result
+
+        return command_binding(command_name, exec_command,
+                               contextual=True, source=source)
+
+    def list_commands(self) -> List[str]:
+        return self.alias_db.list_alias("")
+
+    # Public methods
 
     def help(self) -> str:
         functions = [
@@ -58,40 +80,10 @@ class AliasCommands:
     def binding_exists(self, name: str) -> bool:
         return self.all_cmds.lookup_command(name) is not None
 
-    def exec_alias(self, context: Context) -> str:
-        row = self.alias_db.get_alias(context.command_name)
-        if not row:
-            return errorstr()
-        _, template = row
-        script = "echo " + template
-        result, _ = interpret(context, script)
-        return result
-
-    def register_db_bindings(self) -> None:
-        names = self.alias_db.list_alias("")
-        for name in names:
-            row = self.alias_db.get_alias(name)
-            if not row:
-                raise DBError("Om du ser det här så har räk fuckat upp")
-            _, data = row
-            self.register_binding(name, data)
-
-    def register_binding(self, name: str, data: str) -> None:
-        source = f"Alias {name}: {data}"
-        self.user_cmds.register_command(name, self.exec_alias, contextual=True, source=source)
-
-    def remove_binding(self, name: str) -> bool:
-        try:
-            self.user_cmds.remove_command(name)
-            return True
-        except EvalError:
-            return False
-
     def add_alias(self, name: str, data: str) -> str:
         if self.binding_exists(name):
             return "Hallå farfar, den finns ju redan."
         self.alias_db.add_alias(name, data)
-        self.register_binding(name, data)
         return f"\"{name}\" added. value is: \"{data}\""
 
     def get_alias(self, name: str) -> str:
@@ -107,8 +99,6 @@ class AliasCommands:
                 self.alias_db.del_alias(name)
             except Exception:
                 return "Det blir inget med det."
-            else:
-                self.remove_binding(name)
             return "Alias removed"
         else:
             return errorstr()
