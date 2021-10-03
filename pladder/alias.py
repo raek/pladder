@@ -2,6 +2,7 @@ from contextlib import ExitStack, contextmanager
 import os
 import sqlite3
 import random
+from typing import List, Optional, Tuple
 
 from pladder.plugin import BotPluginInterface, Plugin
 from pladder.script import EvalError, CommandRegistry, Context, interpret
@@ -35,10 +36,10 @@ class AliasCommands:
         admin_cmds = all_cmds.new_command_group("alias")
         admin_cmds.register_command("alias", self.help)
         admin_cmds.register_command("add-alias", self.add_alias, varargs=True)
-        admin_cmds.register_command("get-alias", self.alias_db.get_alias)
+        admin_cmds.register_command("get-alias", self.get_alias)
         admin_cmds.register_command("del-alias", self.del_alias)
         admin_cmds.register_command("list-alias", self.list_alias)
-        admin_cmds.register_command("random-alias", self.alias_db.random_alias)
+        admin_cmds.register_command("random-alias", self.random_alias)
         self.user_cmds = all_cmds.new_command_group("aliases")
         self.register_db_bindings()
 
@@ -58,17 +59,21 @@ class AliasCommands:
         return self.all_cmds.lookup_command(name) is not None
 
     def exec_alias(self, context: Context) -> str:
-        data = self.alias_db.get_alias(context.command_name)
-        _, template = data.split(": ", 1)
+        row = self.alias_db.get_alias(context.command_name)
+        if not row:
+            return errorstr()
+        _, template = row
         script = "echo " + template
         result, _ = interpret(context, script)
         return result
 
     def register_db_bindings(self) -> None:
-        names = self.alias_db.list_alias("_").split(" ")
+        names = self.alias_db.list_alias("")
         for name in names:
-            binding = self.alias_db.get_alias(name)
-            _, data = binding.split(": ", 1)
+            row = self.alias_db.get_alias(name)
+            if not row:
+                raise DBError("Om du ser det här så har räk fuckat upp")
+            _, data = row
             self.register_binding(name, data)
 
     def register_binding(self, name: str, data: str) -> None:
@@ -85,27 +90,41 @@ class AliasCommands:
     def add_alias(self, name: str, data: str) -> str:
         if self.binding_exists(name):
             return "Hallå farfar, den finns ju redan."
-        if result := self.alias_db.add_alias(name, data):
-            self.register_binding(name, data)
-        return result
+        self.alias_db.add_alias(name, data)
+        self.register_binding(name, data)
+        return f"\"{name}\" added. value is: \"{data}\""
+
+    def get_alias(self, name: str) -> str:
+        row = self.alias_db.get_alias(name)
+        if row:
+            return f"{row[0]}: {row[1]}"
+        else:
+            return errorstr()
 
     def del_alias(self, name: str) -> str:
         if self.binding_exists(name):
             try:
-                result = self.alias_db.del_alias(name)
+                self.alias_db.del_alias(name)
             except Exception:
                 return "Det blir inget med det."
             else:
                 self.remove_binding(name)
-            return result
+            return "Alias removed"
         else:
             return errorstr()
 
     def list_alias(self, name_pattern: str) -> str:
         list = self.alias_db.list_alias(name_pattern)
         if list:
-            return F"{len(list.split())} Found: {list}"
+            return f"{len(list)} Found: " + " ".join(list)
         return "0 Found"
+
+    def random_alias(self, name_pattern: str) -> str:
+        name = self.alias_db.random_alias(name_pattern)
+        if name is None:
+            return ":)"
+        else:
+            return name
 
 
 class AliasDb(ExitStack):
@@ -154,7 +173,7 @@ class AliasDb(ExitStack):
         else:
             return False
 
-    def _insert_alias(self, name: str, data: str) -> str:
+    def _insert_alias(self, name: str, data: str) -> None:
         c = self._db.cursor()
         c.execute("BEGIN TRANSACTION")
         try:
@@ -164,27 +183,26 @@ class AliasDb(ExitStack):
             raise DBError("You cannot insert ye value :(")
         else:
             self._db.commit()
-            return f"\"{name}\" added. value is: \"{data}\""
 
-    def add_alias(self, name: str, data: str) -> str:
+    def add_alias(self, name: str, data: str) -> None:
         if self._alias_exists(name):
             raise DBError("Om du ser det här har kodaren som inte vill bli highlightad fuckat upp")
-        return self._insert_alias(name, data)
+        self._insert_alias(name, data)
 
-    def get_alias(self, name: str) -> str:
+    def get_alias(self, name: str) -> Optional[Tuple[str, str]]:
         if self._alias_exists(name):
             c = self._db.cursor()
             try:
                 c.execute("SELECT name, data FROM alias WHERE name=?", [name])
             except Exception:
-                return "eror :("
+                raise DBError("eror :(")
             else:
                 row = c.fetchone()
-                return f"{row[0]}: {row[1]}"
+                return row[0], row[1]
         else:
-            return errorstr()
+            return None
 
-    def del_alias(self, name: str) -> str:
+    def del_alias(self, name: str) -> None:
         if self._alias_exists(name):
             c = self._db.cursor()
             c.execute("BEGIN TRANSACTION")
@@ -195,25 +213,22 @@ class AliasDb(ExitStack):
                 raise DBError("You cannot delete ye flask")
             else:
                 self._db.commit()
-                return "Alias removed"
         else:
             raise DBError("poop")
 
-    def list_alias(self, name_pattern: str) -> str:
+    def list_alias(self, name_pattern: str) -> List[str]:
         c = self._db.cursor()
         searchstr = "%"+name_pattern+"%"
         try:
             c.execute("SELECT name FROM alias WHERE name LIKE ?", [searchstr])
         except Exception:
-            return "eror :("
+            raise DBError("eror :(")
         else:
-            result = ""
-            if (match := c.fetchall()):
-                for line in match:
-                    result += " " + line[0]
-            result = result.strip()
-            return result
+            return [row[0] for row in c.fetchall()]
 
-    def random_alias(self, name_pattern: str) -> str:
+    def random_alias(self, name_pattern: str) -> Optional[str]:
         list = self.list_alias(name_pattern)
-        return random.choice(list.split())
+        if list:
+            return random.choice(list)
+        else:
+            return None

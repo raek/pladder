@@ -52,12 +52,11 @@ def test_help(alias_cmds):
 
 def test_init_binding(alias_db):
     result = alias_db.get_alias("hello")
-    assert result == "hello: Hej!"
+    assert result == ("hello", "Hej!")
 
 
 def test_db_addalias(alias_db):
-    result = alias_db.add_alias("testdb", "datamaskin")
-    assert result == '"testdb" added. value is: "datamaskin"'
+    alias_db.add_alias("testdb", "datamaskin")
 
 
 def test_alias_create(alias_cmds):
@@ -78,12 +77,12 @@ def test_exec_alias(commands, populated_alias_cmds):
 
 def test_db_getalias(populated_alias_db):
     result = populated_alias_db.get_alias("testdb")
-    assert result == "testdb: datamaskin"
+    assert result == ("testdb", "datamaskin")
 
 
 def test_db_listalias(populated_alias_db):
     result = populated_alias_db.list_alias("%")
-    assert result == "hello testalias testdb"
+    assert result == ["hello", "testalias", "testdb"]
 
 
 def test_db_randomalias(populated_alias_db):
@@ -92,9 +91,9 @@ def test_db_randomalias(populated_alias_db):
 
 
 def test_db_delalias(populated_alias_db):
-    res1 = populated_alias_db.del_alias("hello")
-    res2 = populated_alias_db.get_alias("hello")
-    assert res1 == "Alias removed" and res2 in ["Nej", "https://i.imgur.com/6cpffM4.jpeg"]
+    populated_alias_db.del_alias("hello")
+    res = populated_alias_db.get_alias("hello")
+    assert res is None
 
 
 def test_delalias(populated_alias_cmds):
