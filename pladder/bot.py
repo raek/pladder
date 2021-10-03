@@ -196,7 +196,6 @@ class PladderBot(ExitStack, BotPluginInterface):
         connector = RetryProxy(self.bus, f"se.raek.PladderConnector.{network}")
         result = connector.SendMessage(channel, text,
                                        on_error=lambda e: e)
-        print(repr(result))
         if isinstance(result, Exception):
             return str(result)
         else:
@@ -330,7 +329,6 @@ def render_trace(trace, mode):
 
 
 def brief_trace(trace, color_pairs):
-    print(color_pairs)
     if color_pairs:
         (light, dark), *color_pairs = color_pairs
     else:
