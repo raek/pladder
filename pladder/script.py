@@ -77,7 +77,7 @@ class CommandGroup:
     def lookup_command(self, command_name: str) -> Optional[CommandBinding]:
         raise NotImplementedError()
 
-    def list_commands(self) -> List[CommandBinding]:
+    def list_commands(self) -> List[str]:
         raise NotImplementedError()
 
 
@@ -97,8 +97,8 @@ class PythonCommandGroup(CommandGroup):
                 return command
         return None
 
-    def list_commands(self) -> List[CommandBinding]:
-        return list(self._commands)
+    def list_commands(self) -> List[str]:
+        return [command.display_name for command in self._commands]
 
     def remove_command(self, command_name: str) -> None:
         binding = self.lookup_command(command_name)
@@ -135,10 +135,10 @@ class CommandRegistry:
                 return candidate_group
         return None
 
-    def list_commands(self) -> List[CommandBinding]:
-        return [command
+    def list_commands(self) -> List[str]:
+        return [command_name
                 for group in self._groups.values()
-                for command in group.list_commands()]
+                for command_name in group.list_commands()]
 
     def list_groups(self) -> List[str]:
         return list(self._groups.keys())

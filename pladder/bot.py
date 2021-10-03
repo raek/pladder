@@ -162,7 +162,7 @@ class PladderBot(ExitStack, BotPluginInterface):
                 if group is None:
                     return f"Unknown group: {name}"
                 else:
-                    command_names = sorted(command.display_name for command in group.list_commands())
+                    command_names = sorted(group.list_commands())
                     result = f"Commands in {name} group ({len(command_names)}): "
                     result += ", ".join(command_names)
                     return result
