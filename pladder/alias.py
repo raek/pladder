@@ -113,7 +113,7 @@ class AliasCommands:
         else:
             return errorstr()
 
-    def list_alias(self, name_pattern: str) -> str:
+    def list_alias(self, name_pattern: str = "") -> str:
         list = self.alias_db.list_alias(name_pattern)
         if list:
             return f"{len(list)} Found: " + " ".join(list)
