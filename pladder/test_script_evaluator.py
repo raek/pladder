@@ -2,11 +2,13 @@ import re
 
 import pytest
 
-from pladder.script import EvalError, ApplyError, CommandRegistry, CommandGroup, command_binding, new_context, interpret
+from pladder.script import \
+    EvalError, ApplyError, CommandRegistry, PythonCommandGroup, \
+    command_binding, new_context, interpret
 
 
 def make_registry(*bindings):
-    return CommandRegistry([CommandGroup("group", bindings)])
+    return CommandRegistry([PythonCommandGroup("group", bindings)])
 
 
 def test_eval_simple():

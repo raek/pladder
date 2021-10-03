@@ -74,13 +74,24 @@ def command_binding(name_pattern: NamePattern,
 
 
 class CommandGroup:
-    def __init__(self, name: str, initial: List[CommandBinding] = []) -> None:
-        self._name: str = name
-        self._commands: List[CommandBinding] = list(initial)
+    def __init__(self, name: str):
+        self.__name = name
 
     @property
     def name(self) -> str:
-        return self._name
+        return self.__name
+
+    def lookup_command(self, command_name: str) -> Optional[CommandBinding]:
+        raise NotImplementedError()
+
+    def list_commands(self) -> List[CommandBinding]:
+        raise NotImplementedError()
+
+
+class PythonCommandGroup(CommandGroup):
+    def __init__(self, name: str, initial: List[CommandBinding] = []) -> None:
+        super().__init__(name)
+        self._commands: List[CommandBinding] = list(initial)
 
     def register_command(self, command_name: str, fn: Callable[..., str],
                          varargs: bool = False,
@@ -109,9 +120,12 @@ class CommandRegistry:
     def __init__(self, initial: List[CommandGroup] = []) -> None:
         self._groups: List[CommandGroup] = list(initial)
 
-    def new_command_group(self, group_name: str) -> CommandGroup:
-        group = CommandGroup(group_name)
+    def add_command_group(self, group: CommandGroup) -> None:
         self._groups.append(group)
+
+    def new_command_group(self, group_name: str) -> PythonCommandGroup:
+        group = PythonCommandGroup(group_name)
+        self.add_command_group(group)
         return group
 
     def lookup_command(self, command_name: str) -> Optional[CommandBinding]:
