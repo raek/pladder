@@ -8,7 +8,7 @@ from pladder.script import \
 
 
 def make_registry(*bindings):
-    return CommandRegistry([PythonCommandGroup("group", bindings)])
+    return CommandRegistry({"group": PythonCommandGroup(bindings)})
 
 
 def test_eval_simple():

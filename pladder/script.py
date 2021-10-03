@@ -1,5 +1,5 @@
 import re
-from typing import Any, Callable, Dict, List, NamedTuple, Optional, Pattern, Tuple, Union
+from typing import Any, Callable, Dict, List, Mapping, NamedTuple, Optional, Pattern, Tuple, Union
 from inspect import getsource, signature, Parameter
 
 
@@ -74,13 +74,6 @@ def command_binding(name_pattern: NamePattern,
 
 
 class CommandGroup:
-    def __init__(self, name: str):
-        self.__name = name
-
-    @property
-    def name(self) -> str:
-        return self.__name
-
     def lookup_command(self, command_name: str) -> Optional[CommandBinding]:
         raise NotImplementedError()
 
@@ -89,8 +82,7 @@ class CommandGroup:
 
 
 class PythonCommandGroup(CommandGroup):
-    def __init__(self, name: str, initial: List[CommandBinding] = []) -> None:
-        super().__init__(name)
+    def __init__(self, initial: List[CommandBinding] = []) -> None:
         self._commands: List[CommandBinding] = list(initial)
 
     def register_command(self, command_name: str, fn: Callable[..., str],
@@ -117,35 +109,39 @@ class PythonCommandGroup(CommandGroup):
 
 
 class CommandRegistry:
-    def __init__(self, initial: List[CommandGroup] = []) -> None:
-        self._groups: List[CommandGroup] = list(initial)
+    def __init__(self, initial: Mapping[str, CommandGroup] = {}) -> None:
+        self._groups: Dict[str, CommandGroup] = dict(initial)
 
-    def add_command_group(self, group: CommandGroup) -> None:
-        self._groups.append(group)
+    def add_command_group(self, group_name: str, group: CommandGroup) -> None:
+        if group_name in self._groups:
+            raise ScriptError(f"Group {group_name} already registered")
+        self._groups[group_name] = group
 
     def new_command_group(self, group_name: str) -> PythonCommandGroup:
-        group = PythonCommandGroup(group_name)
-        self.add_command_group(group)
+        group = PythonCommandGroup()
+        self.add_command_group(group_name, group)
         return group
 
     def lookup_command(self, command_name: str) -> Optional[CommandBinding]:
-        for group in self._groups:
+        for group in self._groups.values():
             command = group.lookup_command(command_name)
             if command is not None:
                 return command
         return None
 
     def lookup_group(self, group_name: str) -> Optional[CommandGroup]:
-        for group in self._groups:
-            if group.name == group_name:
-                return group
+        for candidate_group_name, candidate_group in self._groups.items():
+            if candidate_group_name == group_name:
+                return candidate_group
         return None
 
     def list_commands(self) -> List[CommandBinding]:
-        return [command for group in self._groups for command in group.list_commands()]
+        return [command
+                for group in self._groups.values()
+                for command in group.list_commands()]
 
     def list_groups(self) -> List[str]:
-        return [group.name for group in self._groups]
+        return list(self._groups.keys())
 
 
 Metadata = Dict[Any, str]
