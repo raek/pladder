@@ -4,17 +4,14 @@ import sqlite3
 import random
 
 from pladder.plugin import BotPluginInterface, Plugin
-from pladder.script import EvalError, CommandGroup, CommandRegistry, Context, interpret
+from pladder.script import EvalError, CommandRegistry, Context, interpret
 
 
 @contextmanager
 def pladder_plugin(bot: BotPluginInterface) -> Plugin:
     alias_db_path = os.path.join(bot.state_dir, "alias.db")
-    all_cmds = bot.commands
-    admin_cmds = bot.new_command_group("alias")
-    user_cmds = bot.new_command_group("aliases")
     with AliasDb(alias_db_path) as alias_db:
-        AliasCommands(all_cmds, admin_cmds, user_cmds, alias_db)
+        AliasCommands(alias_db, bot.commands)
         yield
 
 
@@ -31,20 +28,18 @@ class DBError(Exception):
 
 class AliasCommands:
     def __init__(self,
-                 all_cmds: CommandRegistry,
-                 admin_cmds: CommandGroup,
-                 user_cmds: CommandGroup,
-                 alias_db: "AliasDb") -> None:
+                 alias_db: "AliasDb",
+                 all_cmds: CommandRegistry) -> None:
         self.alias_db = alias_db
         self.all_cmds = all_cmds
-        self.admin_cmds = admin_cmds
-        self.admin_cmds.register_command("alias", self.help)
-        self.admin_cmds.register_command("add-alias", self.add_alias, varargs=True)
-        self.admin_cmds.register_command("get-alias", self.alias_db.get_alias)
-        self.admin_cmds.register_command("del-alias", self.del_alias)
-        self.admin_cmds.register_command("list-alias", self.list_alias)
-        self.admin_cmds.register_command("random-alias", self.alias_db.random_alias)
-        self.user_cmds = user_cmds
+        admin_cmds = all_cmds.new_command_group("alias")
+        admin_cmds.register_command("alias", self.help)
+        admin_cmds.register_command("add-alias", self.add_alias, varargs=True)
+        admin_cmds.register_command("get-alias", self.alias_db.get_alias)
+        admin_cmds.register_command("del-alias", self.del_alias)
+        admin_cmds.register_command("list-alias", self.list_alias)
+        admin_cmds.register_command("random-alias", self.alias_db.random_alias)
+        self.user_cmds = all_cmds.new_command_group("aliases")
         self.register_db_bindings()
 
     def help(self) -> str:

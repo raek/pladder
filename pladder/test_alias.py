@@ -20,9 +20,7 @@ def commands():
 
 @fixture()
 def alias_cmds(commands, alias_db):
-    admin_cmds = commands.new_command_group("alias")
-    user_cmds = commands.new_command_group("aliases")
-    return AliasCommands(commands, admin_cmds, user_cmds, alias_db)
+    return AliasCommands(alias_db, commands)
 
 
 @fixture()
