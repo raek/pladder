@@ -97,6 +97,7 @@ class PladderBot(ExitStack, BotPluginInterface):
         cmds.register_command("get-meta", self.get_meta, contextual=True)
         cmds.register_command("pick", lambda *args: random.choice(args) if args else "")
         cmds.register_command("wpick", wpick)
+        cmds.register_command("random-range", random_range)
         cmds.register_command("concat", lambda *args: " ".join(arg.strip() for arg in args))
         cmds.register_command("eval", self.eval_command, contextual=True)
         cmds.register_command("eval-pick", self.eval_pick, contextual=True)
@@ -104,6 +105,7 @@ class PladderBot(ExitStack, BotPluginInterface):
         cmds.register_command("/=", self.ne)
         cmds.register_command("bool", self.bool_command)
         cmds.register_command("if", self.if_command)
+        cmds.register_command("format-int", format_int)
         cmds.register_command("trace", self.trace, contextual=True)
         cmds.register_command("trace-last", self.trace_last, contextual=True)
         cmds.register_command("source", self.source)
@@ -412,6 +414,14 @@ def pairs(iterable):
         except StopIteration:
             raise ValueError("Got an odd number of elements")
         yield x, y
+
+
+def random_range(start: str, exl_end: str, step: str = "1") -> str:
+    return str(random.randrange(int(start), int(exl_end), int(step)))
+
+
+def format_int(format_string: str, value: str) -> str:
+    return format(int(value), format_string)
 
 
 def load_standard_plugins(bot):
