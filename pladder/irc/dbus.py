@@ -66,9 +66,6 @@ class DbusHook(Hook):
                 "command": "error",
             }
 
-    def _handle_log_error(self, e):
-        return None
-
 
 class PladderConnector:
     # Note: methods of this class are called in the separate GLib main
