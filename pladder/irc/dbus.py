@@ -17,7 +17,6 @@ class DbusHook(Hook):
         self.config = config
         bus = SessionBus()
         self.bot = RetryProxy(bus, "se.raek.PladderBot")
-        self.log = RetryProxy(bus, "se.raek.PladderLog")
         self.connector = PladderConnector(bus, config, client)
         self.running = False
         self.exe = None
@@ -52,14 +51,6 @@ class DbusHook(Hook):
     def on_trigger(self, timestamp, channel, sender, text):
         return self.bot.RunCommand(timestamp, self.config.network, channel, sender.nick, text,
                                    on_error=self._handle_bot_error)
-
-    def on_privmsg(self, timestamp, channel, sender, text):
-        self.log.AddLine(timestamp, self.config.network, channel, sender.nick, text,
-                         on_error=self._handle_log_error)
-
-    def on_send_privmsg(self, timestamp, channel, nick, text):
-        self.log.AddLine(timestamp, self.config.network, channel, nick, text,
-                         on_error=self._handle_log_error)
 
     def _handle_bot_error(self, e):
         if "org.freedesktop.DBus.Error.ServiceUnknown" in str(e):
