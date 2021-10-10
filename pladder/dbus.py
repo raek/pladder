@@ -43,6 +43,37 @@ PLADDER_CONNECTOR_XML = """
 """
 
 
+PLADDER_WEB_API_XML = """
+<node>
+  <interface name="se.raek.PladderWebApi">
+    <method name="CreateToken">
+      <arg direction="in" name="token_name" type="s" />
+      <arg direction="in" name="creator_network" type="s" />
+      <arg direction="in" name="creator_user" type="s" />
+      <arg direction="out" name="ok" type="b" />
+      <arg direction="out" name="secret" type="s" />
+    </method>
+    <method name="GetToken">
+      <arg direction="in" name="token_name" type="s" />
+      <arg direction="out" name="ok" type="b" />
+      <arg direction="out" name="used" type="i" />
+      <arg direction="out" name="use_count" type="i" />
+      <arg direction="out" name="created" type="i" />
+      <arg direction="out" name="creator_network" type="s" />
+      <arg direction="out" name="creator_user" type="s" />
+    </method>
+    <method name="ListTokens">
+      <arg direction="out" name="token_names" type="as" />
+    </method>
+    <method name="DeleteToken">w
+      <arg direction="in" name="token_name" type="s" />
+      <arg direction="out" name="ok" type="b" />
+    </method>
+  </interface>
+</node>
+"""
+
+
 class RetryProxy:
     def __init__(self, bus, object_name):
         self.bus = bus
@@ -50,7 +81,7 @@ class RetryProxy:
         self.obj = None
 
     def __getattr__(self, name):
-        def wrapper(*args, on_error, **kwargs):
+        def wrapper(*args, on_error=None, **kwargs):
             try:
                 if not self.obj:
                     self.obj = self.bus.get(self.object_name)

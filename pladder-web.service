@@ -1,0 +1,10 @@
+[Unit]
+Description=Pladder Bot Web API
+
+[Service]
+Type=notify
+ExecStart=gunicorn3 --access-logfile=- -b localhost:5003 pladder.web.api:app
+SyslogIdentifier=pladder-web
+
+[Install]
+WantedBy=default.target

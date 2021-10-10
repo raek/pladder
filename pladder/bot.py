@@ -436,6 +436,7 @@ def load_standard_plugins(bot):
         "name",
         "bah",
         "azure",
+        "web",
     ]
     for module_name in plugins:
         try:
