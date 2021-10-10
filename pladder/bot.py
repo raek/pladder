@@ -426,20 +426,20 @@ def format_int(format_string: str, value: str) -> str:
 
 def load_standard_plugins(bot):
     plugins = [
-        "pladder.snusk",
-        "pladder.misc",
-        "pladder.bjbot",
-        "pladder.ttd",
-        "pladder.alias",
-        "pladder.bjukkify",
-        "pladder.pladdble",
-        "pladder.name",
-        "pladder.bah",
-        "pladder.azure",
+        "snusk",
+        "misc",
+        "bjbot",
+        "ttd",
+        "alias",
+        "bjukkify",
+        "pladdble",
+        "name",
+        "bah",
+        "azure",
     ]
     for module_name in plugins:
         try:
-            plugin_module = import_module(module_name)
+            plugin_module = import_module(f"pladder.plugins.{module_name}")
             plugin_ctxmgr = getattr(plugin_module, "pladder_plugin")
             bot.enter_context(plugin_ctxmgr(bot))
             print(f"Loaded {module_name}")

@@ -1,6 +1,6 @@
 from typing import NamedTuple
 
-from pladder.misc import vraaaal
+from .misc import vraaaal
 
 
 class DummyContext(NamedTuple):

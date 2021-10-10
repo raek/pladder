@@ -1,6 +1,6 @@
 from pytest import fixture
 
-from pladder.alias import AliasDb, AliasCommands
+from .alias import AliasDb, AliasCommands
 from pladder.script import CommandRegistry, interpret, new_context
 
 

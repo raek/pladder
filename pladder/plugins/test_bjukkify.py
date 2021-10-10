@@ -1,7 +1,7 @@
 from unittest.mock import Mock
 import pytest
 
-from pladder.bjukkify import pladder_plugin, bjukkify
+from .bjukkify import pladder_plugin, bjukkify
 
 
 def test_registers_command():
