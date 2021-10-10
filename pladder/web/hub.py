@@ -1,6 +1,4 @@
-from collections import namedtuple
 from contextlib import ExitStack
-import logging
 import os
 
 from pydbus import SessionBus  # type: ignore
@@ -8,7 +6,6 @@ from pydbus import SessionBus  # type: ignore
 from pladder.dbus import RetryProxy, dbus_loop
 from .dbus import PladderConnector, PladderWebApi
 from .tokens import TokenDb
-from .types import Token
 
 
 class Hub(ExitStack):

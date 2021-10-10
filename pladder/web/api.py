@@ -1,7 +1,6 @@
 import atexit
-from contextlib import ExitStack, contextmanager
+from contextlib import ExitStack
 from datetime import datetime, timezone
-import random
 
 from flask import Flask, make_response, request
 

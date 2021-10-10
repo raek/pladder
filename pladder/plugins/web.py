@@ -41,7 +41,10 @@ class WebCommands:
         if ok:
             used = _format_time(used)
             created = _format_time(created)
-            return f'Token "{token_name}", used {use_count} times, last used {used}, created by {user} ({network}) at {created}'
+            return (f'Token "{token_name}", ' +
+                    f'used {use_count} times, ' +
+                    f'last used {used}, ' +
+                    f'created by {user} on {network} at {created}')
         else:
             return f'Token "{token_name}" was not found.'
 
