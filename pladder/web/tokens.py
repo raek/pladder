@@ -90,6 +90,7 @@ class TokenDb(ExitStack):
                 return None
             name, use_count = row
             now = int(datetime.now(timezone.utc).timestamp())
+            use_count = use_count + 1
             c.execute("""
                 UPDATE tokens
                 SET used = :now, use_count = :use_count
