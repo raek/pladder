@@ -1,3 +1,9 @@
+from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
+
+from gi.repository import GLib  # type: ignore
+
+
 PLADDER_BOT_XML = """
 <node>
   <interface name="se.raek.PladderBot">
@@ -55,3 +61,21 @@ class RetryProxy:
                 else:
                     return on_error(e)
         return wrapper
+
+
+@contextmanager
+def dbus_loop(logger=None):
+    with ThreadPoolExecutor(max_workers=1) as exe:
+        loop = GLib.MainLoop()
+        loop_future = exe.submit(loop.run)
+        if logger:
+            logger.info("Dbus thread started")
+        yield
+        # Signal loop to stop
+        loop.quit()
+        # Wait for loop task to finish
+        loop_future.result()
+        # Wait for executor to shut down (by exiting with block)
+    # Everything is torn down
+    if logger:
+        logger.info("Dbus thread stopped")
