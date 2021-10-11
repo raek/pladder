@@ -1,6 +1,6 @@
 from typing import Generator
 
-from pladder.script import CommandGroup, CommandRegistry
+from pladder.script.types import CommandGroup, CommandRegistry
 
 
 class BotPluginInterface:

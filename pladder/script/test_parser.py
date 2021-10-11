@@ -1,6 +1,7 @@
 import pytest
 
-from pladder.script import ParseError, Call, Word, Literal, Variable, parse
+from .parser import parse
+from .types import ParseError, Call, Word, Literal, Variable
 
 
 def call(*words):

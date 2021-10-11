@@ -1,7 +1,8 @@
 from pytest import fixture
 
 from .alias import AliasDb, AliasCommands
-from pladder.script import CommandRegistry, interpret, new_context
+from pladder.script.interpreter import interpret
+from pladder.script.types import CommandRegistry, new_context
 
 
 @fixture(scope="function")

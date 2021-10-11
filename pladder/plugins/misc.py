@@ -3,7 +3,7 @@ from datetime import datetime
 import re
 import unicodedata
 
-from pladder.script import ScriptError
+from pladder.script.types import ScriptError
 
 
 @contextmanager

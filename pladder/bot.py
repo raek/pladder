@@ -10,7 +10,8 @@ from pladder.dbus import PLADDER_BOT_XML, RetryProxy
 from pladder.fuse import Fuse, FuseResult
 import pladder.irc.color as color
 from pladder.plugin import BotPluginInterface, PluginLoadError
-from pladder.script import ScriptError, ApplyError, CommandRegistry, new_context, interpret, apply_call
+from pladder.script.interpreter import interpret, apply_call
+from pladder.script.types import ScriptError, ApplyError, CommandRegistry, new_context
 
 
 def main():

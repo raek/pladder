@@ -2,9 +2,10 @@ import re
 
 import pytest
 
-from pladder.script import \
+from .interpreter import interpret
+from .types import \
     EvalError, ApplyError, CommandRegistry, PythonCommandGroup, \
-    command_binding, new_context, interpret
+    command_binding, new_context
 
 
 def make_registry(*bindings):

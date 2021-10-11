@@ -5,8 +5,9 @@ import random
 from typing import List, Optional, Tuple
 
 from pladder.plugin import BotPluginInterface, Plugin
-from pladder.script import CommandBinding, CommandGroup, CommandRegistry, Context, \
-    command_binding, interpret
+from pladder.script.interpreter import interpret
+from pladder.script.types import CommandBinding, CommandGroup, CommandRegistry, Context, \
+    command_binding
 
 
 @contextmanager
