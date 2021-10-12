@@ -107,6 +107,8 @@ class PladderBot(ExitStack, BotPluginInterface):
         cmds.register_command("bool", self.bool_command)
         cmds.register_command("if", self.if_command)
         cmds.register_command("format-int", format_int)
+        cmds.register_command("first", first)
+        cmds.register_command("last", last)
         cmds.register_command("trace", self.trace, contextual=True)
         cmds.register_command("trace-last", self.trace_last, contextual=True)
         cmds.register_command("source", self.source)
@@ -423,6 +425,18 @@ def random_range(start: str, exl_end: str, step: str = "1") -> str:
 
 def format_int(format_string: str, value: str) -> str:
     return format(int(value), format_string)
+
+
+def first(*args):
+    if not args:
+        raise ScriptError("first: no arguments given")
+    return args[0]
+
+
+def last(*args):
+    if not args:
+        raise ScriptError("last: no arguments given")
+    return args[-1]
 
 
 def load_standard_plugins(bot):
