@@ -8,6 +8,20 @@ from pladder.script.interpreter import apply_call, interpret
 from pladder.script.types import ScriptError, new_context
 
 
+def _pairs(iterable):
+    it = iter(iterable)
+    while True:
+        try:
+            x = next(it)
+        except StopIteration:
+            return
+        try:
+            y = next(it)
+        except StopIteration:
+            raise ValueError("Got an odd number of elements")
+        yield x, y
+
+
 @contextmanager
 def pladder_plugin(bot):
     last_contexts = bot.last_contexts
@@ -30,10 +44,11 @@ def pladder_plugin(bot):
     cmds.register_command("nth", nth)
     cmds.register_command("pick", lambda *args: random.choice(args) if args else "")
     cmds.register_command("wpick", wpick)
-    # Access to interpreter
+    # Intertwined with interpreter
     cmds.register_command("eval", eval_command, contextual=True)
     cmds.register_command("eval-pick", eval_pick, contextual=True)
     cmds.register_command("comp", comp, contextual=True)
+    cmds.register_command("let", let, contextual=True)
     # Documentation
     cmds.register_command("version", version)
     cmds.register_command("help", help, contextual=True)
@@ -43,7 +58,6 @@ def pladder_plugin(bot):
     cmds.register_command("show-context", show_context, contextual=True)
     cmds.register_command("trace", trace, contextual=True)
     cmds.register_command("trace-last", lambda context, mode: trace_last(context, mode, last_contexts), contextual=True)
-    # Access to insides
     yield
 
 
@@ -115,20 +129,6 @@ def wpick(*args):
     return random.choices(values, weights, k=1)[0]
 
 
-def _pairs(iterable):
-    it = iter(iterable)
-    while True:
-        try:
-            x = next(it)
-        except StopIteration:
-            return
-        try:
-            y = next(it)
-        except StopIteration:
-            raise ValueError("Got an odd number of elements")
-        yield x, y
-
-
 def eval_command(context, script):
     text, _display_name = interpret(context, script)
     return text
@@ -154,6 +154,17 @@ def _apply(context, words):
         raise ScriptError(f"Unknown command name: {command_name}")
     command_context = context._replace(command_name=command_name)
     return apply_call(command_context, command, command_name, arguments)
+
+
+def let(context, *args):
+    if len(args) % 2 != 1:
+        raise ScriptError("Let accepts an odd number of arguments (name-value pairs and a body)")
+    new_env = dict(context.environment)
+    for variable, value in _pairs(args[:-1]):
+        new_env[variable] = value
+    subcontext = context._replace(environment=new_env)
+    result, _display_name = interpret(subcontext, args[-1])
+    return result
 
 
 def version(self):

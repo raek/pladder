@@ -135,7 +135,7 @@ def test_eval_contextual_propagates_metadata():
     script = "ctxaware"
     metadata = {"a": "foo"}
     commands = make_registry(command_binding("ctxaware", lambda context: context.metadata["a"], contextual=True))
-    result, command = interpret(new_context(commands, metadata), script)
+    result, command = interpret(new_context(commands, metadata=metadata), script)
     assert result == "foo"
     assert command == "ctxaware"
 

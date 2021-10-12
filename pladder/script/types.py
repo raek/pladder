@@ -148,6 +148,7 @@ class CommandRegistry:
         return list(self._groups.keys())
 
 
+Environment = Dict[str, str]
 Metadata = Dict[Any, str]
 Result = Tuple[str, str]
 Char = str
@@ -164,13 +165,17 @@ class TraceEntry(NamedTuple):
 
 class Context(NamedTuple):
     commands: CommandRegistry
+    environment: Environment
     metadata: Metadata
     command_name: str
     trace: List[TraceEntry]
 
 
-def new_context(commands: CommandRegistry, metadata: Metadata = {}, command_name: str = "<TOP>") -> Context:
-    return Context(commands, metadata, command_name, [])
+def new_context(commands: CommandRegistry, /,
+                environment: Environment = {},
+                metadata: Metadata = {},
+                command_name: str = "<TOP>") -> Context:
+    return Context(commands, environment, metadata, command_name, [])
 
 
 class ApplyError(ScriptError):

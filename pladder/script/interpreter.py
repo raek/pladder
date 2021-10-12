@@ -2,7 +2,7 @@ from inspect import signature, Parameter
 from typing import Any, Callable, List
 
 from .parser import parse
-from .types import ApplyError, Call, CommandBinding, Context, EvalError, Literal, Result, ScriptError, TraceEntry
+from .types import ApplyError, Call, CommandBinding, Context, EvalError, Literal, Result, TraceEntry
 
 
 def interpret(context: Context, script: str) -> Result:
@@ -20,7 +20,10 @@ def eval_call(context: Context, call: Call) -> Result:
             elif isinstance(fragment, Call):
                 evaled_fragment, _display_name = eval_call(context, fragment)
             else:
-                raise ScriptError(f"Unsupported fragment: {fragment}")
+                try:
+                    evaled_fragment = context.environment[fragment.name]
+                except KeyError:
+                    raise EvalError(f"Unbound variable: {fragment.name}")
             evaled_fragments.append(evaled_fragment)
         evaled_word = "".join(evaled_fragments)
         evaled_words.append(evaled_word)
