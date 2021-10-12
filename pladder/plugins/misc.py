@@ -206,5 +206,6 @@ def tijd():
     else:
         return "geen idee"
 
+
 def vecka():
     return str(datetime.now().isocalendar()[1])

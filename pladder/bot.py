@@ -6,7 +6,7 @@ import os
 import random
 
 from pladder import LAST_COMMIT
-from pladder.dbus import PLADDER_BOT_XML, RetryProxy
+from pladder.dbus import PLADDER_BOT_XML
 from pladder.fuse import Fuse, FuseResult
 import pladder.irc.color as color
 from pladder.plugin import BotPluginInterface, PluginLoadError
@@ -98,6 +98,7 @@ class PladderBot(ExitStack, BotPluginInterface):
         cmds.register_command("concat", lambda *args: " ".join(arg.strip() for arg in args))
         cmds.register_command("eval", self.eval_command, contextual=True)
         cmds.register_command("eval-pick", self.eval_pick, contextual=True)
+        cmds.register_command("let", self.let, contextual=True)
         cmds.register_command("=", self.eq)
         cmds.register_command("/=", self.ne)
         cmds.register_command("bool", self.bool_command)
