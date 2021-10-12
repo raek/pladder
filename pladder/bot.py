@@ -66,7 +66,7 @@ class PladderBot(ExitStack, BotPluginInterface):
             result = {'text': "Usage: {}".format(self.command_usage(e.command)),
                       'command': e.command.display_name}
         except ScriptError as e:
-            result = {'text': str(e),
+            result = {'text': f"Error: {e}",
                       'command': 'error'}
         except RecursionError:
             result = {'text': "RecursionError: Maximum recursion depth exceeded",
