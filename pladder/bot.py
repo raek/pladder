@@ -86,10 +86,6 @@ class PladderBot(ExitStack, BotPluginInterface):
         cmds = self.new_command_group("builtin")
         cmds.register_command("help", self.help)
         cmds.register_command("version", self.version)
-        cmds.register_command("send", self.send, contextual=True, varargs=True)
-        cmds.register_command("channels", self.channels, contextual=True)
-        cmds.register_command("users", self.users, contextual=True)
-        cmds.register_command("connector-config", self.connector_config, contextual=True)
         cmds.register_command("comp", self.comp, contextual=True)
         cmds.register_command("give", self.give, varargs=True)
         cmds.register_command("echo", lambda text="": text, varargs=True)
@@ -183,68 +179,6 @@ class PladderBot(ExitStack, BotPluginInterface):
 
     def version(self):
         return LAST_COMMIT
-
-    def send(self, context, target, user_text):
-        if "send_called" in context.metadata:
-            return "Only one send per script is allowed."
-        context.metadata["send_called"] = True
-        target_parts = target.split("/")
-        if len(target_parts) != 2:
-            return "Invalid target. Syntax: NetworkName/#channel"
-        network, channel = target_parts
-        if not network:
-            network = context.metadata["network"]
-        if context.metadata["channel"] == context.metadata["nick"]:
-            text = "({network}/{nick}) ".format(**context.metadata)
-        else:
-            text = "({network}/{channel}/{nick}) ".format(**context.metadata)
-        text += user_text
-        connector = RetryProxy(self.bus, f"se.raek.PladderConnector.{network}")
-        result = connector.SendMessage(channel, text,
-                                       on_error=lambda e: e)
-        if isinstance(result, Exception):
-            return str(result)
-        else:
-            return f"{result}   {user_text}"
-
-    def channels(self, context, network=None):
-        if network is None:
-            network = context.metadata["network"]
-        connector = RetryProxy(self.bus, f"se.raek.PladderConnector.{network}")
-        channels = connector.GetChannels(on_error=lambda e: None)
-        if channels is None:
-            return f"Not connected to network {network}."
-        else:
-            if any(map(lambda c: " " in c, channels)):
-                channels = ["{" + c + "}" for c in channels]
-            return f"{network}: {', '.join(channels)}"
-
-    def users(self, context, network_and_channel=""):
-        parts = network_and_channel.split("/")
-        if len(parts) != 2:
-            return "Invalid argument. Syntax: NetworkName/#channel"
-        network, channel = parts
-        if not network:
-            network = context.metadata["network"]
-        connector = RetryProxy(self.bus, f"se.raek.PladderConnector.{network}")
-        users = connector.GetChannelUsers(channel, on_error=lambda e: None)
-        if users is None:
-            return f"Not connected to network {network}."
-        else:
-            return f"{network}/{channel}: {', '.join(sorted(users))}"
-
-    def connector_config(self, context, network=None):
-        if network is None:
-            network = context.metadata["network"]
-        connector = RetryProxy(self.bus, f"se.raek.PladderConnector.{network}")
-        config = connector.GetConfig(on_error=lambda e: None)
-        if config is None:
-            return f"Not connected to network {network}."
-        else:
-            parts = []
-            for key, value in config.items():
-                parts.append(f"{key}={repr(value)}")
-            return f"{network}: {', '.join(parts)}"
 
     def show_context(self, context):
         return repr({
@@ -460,6 +394,7 @@ def load_standard_plugins(bot):
         "bah",
         "azure",
         "web",
+        "connector",
     ]
     for module_name in plugins:
         try:
