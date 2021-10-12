@@ -18,6 +18,7 @@ def pladder_plugin(bot):
     cmds.register_command("unicode", unicode, varargs=True)
     cmds.register_command("unicode-name", unicode_name, varargs=True)
     cmds.register_command("tijd", tijd)
+    cmds.register_command("vecka", vecka)
     yield
 
 
@@ -204,3 +205,6 @@ def tijd():
         return f"{minute} voor {next_hour}"
     else:
         return "geen idee"
+
+def vecka():
+    return str(datetime.now().isocalendar()[1])
