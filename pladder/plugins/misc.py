@@ -9,6 +9,7 @@ from pladder.script.types import ScriptError
 @contextmanager
 def pladder_plugin(bot):
     cmds = bot.new_command_group("misc")
+    cmds.register_command("give", give, varargs=True)
     cmds.register_command(re.compile("^kloo+fify$"), kloooofify, varargs=True, contextual=True)
     cmds.register_command(re.compile("^vrå*lify$"), vraaaal, varargs=True, contextual=True)
     cmds.register_command("time", time)
@@ -20,6 +21,10 @@ def pladder_plugin(bot):
     cmds.register_command("tijd", tijd)
     cmds.register_command("vecka", vecka)
     yield
+
+
+def give(target, text):
+    return f"{target}: {text}"
 
 
 def kloooofify(context, text):

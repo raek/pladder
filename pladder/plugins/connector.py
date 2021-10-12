@@ -7,6 +7,7 @@ from pladder.dbus import RetryProxy
 def pladder_plugin(bot):
     connector_cmds = ConnectorCommands(bot.bus)
     cmds = bot.new_command_group("connector")
+    cmds.register_command("get-meta", connector_cmds.get_meta, contextual=True)
     cmds.register_command("send", connector_cmds.send, contextual=True, varargs=True)
     cmds.register_command("channels", connector_cmds.channels, contextual=True)
     cmds.register_command("users", connector_cmds.users, contextual=True)
@@ -17,6 +18,12 @@ def pladder_plugin(bot):
 class ConnectorCommands:
     def __init__(self, bus):
         self.bus = bus
+
+    def get_meta(self, context, key):
+        if key in context.metadata:
+            return str(context.metadata[key])
+        else:
+            return f"Error: no such metadata key: {key}"
 
     def send(self, context, target, user_text):
         if "send_called" in context.metadata:
