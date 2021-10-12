@@ -109,6 +109,7 @@ class PladderBot(ExitStack, BotPluginInterface):
         cmds.register_command("format-int", format_int)
         cmds.register_command("first", first)
         cmds.register_command("last", last)
+        cmds.register_command("nth", nth)
         cmds.register_command("trace", self.trace, contextual=True)
         cmds.register_command("trace-last", self.trace_last, contextual=True)
         cmds.register_command("source", self.source)
@@ -437,6 +438,13 @@ def last(*args):
     if not args:
         raise ScriptError("last: no arguments given")
     return args[-1]
+
+
+def nth(index, *args):
+    index = int(index)
+    if index < 0 or index >= len(args):
+        raise ScriptError("nth: index out of range")
+    return args[index]
 
 
 def load_standard_plugins(bot):
