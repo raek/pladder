@@ -73,8 +73,8 @@ class PladderBot(ExitStack, BotPluginInterface):
             result = {'text': "RecursionError: Maximum recursion depth exceeded",
                       'command': 'error'}
         except Exception as e:
-            print(str(e))
-            result = {'text': "Internal error: " + str(e),
+            print(repr(e))
+            result = {'text': "Internal error: " + repr(e),
                       'command': 'error'}
         self.last_contexts[(network, channel)] = context
         return result
