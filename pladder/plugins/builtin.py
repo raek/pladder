@@ -202,12 +202,12 @@ def help(context, type=None, name=None):
         if command is None:
             return f"Unknown command: {name}"
         else:
-            return f"Usage: {_command_usage(command)}"
+            return f"Usage: {command_usage(command)}"
     else:
         raise Exception("Unreachable")
 
 
-def _command_usage(command):
+def command_usage(command):
     result = command.display_name
     parameters = list(signature(command.fn).parameters.values())
     if command.contextual:

@@ -7,6 +7,7 @@ from pladder.dbus import PLADDER_BOT_XML
 from pladder.fuse import Fuse, FuseResult
 import pladder.irc.color as color
 from pladder.plugin import BotPluginInterface, PluginLoadError
+from pladder.plugins.builtin import command_usage
 from pladder.script.interpreter import interpret
 from pladder.script.types import ScriptError, ApplyError, CommandRegistry, new_context
 
@@ -63,7 +64,7 @@ class PladderBot(ExitStack, BotPluginInterface):
                 result = {'text': result_text,
                           'command': display_name}
         except ApplyError as e:
-            result = {'text': "Usage: {}".format(self.command_usage(e.command)),
+            result = {'text': "Usage: {}".format(command_usage(e.command)),
                       'command': e.command.display_name}
         except ScriptError as e:
             result = {'text': f"Error: {e}",
