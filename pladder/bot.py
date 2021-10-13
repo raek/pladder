@@ -83,6 +83,8 @@ class PladderBot(ExitStack, BotPluginInterface):
 def load_standard_plugins(bot):
     plugins = [
         "builtin",
+        "connector",
+        "web",
         "snusk",
         "misc",
         "bjbot",
@@ -93,8 +95,6 @@ def load_standard_plugins(bot):
         "name",
         "bah",
         "azure",
-        "web",
-        "connector",
     ]
     for module_name in plugins:
         try:
