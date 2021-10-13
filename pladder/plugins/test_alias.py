@@ -116,3 +116,8 @@ def test_invalid_add(alias_cmds):
 def test_invalid_add_other_group(alias_cmds):
     result = alias_cmds.add_alias("echo", "hehu jag är smart")
     assert result == "Hallå farfar, den finns ju redan."
+
+
+def test_set_alias(populated_alias_cmds):
+    result = populated_alias_cmds.set_alias("testalias", "hest")
+    assert result == "\"testalias\" updated. value is: \"hest\", was: \"testtest\""

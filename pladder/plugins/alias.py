@@ -39,6 +39,7 @@ class AliasCommands(CommandGroup):
         admin_cmds.register_command("alias", self.help)
         admin_cmds.register_command("add-alias", self.add_alias, varargs=True)
         admin_cmds.register_command("get-alias", self.get_alias)
+        admin_cmds.register_command("set-alias", self.set_alias, varargs=True)
         admin_cmds.register_command("del-alias", self.del_alias)
         admin_cmds.register_command("list-alias", self.list_alias)
         admin_cmds.register_command("random-alias", self.random_alias)
@@ -94,6 +95,15 @@ class AliasCommands(CommandGroup):
             return f"{row[0]}: {row[1]}"
         else:
             return errorstr()
+
+    def set_alias(self, name: str, data: str) -> str:
+        row = self.alias_db.get_alias(name)
+        if not row:
+            return "Hallå farfar, den där finns ju inte ens."
+        old = row[1]
+        self.alias_db.del_alias(name)
+        self.alias_db.add_alias(name, data)
+        return f"\"{name}\" updated. value is: \"{data}\", was: \"{old}\""
 
     def del_alias(self, name: str) -> str:
         if self.binding_exists(name):
