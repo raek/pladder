@@ -50,7 +50,7 @@ class PladderBot(ExitStack, BotPluginInterface):
                     'nick': nick,
                     'text': text}
         try:
-            context = new_context(self.commands, metadata)
+            context = new_context(self.commands, metadata=metadata)
             fuse_result = self.fuse.run(metadata['datetime'], network, channel)
             if fuse_result == FuseResult.JUST_BLOWN:
                 result = {'text': f'{color.LIGHT_YELLOW}*daily fuse blown*{color.LIGHT_YELLOW}',

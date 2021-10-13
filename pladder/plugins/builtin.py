@@ -239,7 +239,7 @@ def show_context(context):
 
 
 def trace(context, mode, script):
-    subcontext = new_context(context.commands, context.metadata)
+    subcontext = new_context(context.commands, metadata=context.metadata)
     try:
         interpret(subcontext, script)
     except Exception:
