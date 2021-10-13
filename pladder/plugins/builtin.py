@@ -167,7 +167,7 @@ def let(context, *args):
     return result
 
 
-def version(self):
+def version():
     return LAST_COMMIT
 
 
