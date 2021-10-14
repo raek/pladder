@@ -48,6 +48,7 @@ def pladder_plugin(bot):
     cmds.register_command("eval", eval_command, contextual=True)
     cmds.register_command("eval-pick", eval_pick, contextual=True)
     cmds.register_command("comp", comp, contextual=True)
+    cmds.register_command("repeat", repeat, contextual=True)
     cmds.register_command("let", let, contextual=True)
     # Documentation
     cmds.register_command("version", version)
@@ -154,6 +155,11 @@ def _apply(context, words):
         raise ScriptError(f"Unknown command name: {command_name}")
     command_context = context._replace(command_name=command_name)
     return apply_call(command_context, command, command_name, arguments)
+
+
+def repeat(context, count, script):
+    texts = [interpret(context, script)[0] for _ in range(int(count))]
+    return "   ".join(texts)
 
 
 def let(context, *args):
