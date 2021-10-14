@@ -2,6 +2,7 @@ from contextlib import ExitStack
 from datetime import datetime, timezone
 from importlib import import_module
 import os
+import traceback
 
 from pladder.dbus import PLADDER_BOT_XML
 from pladder.fuse import Fuse, FuseResult
@@ -73,7 +74,7 @@ class PladderBot(ExitStack, BotPluginInterface):
             result = {'text': "RecursionError: Maximum recursion depth exceeded",
                       'command': 'error'}
         except Exception as e:
-            print(repr(e))
+            print(traceback.format_exc())
             result = {'text': "Internal error: " + repr(e),
                       'command': 'error'}
         self.last_contexts[(network, channel)] = context
