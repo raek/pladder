@@ -204,11 +204,17 @@ def help(context, type=None, name=None):
                 result += ", ".join(command_names)
                 return result
     elif type == "-command":
-        command = context.commands.lookup_command(name)
-        if command is None:
-            return f"Unknown command: {name}"
+        if name is None:
+            command_names = sorted(context.commands.list_commands())
+            result = f"Commands ({len(command_names)}): "
+            result += ", ".join(command_names)
+            return result
         else:
-            return f"Usage: {command_usage(command)}"
+            command = context.commands.lookup_command(name)
+            if command is None:
+                return f"Unknown command: {name}"
+            else:
+                return f"Usage: {command_usage(command)}"
     else:
         raise Exception("Unreachable")
 
