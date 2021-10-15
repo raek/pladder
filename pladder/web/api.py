@@ -1,6 +1,7 @@
 import atexit
 from contextlib import ExitStack
 from datetime import datetime, timezone
+import logging
 
 from flask import Flask, make_response, request
 
@@ -8,6 +9,7 @@ from pladder.web.hub import Hub
 
 
 app = Flask(__name__)
+logger = logging.getLogger("pladder.web")
 
 global_context = ExitStack().__enter__()
 atexit.register(global_context.__exit__, None, None, None)
@@ -28,5 +30,7 @@ def hello():
     if token_name is None:
         return make_response(("Forbidden", 403))
     script = request.data.decode("utf-8")
+    logger.info(f"Request by {token_name}: {script}")
     result = hub.bot.RunCommand(now, "Web", "api", token_name, script)
+    logger.info(f"Response: {result['text']}")
     return result["text"]
