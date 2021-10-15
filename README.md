@@ -140,7 +140,8 @@ Support for Q authentication on QuakeNet is available. Add an "auth" section lik
 ## Trying out the Mumble client
 
 To connect to a mumble server, first create a configuration file for
-that server. This example will use `examplenet.json` as the file name.
+that server. This example will use `examplenet.json` as the config
+file name.
 
     mkdir -p ~/.config/pladder-mumble/
     editor ~/.config/pladder-mumble/examplenet.json
@@ -151,7 +152,7 @@ Set up the configuration file like this:
         "network": "ExampleNet",
         "host": "mumble.example.se",
         "password": "server_password",
-        "user": "pladder123"
+        "user": "NAME_OF_YOUR_BOT"
     }
 
 There are some optional configuration options. If they are not
@@ -167,9 +168,11 @@ The `certfile` option defaults to
 `~/.config/pladder-mumble/<config-name>.pem`.
 
 After writing a config file, create a certificate file for the Mumble
-client to use, name it `examplenet.pem` and put it next to the
-`examplenet.json` file (in `~/.config/pladder-mumble/`). FIXME:
-describe how to generate the certificate file.
+client to use. The certificate contains the user name (same as in the
+config). Generate a certificate like this:
+
+    cd ~/.config/pladder-mumble/
+    openssl req -x509 -nodes -days 3650 -newkey rsa:2048 -keyout examplenet.pem -out examplenet.pem -subj "/CN=NAME_OF_YOUR_BOT"
 
 Then start a mumble client process:
 
@@ -177,9 +180,9 @@ Then start a mumble client process:
 
 A `--config foo` argument results in the file
 `/.config/pladder-mumble/foo.json` being used. If `--dbus` is given,
-then the Mumble client runs commands using the bot service (which has to
-be started separately). If it is not given, then commands are ignored
-(useful for testing the pure Mumble parts).
+then the Mumble client runs commands using the bot service (which has
+to be started separately). If it is not given, then commands are
+ignored (useful for testing the pure Mumble parts).
 
 
 # Running automatically using systemd
