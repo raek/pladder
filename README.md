@@ -102,6 +102,16 @@ Set up the configuration file like this:
         "channels": ["#bot"]
     }
 
+There are some optional configuration options. If they are not
+specified, then their default values are used:
+
+        "port": 6667,
+        "channels": [],
+        "auth": null,
+        "user_mode": null,
+        "trigger_prefix": "~",
+        "reply_prefix": "> ",
+
 Then start a client process:
 
     pladder-irc --dbus --config raeknet
@@ -113,7 +123,7 @@ started separately). If it is not given, then commands are ignored
 (useful for testing the pure IRC parts).
 
 
-### Authentication
+### IRC Authentication
 
 Support for Q authentication on QuakeNet is available. Add an "auth" section like this in the IRC config:
 
