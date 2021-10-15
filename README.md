@@ -137,6 +137,51 @@ Support for Q authentication on QuakeNet is available. Add an "auth" section lik
     }
 
 
+## Trying out the Mumble client
+
+To connect to a mumble server, first create a configuration file for
+that server. This example will use `examplenet.json` as the file name.
+
+    mkdir -p ~/.config/pladder-mumble/
+    editor ~/.config/pladder-mumble/examplenet.json
+
+Set up the configuration file like this:
+
+    {
+        "network": "ExampleNet",
+        "host": "mumble.example.se",
+        "password": "server_password",
+        "user": "pladder123"
+    }
+
+There are some optional configuration options. If they are not
+specified, then their default values are used:
+
+        "port": 64738,
+        "application": "Pladder Bot",
+        "trigger_prefix": "~",
+        "reply_prefix": "> ",
+        "certfile": "/path/to/certfile.pem",
+
+The `certfile` option defaults to
+`~/.config/pladder-mumble/<config-name>.pem`.
+
+After writing a config file, create a certificate file for the Mumble
+client to use, name it `examplenet.pem` and put it next to the
+`examplenet.json` file (in `~/.config/pladder-mumble/`). FIXME:
+describe how to generate the certificate file.
+
+Then start a mumble client process:
+
+    pladder-mumble --dbus --config examplenet
+
+A `--config foo` argument results in the file
+`/.config/pladder-mumble/foo.json` being used. If `--dbus` is given,
+then the Mumble client runs commands using the bot service (which has to
+be started separately). If it is not given, then commands are ignored
+(useful for testing the pure Mumble parts).
+
+
 # Running automatically using systemd
 
 Systemd is used to manage long-running background services. Services
@@ -201,6 +246,12 @@ You can watch the log in "follow mode" to see how lines appear:
 Note that the bot service and the IRC client can be started and
 stopped independently of each other. The DBus connection between them
 will reconnect automatically.
+
+
+## Installing the Mumble client
+
+Follow the instructions above for IRC, but replace `pladder-irc` with
+`pladder-mumlbe`.
 
 
 # Uninstalling everything
