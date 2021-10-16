@@ -96,6 +96,7 @@ def load_standard_plugins(bot):
         "name",
         "bah",
         "azure",
+        "userdef",
     ]
     for module_name in plugins:
         try:
