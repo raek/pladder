@@ -92,7 +92,7 @@ class AliasCommands(CommandGroup):
     def get_alias(self, name: str) -> str:
         row = self.alias_db.get_alias(name)
         if row:
-            return f"{row[0]}: {row[1]}"
+            return row[1]
         else:
             return errorstr()
 
