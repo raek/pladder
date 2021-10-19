@@ -4,6 +4,7 @@ import sqlite3
 from typing import Iterator, List, NamedTuple, Optional
 
 from pladder.plugin import BotPluginInterface, Plugin
+from pladder.script.parser import escape
 from pladder.script.interpreter import interpret
 from pladder.script.types import CommandBinding, CommandGroup, CommandRegistry, Context, ScriptError, command_binding
 
@@ -52,7 +53,7 @@ class UserdefCommands(CommandGroup):
         if maybe_command is None:
             return None
         command = maybe_command
-        source = f"def-command {command.name} {{{' '.join(command.params)}}} {{{command.script}}}"
+        source = f"def-command {escape(command.name)} {escape(' '.join(command.params))} {escape(command.script)}"
 
         def exec_command(context: Context, *args: str) -> str:
             if len(command.params) != len(args):
