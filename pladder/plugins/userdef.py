@@ -52,7 +52,7 @@ class UserdefCommands(CommandGroup):
         if maybe_command is None:
             return None
         command = maybe_command
-        source = f"def-command {{{command.name}}} {{{command.params}}} {{{command.script}}}"
+        source = f"def-command {command.name} {{{' '.join(command.params)}}} {{{command.script}}}"
 
         def exec_command(context: Context, *args: str) -> str:
             if len(command.params) != len(args):
