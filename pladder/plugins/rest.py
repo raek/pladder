@@ -1,5 +1,5 @@
 from contextlib import contextmanager
-from pladder.plugin import PluginError
+from pladder.script.types import ScriptError
 import requests
 
 @contextmanager
@@ -16,7 +16,7 @@ def rest_post_simple(url, message):
     headers = {"Content-Type": "text/plain; charset=utf-8"}
     r = requests.post(url, headers=headers, data=message)
     if r.status_code != 200:
-        raise PluginError("Unexpected error code: %d" % r.status_code)
+        raise ScriptError("Unexpected error code: %d" % r.status_code)
     else:
         return r.text
 
