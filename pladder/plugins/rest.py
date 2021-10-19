@@ -16,7 +16,6 @@ def rest_post_simple(url, message):
     """
     Do a POST to a simple REST API, sending plain text and returning the result
     """
-    print(message)
     headers = {"Content-Type": "text/plain; charset=utf-8"}
     r = requests.post(url, headers=headers, data=message)
     if r.status_code != 200:
