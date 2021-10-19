@@ -4,6 +4,7 @@ import random
 
 from pladder import LAST_COMMIT
 import pladder.irc.color as color
+from pladder.script.parser import escape
 from pladder.script.interpreter import apply_call, interpret
 from pladder.script.types import ScriptError, new_context
 
@@ -339,10 +340,3 @@ def full_trace(trace, color_pairs):
             part = f"{light}[{call}] {dark}=> {light}{result}"
         parts.append(part)
     return f"{dark}, ".join(parts) + color.RESET
-
-
-def escape(word):
-    if word == "" or " " in word or "{" in word:
-        return "{" + word + "}"
-    else:
-        return word

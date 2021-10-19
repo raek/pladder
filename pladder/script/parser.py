@@ -3,6 +3,13 @@ from typing import Callable, List
 from .types import Call, Char, Fragment, Literal, ParseError, Variable, Word
 
 
+def escape(word: str) -> str:
+    if word == "" or " " in word or "{" in word:
+        return "{" + word + "}"
+    else:
+        return word
+
+
 def parse(text: str) -> Call:
     return _Parser(text).parse()
 
