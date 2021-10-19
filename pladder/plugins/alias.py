@@ -5,6 +5,7 @@ import random
 from typing import List, Optional, Tuple
 
 from pladder.plugin import BotPluginInterface, Plugin
+from pladder.script.parser import escape
 from pladder.script.interpreter import interpret
 from pladder.script.types import CommandBinding, CommandGroup, CommandRegistry, Context, \
     command_binding
@@ -52,7 +53,7 @@ class AliasCommands(CommandGroup):
         if not row:
             return None
         _name, template = row
-        source = f"Alias {command_name}: {template}"
+        source = f"add-alias {escape(command_name)} {escape(template)}"
 
         def exec_command(context: Context) -> str:
             script = "echo " + template
