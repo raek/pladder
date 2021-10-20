@@ -84,7 +84,10 @@ class UserdefCommands(CommandGroup):
         command = self.userdef_db.lookup_command(name)
         if command:
             return f'A command with name "{name}" already exists!'
-        params_list = params.split(" ")
+        if params:
+            params_list = params.split(" ")
+        else:
+            params_list = []
         self.userdef_db.add_command(name, params_list, script)
         return "Command added: " + self._prettify_command(name, params_list, script)
 
@@ -92,7 +95,10 @@ class UserdefCommands(CommandGroup):
         command = self.userdef_db.lookup_command(name)
         if command is None:
             return f'A command with name "{name}" doesn\'t exists!'
-        params_list = params.split(" ")
+        if params:
+            params_list = params.split(" ")
+        else:
+            params_list = []
         self.userdef_db.del_command(name)
         self.userdef_db.add_command(name, params_list, script)
         return ("Command updated. Now: " + self._prettify_command(name, params_list, script) +
@@ -206,7 +212,10 @@ class UserdefDb(ExitStack):
             row = c.fetchone()
             if row:
                 name, params_string, script = row
-                params = params_string.split(" ")
+                if params_string:
+                    params = params_string.split(" ")
+                else:
+                    params = []
                 return Command(name, params, script)
             else:
                 return None
