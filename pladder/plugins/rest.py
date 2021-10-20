@@ -17,7 +17,7 @@ def rest_post_simple(url, message):
     Do a POST to a simple REST API, sending plain text and returning the result
     """
     headers = {"Content-Type": "text/plain; charset=utf-8"}
-    r = requests.post(url, headers=headers, data=message)
+    r = requests.post(url, headers=headers, data=message.encode("utf-8"))
     if r.status_code != 200:
         raise ScriptError("Unexpected error code: %d" % r.status_code)
     else:
