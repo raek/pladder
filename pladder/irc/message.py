@@ -181,7 +181,7 @@ class MessageConnection:
     def send_message(self, message):
         line = format_message(message)
         logger.debug("<-- %s", line)
-        line = line.replace("\n", "").replace("\r", "")
+        line = line.replace("\r\n", " ").replace("\n", " ").replace("\r", " ")
         line_bytes = line.encode("utf-8")
         line_bytes = line_bytes[:MAX_LINE_BYTES - 2]
         line_bytes += b"\r\n"
