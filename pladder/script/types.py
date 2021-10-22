@@ -171,7 +171,7 @@ class Context(NamedTuple):
     trace: List[TraceEntry]
 
 
-def new_context(commands: CommandRegistry, /,
+def new_context(commands: CommandRegistry, *,
                 environment: Environment = {},
                 metadata: Metadata = {},
                 command_name: str = "<TOP>") -> Context:
