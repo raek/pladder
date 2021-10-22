@@ -2,7 +2,7 @@ import atexit
 from contextlib import ExitStack
 from datetime import datetime, timezone
 
-from flask import Flask, make_response, request
+from flask import Flask, make_response, request  # type: ignore
 
 from pladder.web.hub import Hub
 

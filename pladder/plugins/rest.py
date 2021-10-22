@@ -2,7 +2,7 @@ from contextlib import contextmanager
 
 from pladder.script.types import ScriptError
 
-import requests
+import requests  # type: ignore
 
 
 @contextmanager

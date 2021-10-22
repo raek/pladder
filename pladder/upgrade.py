@@ -3,7 +3,7 @@ import json
 import os
 import subprocess
 
-from flask import Flask, make_response, request
+from flask import Flask, make_response, request  # type: ignore
 
 
 app = Flask(__name__)
