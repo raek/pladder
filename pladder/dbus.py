@@ -1,8 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 
-from gi.repository import GLib  # type: ignore
-
 
 PLADDER_BOT_XML = """
 <node>
@@ -96,6 +94,8 @@ class RetryProxy:
 
 @contextmanager
 def dbus_loop(logger=None):
+    from gi.repository import GLib  # type: ignore
+
     with ThreadPoolExecutor(max_workers=1) as exe:
         loop = GLib.MainLoop()
         loop_future = exe.submit(loop.run)
