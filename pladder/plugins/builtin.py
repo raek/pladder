@@ -1,8 +1,8 @@
 from contextlib import contextmanager
 from inspect import Parameter, signature
+import os
 import random
 
-from pladder import LAST_COMMIT
 import pladder.irc.color as color
 from pladder.script.parser import escape
 from pladder.script.interpreter import apply_call, interpret
@@ -26,6 +26,11 @@ def _pairs(iterable):
 @contextmanager
 def pladder_plugin(bot):
     last_contexts = bot.last_contexts
+    try:
+        with open(os.path.join(bot.state_dir, "version.txt"), encoding="utf-8") as f:
+            version = f.read().strip()
+    except Exception:
+        version = "(unknown)"
 
     cmds = bot.new_command_group("builtin")
     # Strings
@@ -52,7 +57,7 @@ def pladder_plugin(bot):
     cmds.register_command("repeat", repeat, contextual=True)
     cmds.register_command("let", let, contextual=True)
     # Documentation
-    cmds.register_command("version", version)
+    cmds.register_command("version", lambda: version)
     cmds.register_command("help", help, contextual=True)
     cmds.register_command("source", source, contextual=True)
     # Debuggning
@@ -172,10 +177,6 @@ def let(context, *args):
     subcontext = context._replace(environment=new_env)
     result, _display_name = interpret(subcontext, args[-1])
     return result
-
-
-def version():
-    return LAST_COMMIT
 
 
 def help(context, type=None, name=None):
