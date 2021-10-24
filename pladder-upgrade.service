@@ -3,7 +3,7 @@ Description=Pladder Bot Upgrader
 
 [Service]
 Type=notify
-ExecStart=gunicorn3 --access-logfile=- -b localhost:5001 pladder.upgrade:app
+ExecStart=%h/.cache/pladder-venv/bin/gunicorn --access-logfile=- -b localhost:5001 pladder.upgrade:app
 SyslogIdentifier=pladder-upgrade
 
 [Install]

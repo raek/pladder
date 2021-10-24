@@ -1,5 +1,5 @@
 __pycache__
 /pladder.egg-info
+/.venv
 .vscode
-virtualenv/
 .mypy_cache

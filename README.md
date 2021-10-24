@@ -4,51 +4,72 @@ This is a personal IRC bot project written by Rasmus and other
 contributors.
 
 
-# Quick 'n' Dirty Test Setup
+# Basic Setup
 
 This is a bare minimum setup for when you only want to develop the bot
 logic and don't care about running an actual IRC client.
 
 Make sure you have Python 3 installed:
 
-    sudo apt install python3
+    $ sudo apt install python3
 
-To run the bot, run this command in the repository root:
+Pladder has some dependencies. The recommended way to install them is
+to use a virtual environment. There is a script that sets up
+everything in the `.venv` directory inside the repository. Run it like
+this:
 
-    python3 -m pladder.cli -c "type command here"
+    $ source setup_and_activate_venv.sh
+    (.venv) $
 
-This will store bot state in `~/.config/pladder-bot/`, which will be
-created and initialized the first time.
+When the venv is active, you have access to the various bot
+applications in the shell. Run `deactivate` to exit the venv. In this
+readme `(.venv) $` will be used to signal that the command needs to be
+run in the virtual environment.
 
+To run a one-off command in the bot, use `pladder-cli` like this:
 
-# Development Setup
+    (.venv) $ pladder-cli -c 'echo Hello, world!'
 
-Install Python 3 and dependency libaries:
-
-    sudo apt install python3 python3-systemd python3-pydbus
-
-Then install this package in "development mode":
-
-    pip3 install --user --editable .
-
-This makes pladder commands available from the PATH. The commands
-"point into" this source directory, so source code changes are
-effective immediately.
+The bot will stores its state in `~/.config/pladder-bot/`. If the
+directory does not exist, it will be created and initialized the first
+time the bot is run.
 
 
-# Overview
+## Trying out changes
 
-The pladder package installs three console commands:
+In the venv, the Pladder package is installed in "editable mode". This
+means that changes made to the bot code will be seen immediately by
+`pladder-cli` the next time it is run.
+
+
+## Running the automated tests and checks
+
+Before comitting changes, please run the checked-in test suite:
+
+    (.venv) $ ./check.sh
+
+If you are making changes to the dependencies of Pladder, please run
+the cheks in fresh virtual environment like this:
+
+    $ ./full_check.sh
+
+
+# Design Overview
+
+The pladder package installs four console commands:
 
 * a bot service (`pladder-bot`) that contains the features of the bot
 (the "business logic", for some value of "business"),
 * an IRC client (`pladder-irc`) that keeps a connection to an IRC
   server and reacts to commands from users,
+* a Mubmle client (`pladder-mumble`) that keeps a connection to an IRC
+  server and reacts to commands from users,
 * a command line tool (`pladder-cli`) that provides a simple way to
   run bot commands during development, and
 
-The bot service can serve multiple IRC client. In other words, the bot
-can be present on multiple IRC networks simultaneously.
+The bot service can serve multiple IRC and Mumble client. In other
+words, the bot can be present on multiple IRC networks and Mumble
+servers simultaneously.
 
 The bot parts can be run in two main ways:
 
@@ -65,7 +86,7 @@ I recommend testing both, but starting with the first.
 The `pladder-cli` command is a convenience tool to run bot commands
 from a normal shell:
 
-    pladder-cli --command snusk
+    (.venv) $ pladder-cli -command snusk
 
 If run without arguments it will read lines from stdin and run them as
 commands.
@@ -76,11 +97,11 @@ commands.
 The bot service communicates with its clients using DBus. A test
 instance of the service can be started like this:
 
-    pladder-bot
+    (.venv) $ pladder-bot
 
 To interact with it, run the CLI from another shell:
 
-    pladder-cli --dbus --command snusk
+    (.venv) $ pladder-cli --dbus --command snusk
 
 
 ## Trying out the IRC client
@@ -88,8 +109,8 @@ To interact with it, run the CLI from another shell:
 To connect to an IRC network, first create a configuration file for
 that network:
 
-    mkdir -p ~/.config/pladder-irc/
-    editor ~/.config/pladder-irc/raeknet.json
+    $ mkdir -p ~/.config/pladder-irc/
+    $ editor ~/.config/pladder-irc/raeknet.json
 
 Set up the configuration file like this:
 
@@ -114,7 +135,7 @@ specified, then their default values are used:
 
 Then start a client process:
 
-    pladder-irc --dbus --config raeknet
+    (.venv) $ pladder-irc --dbus --config raeknet
 
 A `--config foo` argument results in the file
 `/.config/pladder-irc/foo.json` being used. If `--dbus` is given, then
@@ -139,12 +160,18 @@ Support for Q authentication on QuakeNet is available. Add an "auth" section lik
 
 ## Trying out the Mumble client
 
+The mumble client has an extra dependency that cannot be installed by
+pip and must be installed through the system package manager. On
+Debian-based systems (like Ubuntu) install it like this:
+
+    $ sudo apt install libopus0
+
 To connect to a mumble server, first create a configuration file for
 that server. This example will use `examplenet.json` as the config
 file name.
 
-    mkdir -p ~/.config/pladder-mumble/
-    editor ~/.config/pladder-mumble/examplenet.json
+    $ mkdir -p ~/.config/pladder-mumble/
+    $ editor ~/.config/pladder-mumble/examplenet.json
 
 Set up the configuration file like this:
 
@@ -191,41 +218,57 @@ Systemd is used to manage long-running background services. Services
 can be run at the system level or on user level. Pladder is designed
 to be run as a user service (so root is not required for running).
 
+When run from systemd, a different virtual environment is used than
+for the one used in testing. It resides in `~/.cache/pladder-venv`. In
+addition, the services need some package than cannot be installed by
+pip, and needs to be installed through the system package manager. On
+Debian-based systems (such as Ubuntu) they are installed like this:
+
+    $ sudo apt install python3-gi libsystemd-dev
+
+Then create the virtual environment for the services (run the commands
+from the repo root):
+
+    $ python3 -m venv --system-site-packages ~/.cache/pladder-venv
+    $ source ~/.cache/pladder-venv/bin/activate
+    (pladder-venv) $ pip install .[systemd]
+    (pladder-venv) $ deactivate
+
 ## Installing the bot service
 
 First let systemd know that there is such a thing as pladder-bot:
 
-    systemctl --user link ./pladder-bot.service
+    $ systemctl --user link ./pladder-bot.service
 
 This sets up symlinks from the location where user services are
 defined (`~/.config/systemd/user/`) to the repo directory. The service
 is still not enabled nor started. Enable the service to tell systemd
 that it should be started automatically on boot:
 
-    systemctl --user enable pladder-bot.service
+    $ systemctl --user enable pladder-bot.service
 
 Since we just added the service after the last boot, we also need to
 start it manually the first time:
 
-    systemctl --user start pladder-bot.service
+    $ systemctl --user start pladder-bot.service
 
 The `--dbus` flag can be given to `pladder-cli` to run commands on the
 new background service. To check in on the service you can use this
 command (which also displays its most recent log lines):
 
-    systemctl --user status pladder-bot.servcie
+    $ systemctl --user status pladder-bot.service
 
 You can display the full log like this (useful for errors):
 
-    journalctl --user-unit pladder-bot.service -e
+    $ journalctl --user-unit pladder-bot.service -e
 
 If you change the bot code, you can restart the service like this:
 
-    systemctl --user restart pladder-bot.service
+    $ systemctl --user restart pladder-bot.service
 
 When changing settings in the `.service` files themselves, reload them using:
 
-    systemctl --user daemon-reload
+    $ systemctl --user daemon-reload
 
 
 ## Installing the IRC client
@@ -234,17 +277,17 @@ The IRC client service is parameterized (a "template unit"). The idea
 is that you start one instance for each IRC network. First install the
 template:
 
-    systemctl --user link ./pladder-irc@.service
+    $ systemctl --user link ./pladder-irc@.service
 
 Assuming you have a configuration file named `foo.json`, enable and
 start a service for it like this (the `--now` argument is like running
 `start` immediately afterwards):
 
-    systemctl --user enable --now pladder-irc@foo.service
+    $ systemctl --user enable --now pladder-irc@foo.service
 
 You can watch the log in "follow mode" to see how lines appear:
 
-    journalctl --user-unit pladder-irc@foo.service -f
+    $ journalctl --user-unit pladder-irc@foo.service -f
 
 Note that the bot service and the IRC client can be started and
 stopped independently of each other. The DBus connection between them
@@ -259,14 +302,24 @@ Follow the instructions above for IRC, but replace `pladder-irc` with
 
 # Uninstalling everything
 
-The systemd parts:
+If you haven't set up any systemd services or used the Mumble client,
+then there is nothing to uninstall. You can delete the `.venv`
+directory in the repository to free up space if you want.
 
-    systemctl --user disable --now pladder-bot.service
-    systemctl --user disable --now pladder-irc@REPLACEME.service
-    systemctl --user disable --now pladder-log.service
+If you have set up systemd services, then uninstall them like this:
+
+    $ systemctl --user disable --now pladder-bot.service
+    $ systemctl --user disable --now pladder-irc@REPLACEME.service
+    $ systemctl --user disable --now pladder-mubmle@REPLACEME.service
 
 Use `systemctl --user status` to list all the services if you don't know their names.
 
-The Python parts:
+Then remove the virtual environment used by the services:
 
-    pip3 uninstall pladder
+    $ rm -rf ~/.cache/pladder-venv
+
+Lastly, you can uninstall the system packages needed by the Mumble
+client and the services (but be sure to check that this doesn't
+uninstall any packages you need):
+
+    $ sudo apt remove libopus0 python3-gi libsystemd-dev

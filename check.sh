@@ -2,9 +2,9 @@
 
 set -e
 
-echo "Mypy (type checking)"
-python3 -m mypy -p pladder && echo OK
-echo "Flake8"
-python3 -m flake8 --extend-exclude .venv && echo OK
-echo "Pytest"
-python3 -m pytest && echo OK
+echo "Flake8: static analysis and style check"
+flake8 --extend-exclude .venv && echo OK
+echo "Mypy: type checking"
+mypy -p pladder && echo OK
+echo "Pytest: unit tests"
+pytest && echo OK

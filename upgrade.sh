@@ -10,10 +10,16 @@ fi
 
 git fetch --prune origin
 git reset --hard origin/master
-pip3 uninstall -y pladder
 echo "LAST_COMMIT=$(git log --pretty=format:"%h \"%s\" by %an, %ad" -n 1 | python3 -c "import sys; sys.stdout.write(repr(next(sys.stdin)))")" > pladder/__init__.py
-pip3 install --user -r requirements.txt
-pip3 install --user --no-warn-script-location "$1"
+if [[ ! -d ~/.cache/pladder-venv ]]; then
+    python3 -m venv --system-site-packages ~/.cache/pladder-venv
+fi
+source ~/.cache/pladder-venv/bin/activate
+echo "Installing pladder..."
+pip install --force-reinstall "$1"[systemd]
+echo "Pladder installed"
 git checkout -- pladder/__init__.py
+echo "Restarting pladder-bot..."
 systemctl --user daemon-reload
 systemctl --user restart pladder-bot.service
+echo "Restarted pladder-bot"

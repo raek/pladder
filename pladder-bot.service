@@ -4,7 +4,8 @@ Description=Pladder Bot Core
 [Service]
 Type=dbus
 BusName=se.raek.PladderBot
-ExecStart=/usr/bin/python3 -u -m pladder.bot
+Environment="PYTHONUNBUFFERED=1"
+ExecStart=%h/.cache/pladder-venv/bin/pladder-bot
 Restart=on-failure
 SyslogIdentifier=pladder-bot
 
