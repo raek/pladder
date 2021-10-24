@@ -7,7 +7,7 @@ class Config(NamedTuple):
     bind_host: str
     bind_port: int
     secret: str
-    repo_dir: str
+    ref: str
 
 
 CONFIG_DEFAULTS = {
