@@ -3,6 +3,7 @@ Description=Pladder Bot Upgrader
 
 [Service]
 Type=notify
+Environment="PYTHONUNBUFFERED=1"
 ExecStart=%h/.cache/pladder-venv/bin/pladder-upgrade
 SyslogIdentifier=pladder-upgrade
 

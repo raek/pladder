@@ -3,6 +3,7 @@ Description=Pladder Bot Web API
 
 [Service]
 Type=notify
+Environment="PYTHONUNBUFFERED=1"
 ExecStart=%h/.cache/pladder-venv/bin/pladder-web
 SyslogIdentifier=pladder-web
 
