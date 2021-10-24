@@ -17,7 +17,7 @@ if [[ ! -d ~/.cache/pladder-venv ]]; then
 fi
 source ~/.cache/pladder-venv/bin/activate
 echo "Installing pladder..."
-pip install --force-reinstall "$1"[systemd]
+pip install "$1"[systemd]
 echo "Pladder installed"
 echo "Restarting pladder-bot..."
 systemctl --user daemon-reload
