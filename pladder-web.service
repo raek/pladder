@@ -3,7 +3,7 @@ Description=Pladder Bot Web API
 
 [Service]
 Type=notify
-ExecStart=%h/.cache/pladder-venv/bin/gunicorn --access-logfile=- -b localhost:5003 pladder.web.api:app
+ExecStart=%h/.cache/pladder-venv/bin/pladder-web
 SyslogIdentifier=pladder-web
 
 [Install]
