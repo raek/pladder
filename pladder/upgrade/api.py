@@ -47,16 +47,17 @@ def valid_signature(secret, payload, signature):
     return hmac.compare_digest(signature, expected_signature)
 
 
-PIP = Path.home() / ".cache" / "pladder-venv" / "bin" / "pip"
+VENV_BIN = Path.home() / ".cache" / "pladder-venv" / "bin"
 
 
 def upgrade(url, commit, message, author, timestamp):
     try:
         version = f"{commit[:7]} \"{message}\" by {author}, {timestamp}"
         write_version("Upgrade in progress...")
-        subprocess.run([PIP, "uninstall", "-y", "pladder"], check=False)
-        subprocess.run([PIP, "install", f"pladder[systemd] @ git+{url}@{commit}"], check=True)
+        subprocess.run([VENV_BIN / "pip", "uninstall", "-y", "pladder"], check=False)
+        subprocess.run([VENV_BIN / "pip", "install", f"pladder[systemd] @ git+{url}@{commit}"], check=True)
         write_version(version)
+        subprocess.run([VENV_BIN / "pladder-systemd", "update-unit-files"], check=True)
         subprocess.run(["systemctl", "--user", "daemon-reload"], check=True)
         subprocess.run(["systemctl", "--user", "restart", "pladder-bot"], check=True)
         print(f"Upgraded successfully to: {version}")

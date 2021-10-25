@@ -232,29 +232,39 @@ from the repo root):
     $ python3 -m venv --system-site-packages ~/.cache/pladder-venv
     $ source ~/.cache/pladder-venv/bin/activate
     (pladder-venv) $ pip install .[systemd]
-    (pladder-venv) $ deactivate
+
+Installing the `pladder` package does unfortunately not put the
+systemd unit files into `~/.config/systemd/user` where they need to
+be. There is a tool that does this. Run it like this:
+
+    (pladder-venv) $ pladder-systemd update-unit-files
+    $ systemctl --user daemon-reload
+
+This does not enable the units, but merely makes systemd know about
+them. If you change the `.service` files, you need to reinstall the
+`pladder` package and rerun the above two commands.
+
 
 ## Installing the bot service
 
-First let systemd know that there is such a thing as pladder-bot:
-
-    $ systemctl --user link ./pladder-bot.service
-
-This sets up symlinks from the location where user services are
-defined (`~/.config/systemd/user/`) to the repo directory. The service
-is still not enabled nor started. Enable the service to tell systemd
-that it should be started automatically on boot:
+After writing the unit files, it is time to enable the service. This
+means that systemd that it will be started automatically by systemd on
+boot:
 
     $ systemctl --user enable pladder-bot.service
 
-Since we just added the service after the last boot, we also need to
-start it manually the first time:
+Since we just enable the service and have not rebooted yet, we also
+need to start it manually this first time:
 
     $ systemctl --user start pladder-bot.service
 
 The `--dbus` flag can be given to `pladder-cli` to run commands on the
-new background service. To check in on the service you can use this
-command (which also displays its most recent log lines):
+new background service:
+
+    (.venv) $ pladder-cli -c 'echo hello'
+
+To check in on the service you can use this command (which also
+displays its most recent log lines):
 
     $ systemctl --user status pladder-bot.service
 
@@ -265,10 +275,6 @@ You can display the full log like this (useful for errors):
 If you change the bot code, you can restart the service like this:
 
     $ systemctl --user restart pladder-bot.service
-
-When changing settings in the `.service` files themselves, reload them using:
-
-    $ systemctl --user daemon-reload
 
 
 ## Installing the IRC client
@@ -313,6 +319,11 @@ If you have set up systemd services, then uninstall them like this:
     $ systemctl --user disable --now pladder-mubmle@REPLACEME.service
 
 Use `systemctl --user status` to list all the services if you don't know their names.
+
+Then use the `pladder-systemd` tool to remove the unit files:
+
+    $ source ~/.cache/pladder-venv/bin/activate
+    (pladder-venv) $ pladder-systemd remove-unit-files
 
 Then remove the virtual environment used by the services:
 
