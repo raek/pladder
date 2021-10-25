@@ -36,6 +36,7 @@ def pladder_plugin(bot):
     # Strings
     cmds.register_command("echo", lambda text="": text, varargs=True)
     cmds.register_command("concat", lambda *args: " ".join(arg.strip() for arg in args))
+    cmds.register_command("escape", lambda text="": escape(text), varargs=True)
     # Booleans
     cmds.register_command("=", eq)
     cmds.register_command("/=", ne)
