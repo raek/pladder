@@ -4,7 +4,8 @@ from datetime import datetime, timezone
 
 from flask import Flask, make_response, request  # type: ignore
 
-from pladder.web.hub import Hub
+from .hub import Hub
+from .types import NETWORK, UNKNOWN_USER
 
 
 app = Flask(__name__)
@@ -27,8 +28,9 @@ def hello():
     token_name = hub.db.check_token(secret)
     if token_name is None:
         return make_response(("Forbidden", 403))
+    sender = request.headers.get("X-Pladder-Sender", UNKNOWN_USER)
     script = request.data.decode("utf-8")
-    print(f"Request by {token_name}: {script}")
-    result = hub.bot.RunCommand(now, "Web", "api", token_name, script)
+    print(f"Request by {sender} using token {token_name}: {script}")
+    result = hub.bot.RunCommand(now, NETWORK, token_name, sender, script)
     print(f"Response: {result['text']}")
     return result["text"]

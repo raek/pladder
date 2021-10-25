@@ -1,13 +1,10 @@
 import logging
 
 from pladder.dbus import PLADDER_CONNECTOR_XML, PLADDER_WEB_API_XML
+from .types import NETWORK, UNKNOWN_USER
 
 
 logger = logging.getLogger("pladder.web")
-
-
-NETWORK = "Web"
-DUMMY_CHANNEL = "api"
 
 
 class PladderConnector:
@@ -23,18 +20,18 @@ class PladderConnector:
     def GetConfig(self):
         return {
             "network": NETWORK,
-            "dummy_channel": DUMMY_CHANNEL,
         }
 
     def SendMessage(self, channel, text):
         return "Sending is not supported"
 
     def GetChannels(self):
-        return [DUMMY_CHANNEL]
+        return self.db.list_tokens()
 
     def GetChannelUsers(self, channel):
-        if channel == DUMMY_CHANNEL:
-            return self.db.list_tokens()
+        token = self.db.get_token(token_name=channel)
+        if token:
+            return [UNKNOWN_USER]
         else:
             return []
 

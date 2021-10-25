@@ -1,6 +1,10 @@
 from typing import NamedTuple
 
 
+NETWORK = "Web"
+UNKNOWN_USER = "(unknown user)"
+
+
 class Token(NamedTuple):
     name: str
     used: int
