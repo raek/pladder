@@ -38,7 +38,6 @@ def read_config():
 
 
 def run_gunicorn(config):
-    print(sys.argv)
     sys.argv = [
         sys.argv[0].replace("pladder-web", "gunicorn"),
         "--access-logfile", "-",
