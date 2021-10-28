@@ -38,6 +38,11 @@ PLADDER_CONNECTOR_XML = """
       <arg direction="in" name="channel" type="s" />
       <arg direction="out" name="channels" type="as" />
     </method>
+    <method name="TriggerReload">
+      <arg direction="out" name="triggered" type="b" />
+    </method>
+    <signal name="ReloadComplete">
+    </signal>
   </interface>
 </node>
 """

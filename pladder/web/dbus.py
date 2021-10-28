@@ -1,6 +1,8 @@
 import logging
 
-from pladder.dbus import PLADDER_CONNECTOR_XML, PLADDER_WEB_API_XML
+from pydbus.generic import signal  # type: ignore
+
+from pladder.dbus import PLADDER_CONNECTOR_XML, PLADDER_WEB_API_XMLmumble/
 from .types import NETWORK, UNKNOWN_USER
 
 
@@ -63,3 +65,8 @@ class PladderWebApi:
 
     def DeleteToken(self, token_name):
         return self.db.delete_token(token_name)
+
+    def TriggerReload(self):
+        return False
+
+    ReloadComplete = signal()

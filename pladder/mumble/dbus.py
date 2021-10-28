@@ -2,6 +2,7 @@ from contextlib import ExitStack
 import logging
 
 from pydbus import SessionBus  # type: ignore
+from pydbus.generic import signal  # type: ignore
 
 from pladder.dbus import PLADDER_CONNECTOR_XML, RetryProxy, dbus_loop
 from pladder.mumble.client import Hook
@@ -70,3 +71,8 @@ class PladderConnector:
 
     def GetChannelUsers(self, channel):
         return self.client.get_channel_users(channel)
+
+    def TriggerReload(self):
+        return False
+
+    ReloadComplete = signal()
