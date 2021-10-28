@@ -6,6 +6,7 @@ Wants=pladder-bot.service
 Type=notify
 Environment="PYTHONUNBUFFERED=1"
 ExecStart=%h/.cache/pladder-venv/bin/pladder-irc --systemd --dbus --config=%I
+ExecReload=%h/.cache/pladder-venv/bin/pladder-irc --trigger-reload --config=%I
 Restart=always
 RestartSec=5min
 StartLimitInterval=4h

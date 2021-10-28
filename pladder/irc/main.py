@@ -20,15 +20,20 @@ logger = logging.getLogger("pladder.irc")
 
 
 def main():
-    use_systemd, use_dbus, config_name = parse_arguments()
-    config = read_config(config_name)
+    args = parse_arguments()
+    config = read_config(args.config)
+    if args.trigger_reload:
+        from pladder.irc.dbus import send_reload_trigger
+        logging.basicConfig(level=logging.DEBUG)
+        ok = send_reload_trigger(config)
+        return 0 if ok else 1
     with Client(config) as client:
-        if use_systemd:
+        if args.systemd:
             from pladder.irc.systemd import SystemdHook
             client.install_hook(SystemdHook)
         else:
             logging.basicConfig(level=logging.DEBUG)
-        if use_dbus:
+        if args.dbus:
             from pladder.irc.dbus import DbusHook
             client.install_hook(DbusHook)
         client.run()
@@ -39,8 +44,10 @@ def parse_arguments():
     parser.add_argument("--systemd", action="store_true")
     parser.add_argument("--dbus", action="store_true")
     parser.add_argument("--config", required=True)
+    parser.add_argument("--trigger-reload", action="store_true",
+                        help="Don't run a client, but signal an existing client to reload its code.")
     args = parser.parse_args()
-    return args.systemd, args.dbus, args.config
+    return args
 
 
 def read_config(config_name):

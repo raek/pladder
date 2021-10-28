@@ -1,11 +1,15 @@
 from contextlib import ExitStack
 import logging
+import threading
 
 from pydbus import SessionBus  # type: ignore
 from pydbus.generic import signal  # type: ignore
 
 from pladder.dbus import PLADDER_CONNECTOR_XML, RetryProxy, dbus_loop
 from pladder.irc.client import Hook
+
+
+RELOAD_TIMEOUT_SECONDS = 5*60
 
 
 logger = logging.getLogger("pladder.irc")
@@ -80,3 +84,26 @@ class PladderConnector:
         return False
 
     ReloadComplete = signal()
+
+
+def send_reload_trigger(config):
+    logger.info(f"Sending reload trigger to connector for {config.network}...")
+    reload_complete = threading.Event()
+    bus = SessionBus()
+    try:
+        client = bus.get(f"se.raek.PladderConnector.{config.network}")
+    except Exception:
+        logger.error("Coult not reach connector!")
+        return False
+    with dbus_loop():
+        client.ReloadComplete.connect(reload_complete.set)
+        if not client.TriggerReload():
+            logger.error("Reload not supported!")
+            return False
+        logger.info("Reload triggered successfully.")
+        logger.info("Wating for connector to complete reload...")
+        if not reload_complete.wait(timeout=RELOAD_TIMEOUT_SECONDS):
+            logger.error("Reload did not complete in {RELOAD_TIMEOUT_SECONDS} seconds!")
+            return False
+        logger.info("Reload completed.")
+        return True
