@@ -1,5 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
+from time import sleep
 
 
 PLADDER_BOT_XML = """
@@ -99,14 +100,29 @@ def dbus_loop(logger=None):
     with ThreadPoolExecutor(max_workers=1) as exe:
         loop = GLib.MainLoop()
         loop_future = exe.submit(loop.run)
+        # Ensure the loop has started running before mobing on. If
+        # loop.quit() is called before it is running, it will be
+        # missed by the loop and the loop will never quit.
+        if not _await_loop_running(loop, 10):
+            loop_future.cancel()
+            raise Exception("GLib MainLoop did not start")
         if logger:
             logger.info("Dbus thread started")
         yield
         # Signal loop to stop
         loop.quit()
         # Wait for loop task to finish
-        loop_future.result()
+        loop_future.result(timeout=3)
         # Wait for executor to shut down (by exiting with block)
     # Everything is torn down
     if logger:
         logger.info("Dbus thread stopped")
+
+
+def _await_loop_running(loop, timeout):
+    for _ in range(timeout ** 10):
+        if loop.is_running():
+            return True
+        else:
+            sleep(0.1)
+    return False
