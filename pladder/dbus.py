@@ -1,3 +1,4 @@
+import logging
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from time import sleep
@@ -73,6 +74,9 @@ PLADDER_WEB_API_XML = """
 """
 
 
+logger = logging.getLogger("pladder.dbus")
+
+
 class RetryProxy:
     def __init__(self, bus, object_name):
         self.bus = bus
@@ -94,7 +98,7 @@ class RetryProxy:
 
 
 @contextmanager
-def dbus_loop(logger=None):
+def dbus_loop():
     from gi.repository import GLib  # type: ignore
 
     with ThreadPoolExecutor(max_workers=1) as exe:
@@ -106,8 +110,7 @@ def dbus_loop(logger=None):
         if not _await_loop_running(loop, 10):
             loop_future.cancel()
             raise Exception("GLib MainLoop did not start")
-        if logger:
-            logger.info("Dbus thread started")
+        logger.info("Dbus thread started")
         yield
         # Signal loop to stop
         loop.quit()
@@ -115,8 +118,7 @@ def dbus_loop(logger=None):
         loop_future.result(timeout=3)
         # Wait for executor to shut down (by exiting with block)
     # Everything is torn down
-    if logger:
-        logger.info("Dbus thread stopped")
+    logger.info("Dbus thread stopped")
 
 
 def _await_loop_running(loop, timeout):
