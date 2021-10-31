@@ -111,12 +111,14 @@ def dbus_loop():
             loop_future.cancel()
             raise Exception("GLib MainLoop did not start")
         logger.info("Dbus thread started")
-        yield
-        # Signal loop to stop
-        loop.quit()
-        # Wait for loop task to finish
-        loop_future.result(timeout=3)
-        # Wait for executor to shut down (by exiting with block)
+        try:
+            yield
+        finally:
+            # Signal loop to stop
+            loop.quit()
+            # Wait for loop task to finish
+            loop_future.result(timeout=3)
+            # Wait for executor to shut down (by exiting with block)
     # Everything is torn down
     logger.info("Dbus thread stopped")
 
