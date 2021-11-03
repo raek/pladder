@@ -164,9 +164,9 @@ def _apply(context, words):
     return apply_call(command_context, command, command_name, arguments)
 
 
-def repeat(context, count, script):
+def repeat(context, count, script, delimiter="   "):
     texts = [interpret(context, script)[0] for _ in range(int(count))]
-    return "   ".join(texts)
+    return delimiter.join(texts)
 
 
 def let(context, *args):
