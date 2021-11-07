@@ -173,7 +173,10 @@ class MessageConnection:
                 self._recv_buffer = self._recv_buffer[length+2:]
                 if line_bytes:
                     return line_bytes
-            new_bytes = self._socket.recv(self.RECV_SIZE)
+            try:
+                new_bytes = self._socket.recv(self.RECV_SIZE)
+            except OSError as e:
+                raise ConnectionError(f"Could not receive: {e}")
             if not new_bytes:
                 raise ConnectionError("Server closed connection")
             self._recv_buffer += new_bytes
