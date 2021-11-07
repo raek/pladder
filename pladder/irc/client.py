@@ -103,6 +103,8 @@ class Client(ExitStack):
             if params is not None and message.params != params:
                 continue
             return message
+        else:
+            raise Exception("Connection closed")
 
     def _update_status(self, s):
         logger.info(s)
