@@ -3,7 +3,7 @@ from contextlib import suppress
 from collections import namedtuple
 import logging
 import socket
-from threading import Lock
+from threading import Event, Lock
 from time import sleep
 
 
@@ -134,13 +134,24 @@ class ConnectionError(Exception):
     pass
 
 
+class FdDetached(Exception):
+    pass
+
+
 class MessageConnection:
     RECV_SIZE = 4096
+    DETACH_POLL_INTERVAL = 5  # seconds
 
-    def __init__(self, host, port):
+    def __init__(self, host, port, inherited_fd=None):
         self._recv_buffer = b""
-        self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self._socket.connect((host, port))
+        self._should_detach = Event()
+        if inherited_fd:
+            self._socket = socket.socket(fileno=inherited_fd)
+        else:
+            self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self._socket.settimeout(self.DETACH_POLL_INTERVAL)
+        if not inherited_fd:
+            self._socket.connect((host, port))
         self._send_lock = Lock()
 
     def __enter__(self):
@@ -174,7 +185,12 @@ class MessageConnection:
                 if line_bytes:
                     return line_bytes
             try:
+                if self._should_detach.is_set():
+                    fd = self._socket.detach()
+                    raise FdDetached(fd)
                 new_bytes = self._socket.recv(self.RECV_SIZE)
+            except socket.timeout:
+                continue
             except OSError as e:
                 raise ConnectionError(f"Could not receive: {e}")
             if not new_bytes:
@@ -189,11 +205,18 @@ class MessageConnection:
         line_bytes = line_bytes[:MAX_LINE_BYTES - 2]
         line_bytes += b"\r\n"
         with self._send_lock:
-            self._socket.sendall(line_bytes)
-            sleep(len(line_bytes) * SLEEP_PER_BYTE)
+            try:
+                self._socket.sendall(line_bytes)
+                sleep(len(line_bytes) * SLEEP_PER_BYTE)
+                return True
+            except OSError:
+                return False
 
     def send(self, *args):
         self.send_message(make_message(*args))
+
+    def trigger_detach(self):
+        self._should_detach.set()
 
 
 def decode_utf8_with_fallback(bytestring):

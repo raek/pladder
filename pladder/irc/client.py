@@ -47,9 +47,10 @@ class Hook(AbstractContextManager):
 
 
 class Client(ExitStack):
-    def __init__(self, config):
+    def __init__(self, config, inherited_fd=None):
         super().__init__()
         self._config = config
+        self._inherited_fd = inherited_fd
         self._hooks = []
         self._conn = None
         self._messages = self._messages_with_default_handling()
@@ -66,9 +67,14 @@ class Client(ExitStack):
 
     def run(self):
         assert self._conn is None
-        self._update_status(f"Connecting to {self._config.host}:{self._config.port}")
-        self._conn = self.enter_context(MessageConnection(self._config.host, self._config.port))
-        self._settle_in()
+        if self._inherited_fd:
+            self._update_status(f"Inherited socket connected to {self._config.host}:{self._config.port}")
+            self._conn = self.enter_context(MessageConnection(self._config.host, self._config.port, self._inherited_fd))
+            self._resettle_in()
+        else:
+            self._update_status(f"Connecting to {self._config.host}:{self._config.port}")
+            self._conn = self.enter_context(MessageConnection(self._config.host, self._config.port))
+            self._settle_in()
 
     def send_message(self, target, text):
         timestamp = datetime.now(timezone.utc).timestamp()
@@ -89,6 +95,9 @@ class Client(ExitStack):
             return sorted(self._channels[channel].users)
         except KeyError:
             return []
+
+    def trigger_detach(self):
+        self._conn.trigger_detach()
 
     # Internal helper methods
 
@@ -234,6 +243,12 @@ class Client(ExitStack):
             self._join_channels()
         self._ready()
 
+    def _resettle_in(self):
+        self._whois_self()
+        if self._config.channels:
+            self._list_channel_nicks()
+        self._ready()
+
     def _choose_nick(self):
         self._update_status(f'Using nick "{self._config.nick}" and realname "{self._config.realname}"')
         self._conn.send("NICK", self._config.nick)
@@ -270,6 +285,11 @@ class Client(ExitStack):
                 n_total = len(channels_to_join)
                 channel_list = ", ".join(sorted(set(self._channels.keys()) & channels_to_join))
                 self._update_status(f"Joined {n_joined} of {n_total} channels: {channel_list}")
+
+    def _list_channel_nicks(self):
+        for channel in self._config.channels:
+            self._channels[channel] = Channel(set())
+            self._conn.send("NAMES", channel)
 
     def _whois_self(self):
         self._conn.send("WHOIS", self._config.nick)

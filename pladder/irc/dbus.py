@@ -23,6 +23,7 @@ class DbusHook(Hook, ExitStack):
         self.bot = RetryProxy(bus, "se.raek.PladderBot")
         self.connector = PladderConnector(bus, config, client)
         self.enter_context(dbus_loop())
+        self.connector.ReloadComplete()
 
     def on_trigger(self, timestamp, channel, sender, text):
         return self.bot.RunCommand(timestamp, self.config.network, channel, sender.nick, text,
@@ -81,7 +82,8 @@ class PladderConnector:
         return self.client.get_channel_users(channel)
 
     def TriggerReload(self):
-        return False
+        self.client.trigger_detach()
+        return True
 
     ReloadComplete = signal()
 
