@@ -1,7 +1,7 @@
 import logging
-from concurrent.futures import ThreadPoolExecutor
-from contextlib import contextmanager
 from time import sleep
+
+from pladder.threading import background_thread
 
 
 PLADDER_BOT_XML = """
@@ -102,36 +102,21 @@ class RetryProxy:
         return wrapper
 
 
-@contextmanager
 def dbus_loop():
     from gi.repository import GLib  # type: ignore
 
-    with ThreadPoolExecutor(max_workers=1) as exe:
-        loop = GLib.MainLoop()
-        loop_future = exe.submit(loop.run)
-        # Ensure the loop has started running before mobing on. If
-        # loop.quit() is called before it is running, it will be
-        # missed by the loop and the loop will never quit.
-        if not _await_loop_running(loop, 10):
-            loop_future.cancel()
-            raise Exception("GLib MainLoop did not start")
-        logger.info("Dbus thread started")
-        try:
-            yield
-        finally:
-            # Signal loop to stop
-            loop.quit()
-            # Wait for loop task to finish
-            loop_future.result(timeout=3)
-            # Wait for executor to shut down (by exiting with block)
-    # Everything is torn down
-    logger.info("Dbus thread stopped")
+    loop = GLib.MainLoop()
+    sync_timeout = 10
 
+    def await_loop_running():
+        for _ in range(sync_timeout ** 10):
+            if loop.is_running():
+                return True
+            else:
+                sleep(0.1)
+        return False
 
-def _await_loop_running(loop, timeout):
-    for _ in range(timeout ** 10):
-        if loop.is_running():
-            return True
-        else:
-            sleep(0.1)
-    return False
+    return background_thread("DBus main loop",
+                             work_fn=loop.run,
+                             sync_fn=await_loop_running,
+                             stop_fn=loop.quit)
