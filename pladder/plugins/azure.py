@@ -62,8 +62,8 @@ class AzureCommands:
         }
 
         cmds.register_command("translatify-list", self.print_language_list)
-        cmds.register_command("translatify", self.translatify)
-        cmds.register_command("translatify-native", self.translatify_native)
+        cmds.register_command("translatify", self.translatify, varargs=True)
+        cmds.register_command("translatify-native", self.translatify_native, varargs=True)
 
     def print_language_list(self):
         """
