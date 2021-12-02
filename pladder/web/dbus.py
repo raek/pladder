@@ -37,6 +37,11 @@ class PladderConnector:
         else:
             return []
 
+    def TriggerReload(self):
+        return False
+
+    ReloadComplete = signal()
+
 
 class PladderWebApi:
 
@@ -65,8 +70,3 @@ class PladderWebApi:
 
     def DeleteToken(self, token_name):
         return self.db.delete_token(token_name)
-
-    def TriggerReload(self):
-        return False
-
-    ReloadComplete = signal()
