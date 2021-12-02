@@ -1,5 +1,6 @@
 [Unit]
 Description=Pladder Bot Web API
+Wants=pladder-bot.service
 
 [Service]
 Type=notify
