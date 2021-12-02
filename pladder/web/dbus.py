@@ -2,7 +2,7 @@ import logging
 
 from pydbus.generic import signal  # type: ignore
 
-from pladder.dbus import PLADDER_CONNECTOR_XML, PLADDER_WEB_API_XMLmumble/
+from pladder.dbus import PLADDER_CONNECTOR_XML, PLADDER_WEB_API_XML
 from .types import NETWORK, UNKNOWN_USER
 
 
