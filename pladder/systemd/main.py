@@ -30,6 +30,8 @@ OBSOLETE_UNITS = [
 
 
 def update_unit_files():
+    user_dir = Path.home() / ".config" / "systemd" / "user"
+    user_dir.mkdir(parents=True, exist_ok=True)
     print("Wrote unit files:")
     print()
     for unit_name in CURRENT_UNITS:
