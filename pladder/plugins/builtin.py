@@ -264,7 +264,7 @@ def trace(context, mode, script):
 
 def trace_last(context, mode, last_contexts):
     last_context = last_contexts.get((context.metadata["network"], context.metadata["channel"]), None)
-    if not last_context.trace:
+    if not last_context or not last_context.trace:
         return "No last trace stored"
     return render_trace(last_context.trace, mode)
 
