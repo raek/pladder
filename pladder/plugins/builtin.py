@@ -66,6 +66,8 @@ def pladder_plugin(bot):
     cmds.register_command("show-context", show_context, contextual=True)
     cmds.register_command("trace", trace, contextual=True)
     cmds.register_command("trace-last", lambda context, mode: trace_last(context, mode, last_contexts), contextual=True)
+    # Last command
+    cmds.register_command("last-output", lambda context: last_output(context, last_contexts), contextual=True)
     yield
 
 
@@ -342,3 +344,18 @@ def full_trace(trace, color_pairs):
             part = f"{light}[{call}] {dark}=> {light}{result}"
         parts.append(part)
     return f"{dark}, ".join(parts) + color.RESET
+
+
+def last_output(context, last_contexts):
+    last_context = last_contexts.get((context.metadata["network"], context.metadata["channel"]), None)
+    if not last_context or not last_context.trace:
+        raise ScriptError("No last command stored")
+    entry = last_context.trace[-1]
+    if entry.result is None:
+        return ""
+    elif isinstance(entry.result, str):
+        return entry.result
+    elif isinstance(entry.result, Exception):
+        raise entry.result
+    else:
+        raise Exception(f"Unknown result type: {entry.result}")
