@@ -20,6 +20,8 @@ def pladder_plugin(bot):
     cmds.register_command("unicode-name", unicode_name, varargs=True)
     cmds.register_command("tijd", tijd)
     cmds.register_command("vecka", vecka)
+    cmds.register_command("morse", morse, varargs=True)
+    cmds.register_command("unmorse", unmorse)
     yield
 
 
@@ -214,3 +216,33 @@ def tijd():
 
 def vecka():
     return str(datetime.now().isocalendar()[1])
+
+
+MORSE_CODE = [
+    (" ", " "),
+    ("a", ".-"), ("b", "-..."), ("c", "-.-."), ("d", "-.."), ("e", "."),
+    ("f", "..-."), ("g", "--."), ("h", "...."), ("i", ".."), ("j", ".---"),
+    ("k", "-.-"), ("l", ".-.."), ("m", "--"), ("n", "-."), ("o", "---"),
+    ("p", ".--."), ("q", "--.-"), ("r", ".-."), ("s", "..."), ("t", "-"),
+    ("u", "..-"), ("v", "...-"), ("w", ".--"), ("x", "-..-"), ("y", "-.--"),
+    ("z", "--.."), ("å", ".--.-"), ("ä", ".-.-"), ("ö", "---."),
+    ("1", ".----"), ("2", "..---"), ("3", "...--"), ("4", "....-"), ("5", "....."),
+    ("6", "-...."), ("7", "--..."), ("8", "---.."), ("9", "----."), ("0", "-----"),
+    (".", ".-.-.-"), (",", "--..--"), ("?", "..--.."), ("'", ".----."), ("!", "-.-.--"),
+    ("/", "-..-."), ("(", "-.--."), (")", "-.--.-"), ("&", ".-..."), (":", "---..."),
+    (";", "-.-.-."), ("=", "-...-"), ("+", ".-.-."), ("-", "-....-"), ("_", "..--.-"),
+    ('"', ".-..-."), ("$", "...-..-"), ("@", ".--.-."),
+]
+CHAR_TO_MORSE = {char: morse for char, morse in MORSE_CODE}
+MORSE_TO_CHAR = {morse: char for char, morse in MORSE_CODE}
+
+
+def morse(s):
+    return " ".join(CHAR_TO_MORSE[c] for c in s.lower())
+
+
+def unmorse(s):
+    words = []
+    for coded_word in re.split("\s{2,}", s):
+        words.append("".join(MORSE_TO_CHAR.get(char, "�") for char in coded_word.split(" ")))
+    return " ".join(words)
