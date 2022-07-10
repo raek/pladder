@@ -1,5 +1,7 @@
 from contextlib import contextmanager
+from collections import defaultdict
 from datetime import datetime
+import random
 import re
 import unicodedata
 
@@ -233,8 +235,8 @@ MORSE_CODE = [
     (";", "-.-.-."), ("=", "-...-"), ("+", ".-.-."), ("-", "-....-"), ("_", "..--.-"),
     ('"', ".-..-."), ("$", "...-..-"), ("@", ".--.-."),
 ]
-CHAR_TO_MORSE = {char: morse for char, morse in MORSE_CODE}
-MORSE_TO_CHAR = {morse: char for char, morse in MORSE_CODE}
+CHAR_TO_MORSE = defaultdict(lambda: "".join(random.choice(".-") for _ in range(8)), **{char: morse for char, morse in MORSE_CODE}, )
+MORSE_TO_CHAR = defaultdict( lambda: "�", **{morse: char for char, morse in MORSE_CODE})
 
 
 def morse(s):
@@ -244,5 +246,5 @@ def morse(s):
 def unmorse(s):
     words = []
     for coded_word in re.split("\s{2,}", s):
-        words.append("".join(MORSE_TO_CHAR.get(char, "�") for char in coded_word.split(" ")))
+        words.append("".join(MORSE_TO_CHAR[char] for char in coded_word.split(" ")))
     return " ".join(words)
