@@ -235,16 +235,30 @@ MORSE_CODE = [
     (";", "-.-.-."), ("=", "-...-"), ("+", ".-.-."), ("-", "-....-"), ("_", "..--.-"),
     ('"', ".-..-."), ("$", "...-..-"), ("@", ".--.-."),
 ]
-CHAR_TO_MORSE = defaultdict(lambda: "".join(random.choice(".-") for _ in range(8)), **{char: morse for char, morse in MORSE_CODE}, )
-MORSE_TO_CHAR = defaultdict( lambda: "�", **{morse: char for char, morse in MORSE_CODE})
+CHAR_TO_MORSE = {char: morse for char, morse in MORSE_CODE}
+MORSE_TO_CHAR = {morse: char for char, morse in MORSE_CODE}
+
+
+def char_to_morse(c):
+    if c in CHAR_TO_MORSE:
+        return CHAR_TO_MORSE[c]
+    else:
+        return "".join(random.choice(".-") for _ in range(8))
+
+
+def morse_to_char(m):
+    if m in MORSE_TO_CHAR:
+        return MORSE_TO_CHAR[m]
+    else:
+        return "🤷"
 
 
 def morse(s):
-    return " ".join(CHAR_TO_MORSE[c] for c in s.lower())
+    return " ".join(char_to_morse(c) for c in s.lower())
 
 
 def unmorse(s):
     words = []
     for coded_word in re.split("\s{2,}", s):
-        words.append("".join(MORSE_TO_CHAR[char] for char in coded_word.split(" ")))
+        words.append("".join(morse_to_char(char) for char in coded_word.split(" ")))
     return " ".join(words)
