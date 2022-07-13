@@ -168,7 +168,7 @@ class Client(ExitStack):
                                                             reply['text'],
                                                             self._headerlen)
             msgpart = next(self._msgsplitter[reply_to])
-        if text == "more":
+        if text.strip().lower() == "more":
             try:
                 msgpart = next(self._msgsplitter[reply_to])
             except KeyError:
