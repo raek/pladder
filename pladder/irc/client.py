@@ -198,7 +198,12 @@ class Client(ExitStack):
 
     def _handle_leave(self, message):
         nick = message.sender.nick
-        channel, reason = message.params
+        if len(message.params) == 1:
+            channel, reason = message.params + [""]
+        elif len(message.params) == 2:
+            channel, reason = message.params
+        else:
+            raise ValueError(message)
         if nick == self._config.nick:
             del self._channels[channel]
             logger.info(f"Left channel {channel}: {reason}")
@@ -212,7 +217,12 @@ class Client(ExitStack):
 
     def _handle_kick(self, message):
         kicker = message.sender.nick
-        channel, kicked, reason = message.params
+        if len(message.params) == 2:
+            channel, kicked, reason = message.params + [""]
+        elif len(message.params) == 3:
+            channel, kicked, reason = message.params
+        else:
+            raise ValueError(message)
         if kicked == self._config.nick:
             del self._channels[channel]
             logger.warning(f"Kicked from channel {channel} by {kicker}: {reason}")
