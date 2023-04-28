@@ -45,6 +45,24 @@ class PladderBot(ExitStack, BotPluginInterface):
         return self.commands.new_command_group(name)
 
     def RunCommand(self, timestamp, network, channel, nick, text):
+        prefilter_result = self.RunCommand_internal(timestamp, network, channel, nick, text)
+        if prefilter_result['command'] != "error" and self.commands.lookup_command("output-filter"):
+            try:
+                filter_result = self.RunCommand_internal(timestamp, network, channel, nick, "output-filter {{{}}}".format(prefilter_result['text']))
+                result = {'text': filter_result["text"],
+                          'command': prefilter_result['command']}
+            except Exception as e:
+                print(traceback.format_exc())
+                result = {'text': "Internal error while running output-filter: " + repr(e),
+                          'command': 'error'}
+        else:
+            result = prefilter_result
+
+        return result
+
+
+    def RunCommand_internal(self, timestamp, network, channel, nick, text):
+        print("RunCommand_internal {}".format(text))
         metadata = {'datetime': datetime.fromtimestamp(timestamp, tz=timezone.utc),
                     'network': network,
                     'channel': channel,
