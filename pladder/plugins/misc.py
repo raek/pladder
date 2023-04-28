@@ -1,5 +1,4 @@
 from contextlib import contextmanager
-from collections import defaultdict
 from datetime import datetime
 import random
 import re
@@ -259,6 +258,6 @@ def morse(s):
 
 def unmorse(s):
     words = []
-    for coded_word in re.split("\s{2,}", s):
+    for coded_word in re.split(r"\s{2,}", s):
         words.append("".join(morse_to_char(char) for char in coded_word.split(" ")))
     return " ".join(words)
