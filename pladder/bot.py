@@ -5,7 +5,6 @@ import os
 import traceback
 
 from pladder.dbus import PLADDER_BOT_XML
-from pladder.fuse import Fuse, FuseResult
 import pladder.irc.color as color
 from pladder.plugin import BotPluginInterface, PluginLoadError
 from pladder.plugins.builtin import command_usage
@@ -37,7 +36,6 @@ class PladderBot(ExitStack, BotPluginInterface):
         os.makedirs(state_dir, exist_ok=True)
         self.state_dir = state_dir
         self.bus = bus
-        self.fuse = Fuse(state_dir)
         self.commands = CommandRegistry()
         self.last_contexts = {}
 
@@ -52,18 +50,10 @@ class PladderBot(ExitStack, BotPluginInterface):
                     'text': text}
         try:
             context = new_context(self.commands, metadata=metadata)
-            fuse_result = self.fuse.run(metadata['datetime'], network, channel)
-            if fuse_result == FuseResult.JUST_BLOWN:
-                result = {'text': f'{color.LIGHT_YELLOW}*daily fuse blown*{color.LIGHT_YELLOW}',
-                          'command': 'error'}
-            elif fuse_result == FuseResult.BLOWN:
-                result = {'text': '',
-                          'command': 'error'}
-            else:
-                result_text, display_name = interpret(context, text)
-                result_text = result_text[:10000]
-                result = {'text': result_text,
-                          'command': display_name}
+            result_text, display_name = interpret(context, text)
+            result_text = result_text[:10000]
+            result = {'text': result_text,
+                      'command': display_name}
         except ApplyError as e:
             result = {'text': "Usage: {}".format(command_usage(e.command)),
                       'command': e.command.display_name}
