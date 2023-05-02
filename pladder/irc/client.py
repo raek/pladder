@@ -54,7 +54,6 @@ class Client(ExitStack):
         self._hooks = []
         self._conn = None
         self._messages = self._messages_with_default_handling()
-        self._commands = {}
         self._msgsplitter = {}
         self._headerlen = 0
         self._channels = {}
@@ -161,7 +160,6 @@ class Client(ExitStack):
             for hook in self._hooks:
                 reply = hook.on_trigger(timestamp, reply_to, message.sender, text_without_prefix) or reply
         if reply and reply['text']:
-            self._commands[reply_to] = reply['command']
             self._msgsplitter[reply_to] = message_generator("PRIVMSG",
                                                             reply_to,
                                                             self._config.reply_prefix,
@@ -174,7 +172,6 @@ class Client(ExitStack):
             except KeyError:
                 pass
             except StopIteration:
-                del self._commands[reply_to]
                 del self._msgsplitter[reply_to]
             else:
                 logger.info("{} -> {} : {}".format(message.sender.nick, target, text))

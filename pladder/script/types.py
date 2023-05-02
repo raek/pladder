@@ -1,6 +1,6 @@
 from inspect import getsource
 import re
-from typing import Any, Callable, Dict, List, Mapping, NamedTuple, Optional, Pattern, Tuple, Union
+from typing import Any, Callable, Dict, List, Mapping, NamedTuple, Optional, Pattern, Union
 
 
 class ScriptError(Exception):
@@ -150,7 +150,7 @@ class CommandRegistry:
 
 Environment = Dict[str, str]
 Metadata = Dict[Any, str]
-Result = Tuple[str, str]
+Result = str
 Char = str
 
 

@@ -18,7 +18,7 @@ def eval_call(context: Context, call: Call) -> Result:
             if isinstance(fragment, Literal):
                 evaled_fragment = fragment.string
             elif isinstance(fragment, Call):
-                evaled_fragment, _display_name = eval_call(context, fragment)
+                evaled_fragment = eval_call(context, fragment)
             else:
                 try:
                     evaled_fragment = context.environment[fragment.name]
@@ -28,7 +28,7 @@ def eval_call(context: Context, call: Call) -> Result:
         evaled_word = "".join(evaled_fragments)
         evaled_words.append(evaled_word)
     if not evaled_words:
-        return "", ""
+        return ""
     command_name, arguments = evaled_words[0], evaled_words[1:]
     command = context.commands.lookup_command(command_name)
     if command is None:
@@ -43,7 +43,7 @@ def eval_call(context: Context, call: Call) -> Result:
         trace_entry = TraceEntry(command, command_name, arguments, subtrace, e)
         context.trace.append(trace_entry)
         raise
-    return result, command.display_name
+    return result
 
 
 def apply_call(context: Context, command: CommandBinding, command_name: str, arguments: List[str]) -> str:

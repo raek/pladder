@@ -64,8 +64,7 @@ class UserdefCommands(CommandGroup):
                     raise ScriptError(f"{command.name} takes {len(command.params)} arguments, got {len(args)}")
             new_env = dict(zip(command.params, args))
             subcontext = context._replace(environment=new_env)
-            result, _display_name = interpret(subcontext, command.script)
-            return result
+            return interpret(subcontext, command.script)
 
         return command_binding(command_name, exec_command,
                                contextual=True, source=source)

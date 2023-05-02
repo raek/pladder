@@ -49,23 +49,23 @@ class PladderBot(ExitStack, BotPluginInterface):
                     'text': text}
         try:
             context = new_context(self.commands, metadata=metadata)
-            result_text, display_name = interpret(context, text)
+            result_text = interpret(context, text)
             result_text = result_text[:10000]
             result = {'text': result_text,
-                      'command': display_name}
+                      'command': ''}
         except ApplyError as e:
             result = {'text': "Usage: {}".format(command_usage(e.command)),
-                      'command': e.command.display_name}
+                      'command': ''}
         except ScriptError as e:
             result = {'text': f"Error: {e}",
-                      'command': 'error'}
+                      'command': ''}
         except RecursionError:
             result = {'text': "RecursionError: Maximum recursion depth exceeded",
-                      'command': 'error'}
+                      'command': ''}
         except Exception as e:
             print(traceback.format_exc())
             result = {'text': "Internal error: " + repr(e),
-                      'command': 'error'}
+                      'command': ''}
         self.last_contexts[(network, channel)] = context
         return result
 

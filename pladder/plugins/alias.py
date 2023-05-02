@@ -58,8 +58,7 @@ class AliasCommands(CommandGroup):
         def exec_command(context: Context) -> str:
             script = "echo " + template
             subcontext = context._replace(environment={})
-            result, _display_name = interpret(subcontext, script)
-            return result
+            return interpret(subcontext, script)
 
         return command_binding(command_name, exec_command,
                                contextual=True, source=source)

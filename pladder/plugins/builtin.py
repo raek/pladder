@@ -140,14 +140,12 @@ def wpick(*args):
 
 
 def eval_command(context, script):
-    text, _display_name = interpret(context, script)
-    return text
+    return interpret(context, script)
 
 
 def eval_pick(context, *args):
     script = random.choice(args) if args else ""
-    text, _display_name = interpret(context, script)
-    return text
+    return interpret(context, script)
 
 
 def comp(context, command1, *command2_words):
@@ -167,7 +165,7 @@ def _apply(context, words):
 
 
 def repeat(context, count, script, delimiter="   "):
-    texts = [interpret(context, script)[0] for _ in range(int(count))]
+    texts = [interpret(context, script) for _ in range(int(count))]
     return delimiter.join(texts)
 
 
@@ -178,8 +176,7 @@ def let(context, *args):
     for variable, value in _pairs(args[:-1]):
         new_env[variable] = value
     subcontext = context._replace(environment=new_env)
-    result, _display_name = interpret(subcontext, args[-1])
-    return result
+    return interpret(subcontext, args[-1])
 
 
 def help(context, type=None, name=None):

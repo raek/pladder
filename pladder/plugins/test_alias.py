@@ -73,7 +73,7 @@ def test_binding_exists(populated_alias_cmds):
 def test_exec_alias(commands, populated_alias_cmds):
     context = new_context(commands, command_name="testalias")
     script = "testalias"
-    result, _ = interpret(context, script)
+    result = interpret(context, script)
     assert result == "testtest"
 
 
