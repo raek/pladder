@@ -59,7 +59,7 @@ class UserdefCommands(CommandGroup):
             if len(command.params) != len(args):
                 # special case when the command expects 1 argument: just append the arguments together
                 if len(command.params) == 1 and len(args) > 1:
-                    args = [" ".join(args)]
+                    args = tuple([" ".join(args)])
                 else:
                     raise ScriptError(f"{command.name} takes {len(command.params)} arguments, got {len(args)}")
             new_env = dict(zip(command.params, args))
