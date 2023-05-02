@@ -5,7 +5,6 @@ import os
 import traceback
 
 from pladder.dbus import PLADDER_BOT_XML
-import pladder.irc.color as color
 from pladder.plugin import BotPluginInterface, PluginLoadError
 from pladder.plugins.builtin import command_usage
 from pladder.script.interpreter import interpret
