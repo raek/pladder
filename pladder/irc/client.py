@@ -57,6 +57,7 @@ class Client(ExitStack):
         self._msgsplitter = {}
         self._headerlen = 0
         self._channels = {}
+        self._partial_users = {}
 
     # Public API
 
@@ -90,9 +91,9 @@ class Client(ExitStack):
         return sorted(self._channels.keys())
 
     def get_channel_users(self, channel):
-        try:
+        if channel in self._channels:
             return sorted(self._channels[channel].users)
-        except KeyError:
+        else:
             return []
 
     def trigger_detach(self):
@@ -129,6 +130,8 @@ class Client(ExitStack):
                 self._handle_ping(message)
             elif message.command == "PRIVMSG":
                 self._handle_privmsg(message)
+            elif message.command == "NICK":
+                self._handle_nick(message)
             elif message.command == "JOIN":
                 self._handle_join(message)
             elif message.command == "PART":
@@ -137,8 +140,12 @@ class Client(ExitStack):
                 self._handle_invite(message)
             elif message.command == "KICK":
                 self._handle_kick(message)
+            elif message.command == "QUIT":
+                self._handle_quit(message)
             elif message.command == "353":
                 self._handle_names_reply(message)
+            elif message.command == "366":
+                self._handle_end_of_names_reply(message)
             yield message
 
     def _handle_ping(self, message):
@@ -186,12 +193,29 @@ class Client(ExitStack):
             for hook in self._hooks:
                 hook.on_privmsg(timestamp, reply_to, message.sender, text)
 
+    def _handle_nick(self, message):
+        old_nick = message.sender.nick
+        new_nick, = message.params
+        for channel in self._channels.values():
+            if old_nick in channel.users:
+                channel.users.remove(old_nick)
+                channel.users.add(new_nick)
+        if old_nick == self._config.nick:
+            logger.info(f"Changed nick from {old_nick} to {new_nick}")
+            raise Exception("TODO: Implement support for changing own nick")
+        else:
+            logger.info(f"User changed nick from {old_nick} to {new_nick}")
+
     def _handle_join(self, message):
         nick = message.sender.nick
         channel, = message.params
         if nick == self._config.nick:
             self._channels[channel] = Channel(set())
             logger.info(f"Joined channel {channel}")
+        else:
+            if channel in self._channels:
+                self._channels[channel].users.add(nick)
+            logger.info(f"User {nick} joined channel {channel}")
 
     def _handle_leave(self, message):
         nick = message.sender.nick
@@ -202,15 +226,42 @@ class Client(ExitStack):
         else:
             raise ValueError(message)
         if nick == self._config.nick:
-            del self._channels[channel]
+            if channel in self._channels:
+                del self._channels[channel]
             logger.info(f"Left channel {channel}: {reason}")
+        else:
+            if channel in self._channels:
+                users = self._channels[channel].users
+                if nick in users:
+                    users.remove(nick)
+            logger.info(f"User {nick} left channel {channel}: {reason}")
 
     def _handle_invite(self, message):
         inviter = message.sender.nick
         invited, channel = message.params
         if invited == self._config.nick:
+            self._clear_partial_users(channel)
             self._conn.send("JOIN", channel)
             logger.info(f"Was invited to channel {channel} by {inviter}, joining")
+        else:
+            logger.info(f"User {inviter} invited user {invited} to channel {channel}")
+
+    def _handle_quit(self, message):
+        nick = message.sender.nick
+        if len(message.params) == 0:
+            reason = ""
+        elif len(message.params) == 1:
+            reason = message.params[0]
+        else:
+            raise ValueError(message)
+        if nick == self._config.nick:
+            logger.info(f"Quit from server: {reason}")
+            raise Exception("Got my own QUIT message from server")
+        else:
+            for channel in self._channels.values():
+                if nick in channel.users:
+                    channel.users.remove(nick)
+            logger.info(f"User {nick} quit from server: {reason}")
 
     def _handle_kick(self, message):
         kicker = message.sender.nick
@@ -221,21 +272,34 @@ class Client(ExitStack):
         else:
             raise ValueError(message)
         if kicked == self._config.nick:
-            del self._channels[channel]
+            if channel in self._channels:
+                del self._channels[channel]
             logger.warning(f"Kicked from channel {channel} by {kicker}: {reason}")
+        else:
+            if channel in self._channels:
+                users = self._channels[channel].users
+                if kicked in users:
+                    users.remove(kicked)
+            logger.info(f"User {kicker} kicked user {kicked} from channel {channel}: {reason}")
 
     def _handle_names_reply(self, message):
         _, _, channel, nicks_string = message.params
         if channel not in self._channels:
             return
-        for nick in nicks_string.split():
-            nick = self._strip_nick_prefix(nick)
-            self._channels[channel].users.add(nick)
-        logger.info(f"Channel {channel} users: " + ', '.join(sorted(self._channels[channel].users)))
+        users = [self._strip_nick_prefix(nick) for nick in nicks_string.split()]
+        self._add_partial_users(channel, users)
 
     def _strip_nick_prefix(self, nick):
         """Remove non-alphanumeric character before nick (such as @)"""
         return re.sub(r"^\W", "", nick)
+
+    def _handle_end_of_names_reply(self, message):
+        channel = message.params[1]
+        users = self._get_partial_users(channel)
+        if channel in self._channels:
+            self._channels[channel] = self._channels[channel]._replace(users=users)
+        self._clear_partial_users(channel)
+        logger.info(f"Channel {channel} users: " + ', '.join(sorted(users)))
 
     # The "phases" of connecting: the active part of the client
 
@@ -283,6 +347,7 @@ class Client(ExitStack):
         self._update_status("Joining channels: {}".format(", ".join(self._config.channels)))
         channels_to_join = set(self._config.channels)
         for channel in self._config.channels:
+            self._clear_partial_users(channel)
             self._conn.send("JOIN", channel)
         while channels_to_join - set(self._channels.keys()):
             message = self._await_message("JOIN", sender_nick=self._config.nick)
@@ -295,8 +360,20 @@ class Client(ExitStack):
 
     def _list_channel_nicks(self):
         for channel in self._config.channels:
-            self._channels[channel] = Channel(set())
+            self._clear_partial_users(channel)
             self._conn.send("NAMES", channel)
+
+    def _clear_partial_users(self, channel):
+        if channel in self._partial_users:
+            del self._partial_users[channel]
+
+    def _add_partial_users(self, channel, new_users):
+        partial_users = self._partial_users.setdefault(channel, set())
+        for new_user in new_users:
+            partial_users.add(new_user)
+
+    def _get_partial_users(self, channel):
+        return self._partial_users.get(channel, set())
 
     def _whois_self(self):
         self._conn.send("WHOIS", self._config.nick)
