@@ -23,6 +23,7 @@ def pladder_plugin(bot):
     cmds.register_command("vecka", vecka)
     cmds.register_command("morse", morse, varargs=True)
     cmds.register_command("unmorse", unmorse)
+    cmds.register_command("reverse", reverse, varargs=True)
     yield
 
 
@@ -261,3 +262,7 @@ def unmorse(s):
     for coded_word in re.split(r"\s{2,}", s):
         words.append("".join(morse_to_char(char) for char in coded_word.split(" ")))
     return " ".join(words)
+
+
+def reverse(s):
+    return s[::-1]
