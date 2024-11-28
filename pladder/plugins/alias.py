@@ -21,7 +21,7 @@ def pladder_plugin(bot: BotPluginInterface) -> Plugin:
 
 def errorstr() -> str:
     if random.random() > 0.95:
-        return "https://i.imgur.com/6cpffM4.jpeg"
+        return "https://i.imgur.com/NpuOcYR.jpeg"
     else:
         return "Nej"
 
