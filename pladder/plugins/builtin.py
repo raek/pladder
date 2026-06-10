@@ -76,7 +76,7 @@ def eq(value1, value2):
 
 
 def ne(value1, value2):
-    return _bool_py_to_pladder(value2 == value1)
+    return _bool_py_to_pladder(value2 != value1)
 
 
 def bool_command(value):
